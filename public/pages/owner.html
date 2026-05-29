@@ -317,13 +317,13 @@
     <div class="form-row">
       <div class="form-group">
         <label>Role *</label>
-        <select id="empRole">
+        <select id="empRole" onchange="onRoleChange()">
           <option value="">— select —</option>
-          <option>manager</option><option>stockroom</option><option>chef</option>
+          <option>owner</option><option>manager</option><option>stockroom</option><option>chef</option>
           <option>waiter</option><option>frontdesk</option><option>employee</option>
         </select>
       </div>
-      <div class="form-group"><label>Location</label><select id="empLocation"><option value="">— none —</option></select></div>
+      <div class="form-group" id="empLocationGroup"><label>Location</label><select id="empLocation"><option value="">— none —</option></select></div>
     </div>
     <div class="form-group"><label>Status</label><select id="empActive"><option value="1">Active</option><option value="0">Inactive</option></select></div>
     <div style="display:flex;gap:10px;margin-top:20px">
@@ -661,7 +661,7 @@ function renderAdmin(emps) {
       <td>${e.clocked_in ? '<span class="badge badge-gold">● On Duty</span>' : '<span class="badge badge-muted">Off</span>'}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-sm btn-ghost" onclick="openEmpModal(${e.id})">Edit</button>
-        ${e.role!=='owner' && e.is_active ? `<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="openDelete(${e.id},'${e.name.replace(/'/g,"\\'")}')">Deactivate</button>` : ''}
+        ${e.is_active ? `<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="openDelete(${e.id},'${e.name.replace(/'/g,"\\'")}','${e.role}')">Deactivate</button>` : ''}
       </td>
     </tr>
   `).join('') || '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No employees found</td></tr>';
@@ -678,12 +678,18 @@ function filterAdmin() {
   ));
 }
 
+function onRoleChange() {
+  const role = document.getElementById('empRole').value;
+  document.getElementById('empLocationGroup').style.display = role === 'owner' ? 'none' : '';
+  if (role === 'owner') document.getElementById('empLocation').value = '';
+}
+
 function openEmpModal(id = null) {
   editingEmpId = id;
   document.getElementById('empAlert').classList.add('hidden');
   if (id) {
     const e = allEmpsRaw.find(x => x.id === id);
-    document.getElementById('empModalTitle').textContent = 'Edit Employee';
+    document.getElementById('empModalTitle').textContent = 'Edit — ' + e.name;
     document.getElementById('empName').value     = e.name;
     document.getElementById('empEmail').value    = e.email;
     document.getElementById('empPassword').value = '';
@@ -693,13 +699,14 @@ function openEmpModal(id = null) {
     document.getElementById('empActive').value   = e.is_active ? '1' : '0';
     document.getElementById('pwHint').textContent = '(leave blank to keep current)';
   } else {
-    document.getElementById('empModalTitle').textContent = 'Add Employee';
+    document.getElementById('empModalTitle').textContent = 'Add Employee / Owner';
     ['empName','empEmail','empPassword','empRate'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('empRole').value     = '';
     document.getElementById('empLocation').value = '';
     document.getElementById('empActive').value   = '1';
     document.getElementById('pwHint').textContent = '(required)';
   }
+  onRoleChange();
   showModal('empModal');
 }
 
@@ -727,13 +734,23 @@ async function saveEmployee() {
   } catch(e) { showAlert('empAlert', e.message); }
 }
 
-function openDelete(id, name) {
+function openDelete(id, name, role) {
   deletingEmpId = id;
-  document.getElementById('deleteMsg').textContent = `Deactivate "${name}"?`;
+  const ownerNote = role === 'owner' ? ' (requires at least one other active owner)' : '';
+  document.getElementById('deleteMsg').textContent = `Deactivate "${name}"?${ownerNote}`;
   showModal('deleteModal');
 }
 
-async function confirmDelete() { await API.deleteEmployee(deletingEmpId); hideModal('deleteModal'); loadAdmin(); }
+async function confirmDelete() {
+  try {
+    await API.deleteEmployee(deletingEmpId);
+    hideModal('deleteModal');
+    loadAdmin();
+  } catch(e) {
+    hideModal('deleteModal');
+    alert(e.message);
+  }
+}
 
 // ── Timesheets ───────────────────────────────────────────
 function initTimesheets() { if (!document.getElementById('tsStart').value) setRange('week'); }

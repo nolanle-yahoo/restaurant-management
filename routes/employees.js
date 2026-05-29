@@ -53,10 +53,14 @@ router.get('/:id', requireRole('owner','manager'), (req, res) => {
 router.post('/', requireRole('owner','manager'), (req, res) => {
   const { name, email, password, role, location_id, hourly_rate } = req.body;
   if (!name || !email || !password || !role) return res.status(400).json({ error: 'name, email, password, role required' });
-  const validRoles = ['manager','stockroom','employee','frontdesk','waiter','chef'];
+  const validRoles = req.user.role === 'owner'
+    ? ['owner','manager','stockroom','employee','frontdesk','waiter','chef']
+    : ['manager','stockroom','employee','frontdesk','waiter','chef'];
   if (!validRoles.includes(role)) return res.status(400).json({ error: 'Invalid role' });
-  // Managers can only create employees in their own location
-  const locId = req.user.role === 'manager' ? req.user.location_id : (location_id || null);
+  // Managers can only create employees in their own location; owners with owner role get no location
+  const locId = req.user.role === 'manager' ? req.user.location_id
+              : role === 'owner' ? null
+              : (location_id || null);
   try {
     const hash = bcrypt.hashSync(password, 10);
     const r = db.prepare(`INSERT INTO users (name, email, password_hash, role, location_id, hourly_rate) VALUES (?,?,?,?,?,?)`).run(name, email, hash, role, locId, hourly_rate || 0);
@@ -91,7 +95,11 @@ router.put('/:id', requireRole('owner','manager'), (req, res) => {
 router.delete('/:id', requireRole('owner'), (req, res) => {
   const emp = db.prepare(`SELECT role FROM users WHERE id=?`).get(req.params.id);
   if (!emp) return res.status(404).json({ error: 'Employee not found' });
-  if (emp.role === 'owner') return res.status(403).json({ error: 'Cannot delete owner account' });
+  // Prevent deactivating the last active owner
+  if (emp.role === 'owner') {
+    const activeOwners = db.prepare(`SELECT COUNT(*) as n FROM users WHERE role='owner' AND is_active=1`).get();
+    if (activeOwners.n <= 1) return res.status(403).json({ error: 'Cannot deactivate the last active owner account' });
+  }
   // Soft-delete: deactivate and anonymise instead of hard delete to preserve clock records
   db.prepare(`UPDATE users SET is_active=0, email=email||'_deleted_'||id WHERE id=?`).run(req.params.id);
   res.json({ success: true });
