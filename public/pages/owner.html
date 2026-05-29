@@ -10,24 +10,21 @@
     .report-controls .form-group { margin:0; }
     .report-controls label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.3px; display:block; margin-bottom:4px; }
     .report-controls input, .report-controls select { padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:13.5px; }
-    .quick-range { display:flex; gap:6px; }
     .quick-btn { padding:6px 12px; border-radius:6px; border:1.5px solid var(--border); background:#fff; cursor:pointer; font-size:12.5px; font-weight:600; transition:all .15s; }
     .quick-btn:hover { border-color:var(--burgundy); color:var(--burgundy); }
     tfoot td { font-weight:800; background:#F5F0EA !important; }
-    .print-area { display:none; }
+    .rate-badge { background:rgba(74,124,89,.12); color:var(--success); padding:2px 8px; border-radius:12px; font-size:12px; font-weight:700; }
+    .wh-filter { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+    .wh-filter input, .wh-filter select { padding:7px 11px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; }
     @media print {
-      .sidebar, .topbar, .report-controls, .no-print { display:none !important; }
+      .sidebar, .topbar, .no-print { display:none !important; }
       .main-content { margin:0 !important; }
-      .print-area { display:block; }
       .card { box-shadow:none !important; border:1px solid #ccc !important; }
     }
-    .rate-badge { background:rgba(74,124,89,.12); color:var(--success); padding:2px 8px; border-radius:12px; font-size:12px; font-weight:700; }
-    .delete-confirm { color:var(--danger); }
   </style>
 </head>
 <body>
 <div class="app-shell">
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="logo-icon">🍷</div>
@@ -41,16 +38,16 @@
     </div>
     <nav class="sidebar-nav">
       <a class="nav-item active" href="#" onclick="showSection('overview')"><span class="nav-icon">📊</span>Overview</a>
-      <a class="nav-item" href="#" onclick="showSection('locations')"><span class="nav-icon">📍</span>Locations</a>
+      <a class="nav-item" href="#" onclick="showSection('staff')"><span class="nav-icon">👥</span>Staff & Locations</a>
       <a class="nav-item" href="#" onclick="showSection('timesheets')"><span class="nav-icon">📋</span>Timesheets</a>
-      <a class="nav-item" href="#" onclick="showSection('admin')"><span class="nav-icon">⚙️</span>Admin Panel</a>
+      <a class="nav-item" href="#" onclick="showSection('warehouse')"><span class="nav-icon">🏭</span>Warehouse</a>
       <a class="nav-item" href="#" onclick="showSection('supply')"><span class="nav-icon">📦</span>Supply Orders</a>
-      <a class="nav-item" href="#" onclick="showSection('inventory')"><span class="nav-icon">🏪</span>Inventory</a>
+      <a class="nav-item" href="#" onclick="showSection('transfers')"><span class="nav-icon">🔄</span>Transfers</a>
+      <a class="nav-item" href="#" onclick="showSection('admin')"><span class="nav-icon">⚙️</span>Admin Panel</a>
     </nav>
     <div class="sidebar-footer"><button class="logout-btn">Sign Out</button></div>
   </aside>
 
-  <!-- Main -->
   <div class="main-content">
     <div class="topbar">
       <div class="topbar-title" id="pageTitle">Overview</div>
@@ -65,8 +62,8 @@
       <!-- ── Overview ─────────────────────────────────── -->
       <section id="sec-overview">
         <div class="stat-grid" id="globalStats"></div>
-        <div class="loc-grid" id="locCards"></div>
-        <div class="card mt-24">
+        <div class="loc-grid" id="locCards" style="margin-bottom:24px"></div>
+        <div class="card">
           <div class="card-header"><div class="card-title">Recent Staff Activity</div></div>
           <table class="data-table">
             <thead><tr><th>Name</th><th>Role</th><th>Location</th><th>Action</th><th>Time</th></tr></thead>
@@ -75,9 +72,21 @@
         </div>
       </section>
 
-      <!-- ── Locations ─────────────────────────────────── -->
-      <section id="sec-locations" class="hidden">
-        <div class="loc-grid" id="locDetailCards"></div>
+      <!-- ── Staff & Locations ─────────────────────────── -->
+      <section id="sec-staff" class="hidden">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <div class="card-title">Staff by Location</div>
+            <button class="btn btn-primary btn-sm" onclick="openEmpModal()">+ Add Employee</button>
+          </div>
+          <div class="staff-loc-grid" id="staffLocGrid"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Unassigned Staff</div>
+          </div>
+          <div id="unassignedStaff" style="padding:8px 0"></div>
+        </div>
       </section>
 
       <!-- ── Timesheets ─────────────────────────────────── -->
@@ -85,7 +94,7 @@
         <div class="card" style="margin-bottom:20px">
           <div class="card-header no-print">
             <div class="card-title">Generate Timesheet Report</div>
-            <div class="quick-range">
+            <div style="display:flex;gap:6px">
               <button class="quick-btn" onclick="setRange('today')">Today</button>
               <button class="quick-btn" onclick="setRange('week')">This Week</button>
               <button class="quick-btn" onclick="setRange('lastweek')">Last Week</button>
@@ -95,65 +104,98 @@
           <div class="report-controls no-print">
             <div class="form-group">
               <label>Location</label>
-              <select id="tsLocFilter" style="width:180px">
-                <option value="">All Locations</option>
-              </select>
+              <select id="tsLocFilter" style="width:180px"><option value="">All Locations</option></select>
             </div>
-            <div class="form-group">
-              <label>Start Date</label>
-              <input type="date" id="tsStart">
-            </div>
-            <div class="form-group">
-              <label>End Date</label>
-              <input type="date" id="tsEnd">
-            </div>
+            <div class="form-group"><label>Start Date</label><input type="date" id="tsStart"></div>
+            <div class="form-group"><label>End Date</label><input type="date" id="tsEnd"></div>
             <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
             <button class="btn btn-ghost" onclick="window.print()">🖨 Print</button>
             <button class="btn btn-ghost" onclick="exportCSV()">⬇ CSV</button>
           </div>
         </div>
-
         <div id="tsResult" class="hidden">
-          <!-- Summary card -->
           <div class="stat-grid" id="tsSummaryStats" style="margin-bottom:20px"></div>
-
-          <!-- By employee summary table -->
           <div class="card" style="margin-bottom:20px">
-            <div class="card-header">
-              <div class="card-title" id="tsReportTitle">Employee Summary</div>
-            </div>
-            <table class="data-table" id="tsSummaryTable">
-              <thead>
-                <tr>
-                  <th>Employee</th><th>Role</th><th>Location</th>
-                  <th>Total Hours</th><th>Hourly Rate</th><th>Total Pay</th>
-                </tr>
-              </thead>
+            <div class="card-header"><div class="card-title" id="tsReportTitle">Employee Summary</div></div>
+            <table class="data-table">
+              <thead><tr><th>Employee</th><th>Role</th><th>Location</th><th>Total Hours</th><th>Hourly Rate</th><th>Total Pay</th></tr></thead>
               <tbody id="tsSummaryBody"></tbody>
               <tfoot><tr id="tsTotalsRow"></tr></tfoot>
             </table>
           </div>
-
-          <!-- Detail records -->
           <div class="card">
             <div class="card-header">
               <div class="card-title">Detailed Records</div>
-              <button class="btn btn-ghost btn-sm no-print" onclick="toggleDetails()">Toggle Details</button>
+              <button class="btn btn-ghost btn-sm no-print" onclick="document.getElementById('tsDetailWrap').style.display=document.getElementById('tsDetailWrap').style.display==='none'?'':'none'">Toggle Details</button>
             </div>
             <div id="tsDetailWrap">
-              <table class="data-table" id="tsDetailTable">
-                <thead>
-                  <tr><th>Date</th><th>Employee</th><th>Role</th><th>Location</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Rate</th><th>Pay</th></tr>
-                </thead>
+              <table class="data-table">
+                <thead><tr><th>Date</th><th>Employee</th><th>Role</th><th>Location</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Rate</th><th>Pay</th></tr></thead>
                 <tbody id="tsDetailBody"></tbody>
               </table>
             </div>
           </div>
         </div>
+        <div id="tsEmpty" style="text-align:center;padding:60px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">📋</div><div style="font-weight:700">Select a date range and click Generate Report</div></div>
+      </section>
 
-        <div id="tsEmpty" class="hidden" style="text-align:center;padding:60px;color:var(--muted)">
-          <div style="font-size:40px;margin-bottom:12px">📋</div>
-          <div style="font-weight:700">Select a date range and click Generate Report</div>
+      <!-- ── Warehouse ──────────────────────────────────── -->
+      <section id="sec-warehouse" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Warehouse Inventory — All Locations</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="badge badge-danger" id="whLowBadge"></span>
+            </div>
+          </div>
+          <div class="wh-filter no-print">
+            <input id="whSearch" placeholder="Search item…" style="width:200px" oninput="renderWarehouse()">
+            <select id="whCat" onchange="renderWarehouse()"><option value="">All Categories</option></select>
+            <label style="font-size:12.5px;display:flex;align-items:center;gap:6px;font-weight:600;cursor:pointer">
+              <input type="checkbox" id="whLowOnly" onchange="renderWarehouse()"> Low Stock Only
+            </label>
+          </div>
+          <div style="overflow-x:auto"><table class="wh-table" id="whTable"><thead id="whHead"></thead><tbody id="whBody"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- ── Supply Orders ──────────────────────────────── -->
+      <section id="sec-supply" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Supply Orders</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="supplyLocFilter" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px" onchange="loadSupply()">
+                <option value="">All Locations</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="openSupplyModal()">+ New Supply Order</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>Location</th><th>Qty</th><th>Vendor</th><th>Ordered By</th><th>Expected</th><th>Tracking</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="supplyBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── Transfer Requests ─────────────────────────── -->
+      <section id="sec-transfers" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Transfer Requests</div>
+            <div style="display:flex;gap:8px">
+              <select id="trStatusFilter" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px" onchange="loadTransfers()">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="in_transit">In Transit</option>
+                <option value="received">Received</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="openTransferModal()">+ New Transfer Request</button>
+            </div>
+          </div>
+          <div id="transferList"></div>
         </div>
       </section>
 
@@ -163,47 +205,21 @@
           <div class="card-header">
             <div class="card-title">All Employees</div>
             <div style="display:flex;gap:8px;align-items:center">
-              <input id="adminSearch" placeholder="Search by name or email…" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;width:220px;" oninput="filterAdmin()">
-              <select id="adminRoleFilter" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;" onchange="filterAdmin()">
+              <input id="adminSearch" placeholder="Search…" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;width:200px" oninput="filterAdmin()">
+              <select id="adminRoleFilter" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px" onchange="filterAdmin()">
                 <option value="">All Roles</option>
                 <option>owner</option><option>manager</option><option>stockroom</option>
                 <option>chef</option><option>waiter</option><option>frontdesk</option><option>employee</option>
               </select>
-              <button class="btn btn-primary" onclick="openEmpModal()">+ Add Employee</button>
+              <select id="adminLocFilter" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px" onchange="filterAdmin()">
+                <option value="">All Locations</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="openEmpModal()">+ Add Employee</button>
             </div>
           </div>
           <table class="data-table">
-            <thead>
-              <tr><th>Name</th><th>Email</th><th>Role</th><th>Location</th><th>Hourly Rate</th><th>Status</th><th>On Duty</th><th>Actions</th></tr>
-            </thead>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Location</th><th>Hourly Rate</th><th>Status</th><th>On Duty</th><th>Actions</th></tr></thead>
             <tbody id="adminBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ── Supply Orders ──────────────────────────────── -->
-      <section id="sec-supply" class="hidden">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Supply Orders</div></div>
-          <table class="data-table">
-            <thead><tr><th>Item</th><th>Location</th><th>Qty</th><th>Ordered By</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody id="supplyBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ── Inventory ───────────────────────────────────── -->
-      <section id="sec-inventory" class="hidden">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Inventory — All Locations</div>
-            <select id="invLocFilter" style="width:200px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;" onchange="loadInventory()">
-              <option value="">All Locations</option>
-            </select>
-          </div>
-          <table class="data-table">
-            <thead><tr><th>Item</th><th>Category</th><th>Location</th><th>Stock</th><th>Level</th><th>Status</th></tr></thead>
-            <tbody id="invBody"></tbody>
           </table>
         </div>
       </section>
@@ -212,7 +228,80 @@
   </div>
 </div>
 
-<!-- ── Employee Modal (Add / Edit) ─────────────────────── -->
+<!-- ── Supply Order Modal ──────────────────────────────────── -->
+<div class="modal-overlay" id="supplyModal">
+  <div class="modal" style="width:560px">
+    <div class="modal-title">New Supply Order</div>
+    <div id="supplyAlert" class="alert hidden"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Item Name *</label><input id="soItem" placeholder="e.g. Beef Tenderloin" list="invItems"></div>
+      <div class="form-group"><label>Quantity *</label><input type="number" id="soQty" min="1" placeholder="Amount"></div>
+    </div>
+    <datalist id="invItems"></datalist>
+    <div class="form-row">
+      <div class="form-group">
+        <label>For Location *</label>
+        <select id="soLocation"><option value="">— select —</option></select>
+      </div>
+      <div class="form-group"><label>Vendor / Supplier</label><input id="soVendor" placeholder="Supplier name"></div>
+    </div>
+    <div class="form-group"><label>Shipping Address</label><input id="soShipping" placeholder="Delivery address"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Expected Delivery</label><input type="date" id="soExpected"></div>
+      <div class="form-group"><label>Tracking Number</label><input id="soTracking" placeholder="Optional"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><input id="soNotes" placeholder="Any special instructions"></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="submitSupplyOrder()">Place Order</button>
+      <button class="btn btn-ghost" onclick="hideModal('supplyModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Transfer Request Modal ─────────────────────────────── -->
+<div class="modal-overlay" id="transferModal">
+  <div class="modal" style="width:540px">
+    <div class="modal-title">New Transfer Request</div>
+    <div id="transferAlert" class="alert hidden"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Item Name *</label><input id="trItem" placeholder="e.g. Olive Oil" list="invItemsTr"></div>
+      <div class="form-group"><label>Quantity *</label><input type="number" id="trQty" min="0.1" step="0.1" placeholder="Amount"></div>
+    </div>
+    <datalist id="invItemsTr"></datalist>
+    <div class="form-row">
+      <div class="form-group"><label>From Location *</label><select id="trFrom"><option value="">— select source —</option></select></div>
+      <div class="form-group"><label>To Location *</label><select id="trTo"><option value="">— select destination —</option></select></div>
+    </div>
+    <div class="form-group"><label>Vendor / Carrier</label><input id="trVendor" placeholder="Shipping carrier or vendor (optional)"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Shipping / Pickup Info</label><input id="trShipping" placeholder="Driver, pickup time, etc."></div>
+      <div class="form-group"><label>Tracking Number</label><input id="trTracking" placeholder="Optional"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><input id="trNotes" placeholder="Reason for transfer, urgency, etc."></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="submitTransfer()">Submit Request</button>
+      <button class="btn btn-ghost" onclick="hideModal('transferModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Reassign Location Modal ───────────────────────────── -->
+<div class="modal-overlay" id="reassignModal">
+  <div class="modal" style="width:360px">
+    <div class="modal-title">Reassign Location</div>
+    <p id="reassignEmpName" style="font-weight:700;color:var(--charcoal);margin-bottom:14px"></p>
+    <div class="form-group">
+      <label>New Location</label>
+      <select id="reassignLoc"><option value="">— No Location —</option></select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="confirmReassign()">Reassign</button>
+      <button class="btn btn-ghost" onclick="hideModal('reassignModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Employee Add/Edit Modal ───────────────────────────── -->
 <div class="modal-overlay" id="empModal">
   <div class="modal" style="width:500px">
     <div class="modal-title" id="empModalTitle">Add Employee</div>
@@ -222,7 +311,7 @@
       <div class="form-group"><label>Email *</label><input type="email" id="empEmail" placeholder="email@example.com"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Password <span id="pwHint" style="color:var(--muted);font-weight:400">(required for new)</span></label><input type="password" id="empPassword" placeholder="Leave blank to keep current"></div>
+      <div class="form-group"><label>Password <span id="pwHint" style="color:var(--muted);font-weight:400"></span></label><input type="password" id="empPassword" placeholder="Leave blank to keep current"></div>
       <div class="form-group"><label>Hourly Rate ($)</label><input type="number" id="empRate" min="0" step="0.50" placeholder="0.00"></div>
     </div>
     <div class="form-row">
@@ -234,28 +323,22 @@
           <option>waiter</option><option>frontdesk</option><option>employee</option>
         </select>
       </div>
-      <div class="form-group">
-        <label>Location</label>
-        <select id="empLocation"><option value="">— none —</option></select>
-      </div>
+      <div class="form-group"><label>Location</label><select id="empLocation"><option value="">— none —</option></select></div>
     </div>
-    <div class="form-group">
-      <label>Status</label>
-      <select id="empActive"><option value="1">Active</option><option value="0">Inactive</option></select>
-    </div>
+    <div class="form-group"><label>Status</label><select id="empActive"><option value="1">Active</option><option value="0">Inactive</option></select></div>
     <div style="display:flex;gap:10px;margin-top:20px">
-      <button class="btn btn-primary" id="empSaveBtn" onclick="saveEmployee()">Save Employee</button>
+      <button class="btn btn-primary" onclick="saveEmployee()">Save Employee</button>
       <button class="btn btn-ghost" onclick="hideModal('empModal')">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- ── Delete Confirm Modal ─────────────────────────────── -->
+<!-- ── Delete Confirm ────────────────────────────────────── -->
 <div class="modal-overlay" id="deleteModal">
   <div class="modal" style="width:380px">
     <div class="modal-title" style="color:var(--danger)">Deactivate Employee</div>
-    <p id="deleteMsg" style="margin:12px 0;color:var(--charcoal);font-size:14px;"></p>
-    <p style="font-size:13px;color:var(--muted)">This will deactivate the account. Clock records are preserved.</p>
+    <p id="deleteMsg" style="margin:12px 0;font-size:14px"></p>
+    <p style="font-size:13px;color:var(--muted)">Clock records are preserved.</p>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button class="btn btn-danger" onclick="confirmDelete()">Deactivate</button>
       <button class="btn btn-ghost" onclick="hideModal('deleteModal')">Cancel</button>
@@ -269,34 +352,39 @@
 const user = requireAuth(['owner']);
 if (user) populateSidebar(user);
 liveClock('topbarTime');
-onModalOverlayClick('empModal');
-onModalOverlayClick('deleteModal');
+['supplyModal','transferModal','reassignModal','empModal','deleteModal'].forEach(onModalOverlayClick);
 
-let currentSection = 'overview', locations = [], allEmpsRaw = [], editingEmpId = null, deletingEmpId = null;
-
-const SECTIONS = { overview:'Overview', locations:'Locations', timesheets:'Timesheets', admin:'Admin Panel', supply:'Supply Orders', inventory:'Inventory' };
+const NAV_LABELS = { overview:'Overview', staff:'Staff & Locations', timesheets:'Timesheets', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', admin:'Admin Panel' };
+const NAV_KEYS   = Object.keys(NAV_LABELS);
+let currentSection = 'overview', locations = [], allEmpsRaw = [], whData = null, editingEmpId = null, deletingEmpId = null, reassignEmpId = null, allInvItems = [];
 
 function showSection(name) {
   document.querySelectorAll('.main-content section').forEach(s => s.classList.add('hidden'));
   document.getElementById('sec-' + name).classList.remove('hidden');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.nav-item')[['overview','locations','timesheets','admin','supply','inventory'].indexOf(name)].classList.add('active');
-  document.getElementById('pageTitle').textContent = SECTIONS[name];
+  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', NAV_KEYS[i] === name));
+  document.getElementById('pageTitle').textContent = NAV_LABELS[name];
   currentSection = name;
-  if (name === 'admin')     loadAdmin();
-  if (name === 'supply')    loadSupply();
-  if (name === 'inventory') loadInventory();
-  if (name === 'timesheets') initTimesheets();
+  const loaders = { staff: loadStaffLocations, warehouse: loadWarehouse, supply: loadSupply, transfers: loadTransfers, admin: loadAdmin, timesheets: initTimesheets };
+  if (loaders[name]) loaders[name]();
 }
 
 async function loadAll() {
   await loadSummary();
-  if (currentSection !== 'overview' && currentSection !== 'locations') showSection(currentSection);
+  if (currentSection !== 'overview') showSection(currentSection);
 }
 
 async function loadSummary() {
-  const { locations: locs, totals } = await API.locationsSummary();
+  const [{ locations: locs, totals }, recent] = await Promise.all([API.locationsSummary(), API.clockRecent()]);
   locations = locs;
+  const locOpts = locs.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  ['tsLocFilter','supplyLocFilter','soLocation','trFrom','trTo','empLocation','reassignLoc','adminLocFilter'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const pre = el.id === 'tsLocFilter' || el.id === 'supplyLocFilter' || el.id === 'adminLocFilter'
+      ? '<option value="">All Locations</option>'
+      : el.id === 'empLocation' || el.id === 'reassignLoc' ? '<option value="">— none —</option>' : '<option value="">— select —</option>';
+    el.innerHTML = pre + locOpts;
+  });
 
   document.getElementById('globalStats').innerHTML = `
     <div class="stat-card"><div class="stat-icon burgundy">👥</div><div class="stat-info"><div class="stat-value">${totals.staff_on_duty}</div><div class="stat-label">Staff On Duty</div></div></div>
@@ -304,8 +392,7 @@ async function loadSummary() {
     <div class="stat-card"><div class="stat-icon warning">⚠️</div><div class="stat-info"><div class="stat-value">${totals.low_stock_count}</div><div class="stat-label">Low Stock Alerts</div></div></div>
     <div class="stat-card"><div class="stat-icon danger">📦</div><div class="stat-info"><div class="stat-value">${totals.pending_supply_orders}</div><div class="stat-label">Pending Supply Orders</div></div></div>
   `;
-
-  const locHtml = locs.map(l => `
+  document.getElementById('locCards').innerHTML = locs.map(l => `
     <div class="loc-card">
       <div class="loc-name">📍 ${l.name}</div>
       <div class="text-sm text-muted" style="margin-bottom:10px">${l.address}</div>
@@ -313,21 +400,11 @@ async function loadSummary() {
         <div class="loc-stat"><div class="ls-val">${l.staff_on_duty}</div><div class="ls-lab">On Duty</div></div>
         <div class="loc-stat"><div class="ls-val">${l.occupancy_pct}%</div><div class="ls-lab">Occupancy</div></div>
         <div class="loc-stat"><div class="ls-val">${l.open_orders}</div><div class="ls-lab">Open Orders</div></div>
-        <div class="loc-stat"><div class="ls-val ${l.low_stock_count > 0 ? '' : ''}">${l.low_stock_count}</div><div class="ls-lab">Low Stock</div></div>
+        <div class="loc-stat"><div class="ls-val">${l.low_stock_count}</div><div class="ls-lab">Low Stock</div></div>
       </div>
       <div class="progress-wrap mt-16"><div class="progress-bar" style="width:${l.occupancy_pct}%"></div></div>
     </div>
   `).join('');
-  document.getElementById('locCards').innerHTML = locHtml;
-  document.getElementById('locDetailCards').innerHTML = locHtml;
-
-  // Populate location selectors
-  const opts = locs.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
-  document.getElementById('tsLocFilter').innerHTML = '<option value="">All Locations</option>' + opts;
-  document.getElementById('invLocFilter').innerHTML = '<option value="">All Locations</option>' + opts;
-  document.getElementById('empLocation').innerHTML  = '<option value="">— none —</option>' + opts;
-
-  const recent = await API.clockRecent();
   document.getElementById('activityBody').innerHTML = recent.map(r => `
     <tr>
       <td class="fw-700">${r.name}</td>
@@ -339,7 +416,234 @@ async function loadSummary() {
   `).join('');
 }
 
-// ── Admin Panel ─────────────────────────────────────────
+// ── Staff & Locations ────────────────────────────────────
+async function loadStaffLocations() {
+  allEmpsRaw = await API.allEmployees();
+  renderStaffByLoc(allEmpsRaw);
+}
+
+function renderStaffByLoc(emps) {
+  const byLoc = {};
+  locations.forEach(l => { byLoc[l.id] = { loc: l, staff: [] }; });
+  const unassigned = [];
+  emps.filter(e => e.is_active).forEach(e => {
+    if (e.location_id && byLoc[e.location_id]) byLoc[e.location_id].staff.push(e);
+    else if (e.role !== 'owner') unassigned.push(e);
+  });
+
+  document.getElementById('staffLocGrid').innerHTML = locations.map(l => {
+    const { staff } = byLoc[l.id];
+    const chips = staff.map(e => `
+      <span class="staff-chip">
+        ${e.name} <span class="chip-role">${e.role}</span>
+        ${e.clocked_in ? '🟢' : ''}
+        <button class="reassign-btn" onclick="openReassign(${e.id},'${e.name.replace(/'/g,"\\'")}')">Move</button>
+      </span>
+    `).join('');
+    return `
+      <div class="staff-loc-card">
+        <div class="loc-title">
+          📍 ${l.name}
+          <span class="badge badge-info">${staff.length} staff</span>
+        </div>
+        <div>${chips || '<span style="color:var(--muted);font-size:12px">No staff assigned</span>'}</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('unassignedStaff').innerHTML = unassigned.length
+    ? unassigned.map(e => `
+        <span class="staff-chip" style="margin:4px">
+          ${e.name} <span class="chip-role">${e.role}</span>
+          <button class="reassign-btn" onclick="openReassign(${e.id},'${e.name.replace(/'/g,"\\'")}')">Assign</button>
+        </span>
+      `).join('')
+    : '<span style="color:var(--muted);font-size:13px">All staff have been assigned to a location</span>';
+}
+
+function openReassign(empId, empName) {
+  reassignEmpId = empId;
+  const emp = allEmpsRaw.find(e => e.id === empId);
+  document.getElementById('reassignEmpName').textContent = empName;
+  document.getElementById('reassignLoc').value = emp?.location_id || '';
+  showModal('reassignModal');
+}
+
+async function confirmReassign() {
+  const locId = document.getElementById('reassignLoc').value || null;
+  await API.updateEmployee(reassignEmpId, { location_id: locId });
+  hideModal('reassignModal');
+  loadStaffLocations();
+}
+
+// ── Warehouse ────────────────────────────────────────────
+async function loadWarehouse() {
+  whData = await API.warehouse();
+  const cats = [...new Set(whData.items.map(i => i.category))].sort();
+  const catSel = document.getElementById('whCat');
+  catSel.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option>${c}</option>`).join('');
+
+  // Build item names for datalists
+  allInvItems = [...new Set(whData.items.map(i => i.item_name))];
+  ['invItems','invItemsTr'].forEach(id => {
+    const dl = document.getElementById(id);
+    if (dl) dl.innerHTML = allInvItems.map(n => `<option value="${n}">`).join('');
+  });
+
+  renderWarehouse();
+}
+
+function renderWarehouse() {
+  if (!whData) return;
+  const q    = document.getElementById('whSearch').value.toLowerCase();
+  const cat  = document.getElementById('whCat').value;
+  const low  = document.getElementById('whLowOnly').checked;
+
+  const locs = whData.locations;
+  document.getElementById('whHead').innerHTML = `<tr><th>Item</th><th>Category</th><th>Unit</th>${locs.map(l=>`<th>${l.name.replace(' ','<br>')}</th>`).join('')}<th>Total</th></tr>`;
+
+  let filtered = whData.items.filter(i =>
+    (!q   || i.item_name.toLowerCase().includes(q)) &&
+    (!cat || i.category === cat)
+  );
+
+  let lowCount = 0;
+  const rows = filtered.map(item => {
+    const cells = locs.map(l => {
+      const d = item.by_location[l.id];
+      if (!d) return `<td><span class="wh-qty none">—</span></td>`;
+      const cls = d.qty === 0 ? 'none' : d.qty < d.min ? (d.qty < d.min * 0.5 ? 'critical' : 'low') : 'ok';
+      if (cls === 'low' || cls === 'critical') lowCount++;
+      return `<td><span class="wh-qty ${cls}">${d.qty}</span><div style="font-size:10px;color:var(--muted)">min ${d.min}</div></td>`;
+    });
+    const total = locs.reduce((s,l) => s + (item.by_location[l.id]?.qty || 0), 0);
+    const hasLow = locs.some(l => { const d = item.by_location[l.id]; return d && d.qty < d.min; });
+    if (low && !hasLow) return '';
+    return `<tr><td class="fw-700">${item.item_name}</td><td><span class="badge badge-muted">${item.category}</span></td><td style="color:var(--muted)">${item.unit}</td>${cells.join('')}<td class="fw-700">${total.toFixed(1)}</td></tr>`;
+  }).join('');
+
+  document.getElementById('whBody').innerHTML = rows || '<tr><td colspan="20" style="text-align:center;padding:24px;color:var(--muted)">No items match filter</td></tr>';
+  document.getElementById('whLowBadge').textContent = lowCount > 0 ? `${lowCount} low stock cells` : '';
+}
+
+// ── Supply Orders ────────────────────────────────────────
+function openSupplyModal() {
+  document.getElementById('supplyAlert').classList.add('hidden');
+  ['soItem','soQty','soVendor','soShipping','soExpected','soTracking','soNotes'].forEach(id => document.getElementById(id).value = '');
+  showModal('supplyModal');
+}
+
+async function submitSupplyOrder() {
+  const item_name = document.getElementById('soItem').value.trim();
+  const quantity  = parseFloat(document.getElementById('soQty').value);
+  const location_id = document.getElementById('soLocation').value;
+  if (!item_name || !quantity || !location_id) return showAlert('supplyAlert', 'Item name, quantity and location are required');
+  try {
+    await API.orderSupply({
+      item_name, quantity, location_id,
+      vendor:           document.getElementById('soVendor').value || undefined,
+      shipping_address: document.getElementById('soShipping').value || undefined,
+      expected_date:    document.getElementById('soExpected').value || undefined,
+      tracking_number:  document.getElementById('soTracking').value || undefined,
+      notes:            document.getElementById('soNotes').value || undefined,
+    });
+    hideModal('supplyModal');
+    loadSupply();
+  } catch(e) { showAlert('supplyAlert', e.message); }
+}
+
+async function loadSupply() {
+  const locId = document.getElementById('supplyLocFilter').value;
+  const rows = await API.supplyOrders(locId);
+  document.getElementById('supplyBody').innerHTML = rows.map(r => `
+    <tr>
+      <td class="fw-700">${r.item_name || '—'}</td>
+      <td>${r.location_name}</td>
+      <td>${r.quantity} ${r.unit || ''}</td>
+      <td>${r.vendor ? `<span style="font-size:12px">${r.vendor}</span>` : '<span class="text-muted">—</span>'}</td>
+      <td class="text-sm">${r.ordered_by_name}</td>
+      <td class="text-sm text-muted">${r.expected_date || '—'}</td>
+      <td class="text-sm">${r.tracking_number ? `<code style="background:#F5F0EA;padding:2px 6px;border-radius:4px;font-size:11px">${r.tracking_number}</code>` : '—'}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td style="white-space:nowrap">
+        ${r.status==='pending'  ? `<button class="btn btn-sm btn-success" onclick="updateSupply(${r.id},'approved')">Approve</button>` : ''}
+        ${r.status==='approved' ? `<button class="btn btn-sm btn-primary" onclick="updateSupply(${r.id},'shipped')">Mark Shipped</button>` : ''}
+        ${r.status==='shipped'  ? `<button class="btn btn-sm btn-gold"    onclick="updateSupply(${r.id},'received')">Mark Received</button>` : ''}
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">No supply orders</td></tr>';
+}
+
+async function updateSupply(id, status) { await API.updateSupplyOrder(id, { status }); loadSupply(); }
+
+// ── Transfer Requests ────────────────────────────────────
+function openTransferModal() {
+  document.getElementById('transferAlert').classList.add('hidden');
+  ['trItem','trQty','trVendor','trShipping','trTracking','trNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('trFrom').value = '';
+  document.getElementById('trTo').value = '';
+  showModal('transferModal');
+}
+
+async function submitTransfer() {
+  const item_name       = document.getElementById('trItem').value.trim();
+  const quantity        = parseFloat(document.getElementById('trQty').value);
+  const from_location_id = document.getElementById('trFrom').value;
+  const to_location_id   = document.getElementById('trTo').value;
+  if (!item_name || !quantity || !from_location_id || !to_location_id) return showAlert('transferAlert', 'Item, quantity, from and to locations required');
+  try {
+    await API.createTransferRequest({
+      item_name, quantity, from_location_id, to_location_id,
+      vendor:          document.getElementById('trVendor').value || undefined,
+      shipping_info:   document.getElementById('trShipping').value || undefined,
+      tracking_number: document.getElementById('trTracking').value || undefined,
+      notes:           document.getElementById('trNotes').value || undefined,
+    });
+    hideModal('transferModal');
+    loadTransfers();
+  } catch(e) { showAlert('transferAlert', e.message); }
+}
+
+async function loadTransfers() {
+  const all = await API.transferRequests();
+  const sf  = document.getElementById('trStatusFilter').value;
+  const trs = sf ? all.filter(t => t.status === sf) : all;
+  const TR_NEXT = { pending:['approved','cancelled'], approved:['in_transit','cancelled'], in_transit:['received','cancelled'] };
+  const TR_BTN  = { approved:'Approve', in_transit:'Mark In Transit', received:'Mark Received', cancelled:'Cancel' };
+
+  document.getElementById('transferList').innerHTML = trs.map(t => `
+    <div class="tr-card status-${t.status}">
+      <div class="tr-header">
+        <div>
+          <div class="tr-item">${t.item_name} <span style="font-weight:400;font-size:13px;color:var(--muted)">× ${t.quantity}</span></div>
+          <div class="tr-route">📤 ${t.from_location_name} → 📥 ${t.to_location_name}</div>
+        </div>
+        ${statusBadge(t.status)}
+      </div>
+      <div class="tr-meta">
+        <span>👤 ${t.requested_by_name}</span>
+        <span>🕐 ${fmtDate(t.created_at)}</span>
+        ${t.vendor ? `<span>🏢 ${t.vendor}</span>` : ''}
+        ${t.tracking_number ? `<span>📦 <code style="background:#F5F0EA;padding:1px 5px;border-radius:3px">${t.tracking_number}</code></span>` : ''}
+        ${t.shipping_info ? `<span>🚚 ${t.shipping_info}</span>` : ''}
+        ${t.notes ? `<span>💬 ${t.notes}</span>` : ''}
+      </div>
+      ${TR_NEXT[t.status] ? `<div style="margin-top:10px;display:flex;gap:6px">
+        ${TR_NEXT[t.status].map(s => `<button class="btn btn-sm ${s==='cancelled'?'btn-ghost':s==='approved'?'btn-success':'btn-primary'}" onclick="advanceTransfer(${t.id},'${s}')">${TR_BTN[s]}</button>`).join('')}
+        ${t.status==='in_transit' && !t.tracking_number ? `<input id="trk-${t.id}" placeholder="Add tracking #" style="padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12.5px;width:160px">` : ''}
+      </div>` : ''}
+    </div>
+  `).join('') || '<div style="text-align:center;padding:40px;color:var(--muted)">No transfer requests</div>';
+}
+
+async function advanceTransfer(id, status) {
+  const trkEl = document.getElementById('trk-' + id);
+  await API.updateTransferRequest(id, { status, tracking_number: trkEl?.value || undefined });
+  loadTransfers();
+  if (status === 'received') loadWarehouse();
+}
+
+// ── Admin Panel ──────────────────────────────────────────
 async function loadAdmin() {
   allEmpsRaw = await API.allEmployees();
   renderAdmin(allEmpsRaw);
@@ -349,15 +653,15 @@ function renderAdmin(emps) {
   document.getElementById('adminBody').innerHTML = emps.map(e => `
     <tr>
       <td class="fw-700">${e.name}</td>
-      <td class="text-sm text-muted">${e.email.replace(/_deleted_\d+$/, ' (deleted)')}</td>
+      <td class="text-sm text-muted">${e.email.replace(/_deleted_\d+$/, ' (inactive)')}</td>
       <td><span class="badge badge-info">${e.role}</span></td>
       <td>${e.location_name || '—'}</td>
-      <td><span class="rate-badge">$${(e.hourly_rate || 0).toFixed(2)}/hr</span></td>
+      <td><span class="rate-badge">$${(e.hourly_rate||0).toFixed(2)}/hr</span></td>
       <td>${e.is_active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-muted">Inactive</span>'}</td>
       <td>${e.clocked_in ? '<span class="badge badge-gold">● On Duty</span>' : '<span class="badge badge-muted">Off</span>'}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-sm btn-ghost" onclick="openEmpModal(${e.id})">Edit</button>
-        ${e.role !== 'owner' && e.is_active ? `<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="openDelete(${e.id},'${e.name.replace(/'/g,"\\'")}')">Deactivate</button>` : ''}
+        ${e.role!=='owner' && e.is_active ? `<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="openDelete(${e.id},'${e.name.replace(/'/g,"\\'")}')">Deactivate</button>` : ''}
       </td>
     </tr>
   `).join('') || '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No employees found</td></tr>';
@@ -366,33 +670,31 @@ function renderAdmin(emps) {
 function filterAdmin() {
   const q    = document.getElementById('adminSearch').value.toLowerCase();
   const role = document.getElementById('adminRoleFilter').value;
-  const filtered = allEmpsRaw.filter(e =>
+  const loc  = document.getElementById('adminLocFilter').value;
+  renderAdmin(allEmpsRaw.filter(e =>
     (e.name.toLowerCase().includes(q) || e.email.toLowerCase().includes(q)) &&
-    (!role || e.role === role)
-  );
-  renderAdmin(filtered);
+    (!role || e.role === role) &&
+    (!loc  || String(e.location_id) === loc)
+  ));
 }
 
 function openEmpModal(id = null) {
   editingEmpId = id;
   document.getElementById('empAlert').classList.add('hidden');
   if (id) {
-    const emp = allEmpsRaw.find(e => e.id === id);
+    const e = allEmpsRaw.find(x => x.id === id);
     document.getElementById('empModalTitle').textContent = 'Edit Employee';
-    document.getElementById('empName').value     = emp.name;
-    document.getElementById('empEmail').value    = emp.email;
+    document.getElementById('empName').value     = e.name;
+    document.getElementById('empEmail').value    = e.email;
     document.getElementById('empPassword').value = '';
-    document.getElementById('empRate').value     = emp.hourly_rate || 0;
-    document.getElementById('empRole').value     = emp.role;
-    document.getElementById('empLocation').value = emp.location_id || '';
-    document.getElementById('empActive').value   = emp.is_active ? '1' : '0';
+    document.getElementById('empRate').value     = e.hourly_rate || 0;
+    document.getElementById('empRole').value     = e.role;
+    document.getElementById('empLocation').value = e.location_id || '';
+    document.getElementById('empActive').value   = e.is_active ? '1' : '0';
     document.getElementById('pwHint').textContent = '(leave blank to keep current)';
   } else {
     document.getElementById('empModalTitle').textContent = 'Add Employee';
-    document.getElementById('empName').value     = '';
-    document.getElementById('empEmail').value    = '';
-    document.getElementById('empPassword').value = '';
-    document.getElementById('empRate').value     = '';
+    ['empName','empEmail','empPassword','empRate'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('empRole').value     = '';
     document.getElementById('empLocation').value = '';
     document.getElementById('empActive').value   = '1';
@@ -402,17 +704,15 @@ function openEmpModal(id = null) {
 }
 
 async function saveEmployee() {
-  const name        = document.getElementById('empName').value.trim();
-  const email       = document.getElementById('empEmail').value.trim();
-  const password    = document.getElementById('empPassword').value;
+  const name     = document.getElementById('empName').value.trim();
+  const email    = document.getElementById('empEmail').value.trim();
+  const password = document.getElementById('empPassword').value;
+  const role     = document.getElementById('empRole').value;
   const hourly_rate = parseFloat(document.getElementById('empRate').value) || 0;
-  const role        = document.getElementById('empRole').value;
   const location_id = document.getElementById('empLocation').value || null;
   const is_active   = parseInt(document.getElementById('empActive').value);
-
   if (!name || !email || !role) return showAlert('empAlert', 'Name, email and role are required');
   if (!editingEmpId && !password) return showAlert('empAlert', 'Password is required for new employees');
-
   try {
     if (editingEmpId) {
       const payload = { name, email, role, location_id, hourly_rate, is_active };
@@ -423,45 +723,35 @@ async function saveEmployee() {
     }
     hideModal('empModal');
     loadAdmin();
+    if (currentSection === 'staff') loadStaffLocations();
   } catch(e) { showAlert('empAlert', e.message); }
 }
 
 function openDelete(id, name) {
   deletingEmpId = id;
-  document.getElementById('deleteMsg').textContent = `Are you sure you want to deactivate "${name}"?`;
+  document.getElementById('deleteMsg').textContent = `Deactivate "${name}"?`;
   showModal('deleteModal');
 }
 
-async function confirmDelete() {
-  await API.deleteEmployee(deletingEmpId);
-  hideModal('deleteModal');
-  loadAdmin();
-}
+async function confirmDelete() { await API.deleteEmployee(deletingEmpId); hideModal('deleteModal'); loadAdmin(); }
 
 // ── Timesheets ───────────────────────────────────────────
-function initTimesheets() {
-  if (!document.getElementById('tsStart').value) setRange('week');
-}
+function initTimesheets() { if (!document.getElementById('tsStart').value) setRange('week'); }
 
 function setRange(type) {
-  const today = new Date();
-  const fmt = d => d.toISOString().slice(0,10);
+  const today = new Date(), fmt = d => d.toISOString().slice(0,10);
   let start, end;
-  if (type === 'today') {
-    start = end = fmt(today);
-  } else if (type === 'week') {
-    const dow = today.getDay();
-    const mon = new Date(today); mon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  if (type === 'today') { start = end = fmt(today); }
+  else if (type === 'week') {
+    const mon = new Date(today); mon.setDate(today.getDate() - (today.getDay()||7) + 1);
     start = fmt(mon); end = fmt(today);
   } else if (type === 'lastweek') {
-    const dow = today.getDay();
-    const thisMon = new Date(today); thisMon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
-    const lastMon = new Date(thisMon); lastMon.setDate(thisMon.getDate() - 7);
-    const lastSun = new Date(thisMon); lastSun.setDate(thisMon.getDate() - 1);
-    start = fmt(lastMon); end = fmt(lastSun);
+    const mon = new Date(today); mon.setDate(today.getDate() - (today.getDay()||7) + 1);
+    const lm = new Date(mon); lm.setDate(mon.getDate()-7);
+    const ls = new Date(mon); ls.setDate(mon.getDate()-1);
+    start = fmt(lm); end = fmt(ls);
   } else if (type === 'month') {
-    start = fmt(new Date(today.getFullYear(), today.getMonth(), 1));
-    end   = fmt(today);
+    start = fmt(new Date(today.getFullYear(), today.getMonth(), 1)); end = fmt(today);
   }
   document.getElementById('tsStart').value = start;
   document.getElementById('tsEnd').value   = end;
@@ -471,111 +761,38 @@ async function generateReport() {
   const start = document.getElementById('tsStart').value;
   const end   = document.getElementById('tsEnd').value;
   const locId = document.getElementById('tsLocFilter').value;
-  if (!start || !end) return showAlert('', 'Please select start and end dates', 'warning');
-
+  if (!start || !end) return;
   const { summary, records, totals } = await API.timesheets(start, end, locId);
-
   document.getElementById('tsResult').classList.remove('hidden');
   document.getElementById('tsEmpty').classList.add('hidden');
   document.getElementById('tsReportTitle').textContent = `Employee Summary  (${start} → ${end})`;
-
   document.getElementById('tsSummaryStats').innerHTML = `
     <div class="stat-card"><div class="stat-icon burgundy">👥</div><div class="stat-info"><div class="stat-value">${summary.length}</div><div class="stat-label">Employees</div></div></div>
     <div class="stat-card"><div class="stat-icon gold">⏱️</div><div class="stat-info"><div class="stat-value">${totals.total_hours}</div><div class="stat-label">Total Hours</div></div></div>
     <div class="stat-card"><div class="stat-icon success">💵</div><div class="stat-info"><div class="stat-value">$${totals.total_pay.toFixed(2)}</div><div class="stat-label">Total Payroll</div></div></div>
-    <div class="stat-card"><div class="stat-icon warning">💰</div><div class="stat-info"><div class="stat-value">$${summary.length ? (totals.total_pay / summary.length).toFixed(2) : '0.00'}</div><div class="stat-label">Avg Pay / Employee</div></div></div>
+    <div class="stat-card"><div class="stat-icon warning">💰</div><div class="stat-info"><div class="stat-value">$${summary.length?(totals.total_pay/summary.length).toFixed(2):'0.00'}</div><div class="stat-label">Avg / Employee</div></div></div>
   `;
-
   document.getElementById('tsSummaryBody').innerHTML = summary.map(e => `
-    <tr>
-      <td class="fw-700">${e.name}</td>
-      <td><span class="badge badge-info">${e.role}</span></td>
-      <td>${e.location_name || '—'}</td>
-      <td class="fw-700">${e.total_hours}</td>
-      <td>$${(e.hourly_rate || 0).toFixed(2)}/hr</td>
-      <td class="fw-700" style="color:var(--success)">$${(e.total_pay || 0).toFixed(2)}</td>
-    </tr>
+    <tr><td class="fw-700">${e.name}</td><td><span class="badge badge-info">${e.role}</span></td><td>${e.location_name||'—'}</td>
+    <td class="fw-700">${e.total_hours}</td><td>$${(e.hourly_rate||0).toFixed(2)}/hr</td>
+    <td class="fw-700" style="color:var(--success)">$${(e.total_pay||0).toFixed(2)}</td></tr>
   `).join('') || '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">No records for this period</td></tr>';
-
-  document.getElementById('tsTotalsRow').innerHTML = `
-    <td colspan="3" style="text-align:right">TOTAL</td>
-    <td>${totals.total_hours} hrs</td>
-    <td>—</td>
-    <td style="color:var(--success)">$${totals.total_pay.toFixed(2)}</td>
-  `;
-
+  document.getElementById('tsTotalsRow').innerHTML = `<td colspan="3" style="text-align:right">TOTAL</td><td>${totals.total_hours} hrs</td><td>—</td><td style="color:var(--success)">$${totals.total_pay.toFixed(2)}</td>`;
   document.getElementById('tsDetailBody').innerHTML = records.map(r => `
-    <tr>
-      <td>${r.work_date}</td>
-      <td class="fw-700">${r.name}</td>
-      <td><span class="badge badge-muted">${r.role}</span></td>
-      <td>${r.location_name || '—'}</td>
-      <td>${r.clock_in_time ? r.clock_in_time.slice(0,5) : '—'}</td>
-      <td>${r.clock_out_time ? r.clock_out_time.slice(0,5) : '—'}</td>
-      <td>${r.hours_worked ?? '—'}</td>
-      <td>$${(r.hourly_rate || 0).toFixed(2)}</td>
-      <td class="fw-700">$${(r.pay || 0).toFixed(2)}</td>
-    </tr>
+    <tr><td>${r.work_date}</td><td class="fw-700">${r.name}</td><td><span class="badge badge-muted">${r.role}</span></td><td>${r.location_name||'—'}</td>
+    <td>${r.clock_in_time?r.clock_in_time.slice(0,5):'—'}</td><td>${r.clock_out_time?r.clock_out_time.slice(0,5):'—'}</td>
+    <td>${r.hours_worked??'—'}</td><td>$${(r.hourly_rate||0).toFixed(2)}</td><td class="fw-700">$${(r.pay||0).toFixed(2)}</td></tr>
   `).join('') || '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted)">No detail records</td></tr>';
-
   window._tsData = { summary, records, totals, start, end };
-}
-
-function toggleDetails() {
-  const w = document.getElementById('tsDetailWrap');
-  w.style.display = w.style.display === 'none' ? '' : 'none';
 }
 
 function exportCSV() {
   if (!window._tsData) return;
   const { summary, start, end } = window._tsData;
   let csv = 'Employee,Role,Location,Total Hours,Hourly Rate,Total Pay\n';
-  summary.forEach(e => {
-    csv += `"${e.name}","${e.role}","${e.location_name || ''}",${e.total_hours},${(e.hourly_rate||0).toFixed(2)},${(e.total_pay||0).toFixed(2)}\n`;
-  });
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  summary.forEach(e => { csv += `"${e.name}","${e.role}","${e.location_name||''}",${e.total_hours},${(e.hourly_rate||0).toFixed(2)},${(e.total_pay||0).toFixed(2)}\n`; });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download = `timesheet_${start}_${end}.csv`; a.click();
-}
-
-// ── Supply Orders ────────────────────────────────────────
-async function loadSupply() {
-  const rows = await API.supplyOrders();
-  document.getElementById('supplyBody').innerHTML = rows.map(r => `
-    <tr>
-      <td class="fw-700">${r.item_name}</td>
-      <td>${r.location_name}</td>
-      <td>${r.quantity} ${r.unit}</td>
-      <td>${r.ordered_by_name}</td>
-      <td class="text-sm text-muted">${fmtDate(r.created_at)}</td>
-      <td>${statusBadge(r.status)}</td>
-      <td>
-        ${r.status==='pending'   ? `<button class="btn btn-sm btn-success" onclick="updateSupply(${r.id},'approved')">Approve</button>` : ''}
-        ${r.status==='approved'  ? `<button class="btn btn-sm btn-primary" onclick="updateSupply(${r.id},'shipped')">Mark Shipped</button>` : ''}
-        ${r.status==='shipped'   ? `<button class="btn btn-sm btn-gold"    onclick="updateSupply(${r.id},'received')">Mark Received</button>` : ''}
-      </td>
-    </tr>
-  `).join('') || '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">No supply orders</td></tr>';
-}
-
-async function updateSupply(id, status) { await API.updateSupplyOrder(id, status); loadSupply(); }
-
-// ── Inventory ────────────────────────────────────────────
-async function loadInventory() {
-  const locId = document.getElementById('invLocFilter').value;
-  const items = await API.inventory(locId);
-  document.getElementById('invBody').innerHTML = items.map(i => {
-    const pct = Math.min(100, Math.round(i.quantity / (i.min_quantity * 2) * 100));
-    const cls = i.quantity < i.min_quantity ? (i.quantity < i.min_quantity * 0.5 ? 'critical' : 'low') : 'ok';
-    return `<tr>
-      <td class="fw-700">${i.item_name}</td>
-      <td><span class="badge badge-muted">${i.category}</span></td>
-      <td>${i.location_name || '—'}</td>
-      <td>${i.quantity} ${i.unit}</td>
-      <td><div class="inv-bar-wrap"><div class="inv-bar ${cls}" style="width:${pct}%"></div></div></td>
-      <td>${i.quantity < i.min_quantity ? '<span class="badge badge-danger">Low Stock</span>' : '<span class="badge badge-success">OK</span>'}</td>
-    </tr>`;
-  }).join('');
 }
 
 loadAll();

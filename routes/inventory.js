@@ -5,6 +5,7 @@ const { verifyToken, requireRole } = require('../middleware/auth');
 const router = express.Router();
 router.use(verifyToken);
 
+// ── Inventory levels ───────────────────────────────────────
 router.get('/', requireRole('owner','manager','chef','stockroom'), (req, res) => {
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
   if (!locId) {
@@ -15,23 +16,98 @@ router.get('/', requireRole('owner','manager','chef','stockroom'), (req, res) =>
   res.json(rows);
 });
 
-router.post('/order', requireRole('owner','manager','chef','stockroom'), (req, res) => {
-  const { item_id, quantity } = req.body;
-  if (!item_id || !quantity) return res.status(400).json({ error: 'item_id and quantity required' });
-  const item = db.prepare(`SELECT * FROM inventory WHERE id=?`).get(item_id);
-  if (!item) return res.status(404).json({ error: 'Item not found' });
-  db.prepare(`INSERT INTO supply_orders (item_id, location_id, quantity, status, ordered_by) VALUES (?,?,?,'pending',?)`).run(item_id, item.location_id, quantity, req.user.id);
+// ── Warehouse view — all locations side by side ────────────
+router.get('/warehouse', requireRole('owner','manager','stockroom','chef'), (req, res) => {
+  const locations = db.prepare(`SELECT * FROM locations ORDER BY name`).all();
+  const items = db.prepare(`
+    SELECT i.item_name, i.category, i.unit,
+           GROUP_CONCAT(i.location_id || ':' || i.quantity || ':' || i.min_quantity || ':' || i.id) as loc_data
+    FROM inventory i GROUP BY i.item_name, i.category, i.unit ORDER BY i.category, i.item_name
+  `).all();
+
+  const rows = items.map(i => {
+    const byLoc = {};
+    (i.loc_data || '').split(',').forEach(seg => {
+      const [lid, qty, min, id] = seg.split(':');
+      byLoc[lid] = { qty: parseFloat(qty), min: parseFloat(min), id: parseInt(id) };
+    });
+    return { item_name: i.item_name, category: i.category, unit: i.unit, by_location: byLoc };
+  });
+
+  res.json({ locations, items: rows });
+});
+
+// ── Supply Orders ──────────────────────────────────────────
+router.get('/supply-orders', requireRole('owner','manager','stockroom','chef'), (req, res) => {
+  const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
+  const cond = locId ? 'WHERE so.location_id=?' : '';
+  const args = locId ? [locId] : [];
+  const rows = db.prepare(`
+    SELECT so.*,
+           COALESCE(so.item_name, i.item_name) as item_name,
+           COALESCE(i.unit, 'units') as unit,
+           l.name as location_name, u.name as ordered_by_name
+    FROM supply_orders so
+    LEFT JOIN inventory i ON so.item_id=i.id
+    JOIN locations l ON so.location_id=l.id
+    JOIN users u ON so.ordered_by=u.id
+    ${cond}
+    ORDER BY so.created_at DESC
+  `).all(...args);
+  res.json(rows);
+});
+
+router.post('/order', requireRole('owner','manager','chef','stockroom','employee'), (req, res) => {
+  const { item_id, item_name: reqItemName, quantity, location_id: reqLocId,
+          vendor, shipping_address, tracking_number, expected_date, notes } = req.body;
+  if (!quantity) return res.status(400).json({ error: 'quantity required' });
+  if (!item_id && !reqItemName) return res.status(400).json({ error: 'item_id or item_name required' });
+
+  // Determine target location
+  const forLocId = (req.user.role === 'owner' && reqLocId) ? reqLocId
+                 : req.user.location_id || reqLocId;
+  if (!forLocId) return res.status(400).json({ error: 'location_id required' });
+
+  let itemId = item_id;
+  let itemName = reqItemName;
+
+  if (item_id) {
+    const item = db.prepare(`SELECT * FROM inventory WHERE id=?`).get(item_id);
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+    itemName = item.item_name;
+  } else {
+    // Look for or create inventory entry at target location
+    let existing = db.prepare(`SELECT id FROM inventory WHERE item_name=? AND location_id=?`).get(reqItemName, forLocId);
+    if (!existing) {
+      const r = db.prepare(`INSERT INTO inventory (location_id, item_name, category, unit, quantity, min_quantity) VALUES (?,'${reqItemName}','Other','units',0,0)`).run(forLocId);
+      itemId = r.lastInsertRowid;
+    } else {
+      itemId = existing.id;
+    }
+  }
+
+  db.prepare(`
+    INSERT INTO supply_orders (item_id, item_name, location_id, quantity, vendor, shipping_address, tracking_number, expected_date, notes, status, ordered_by)
+    VALUES (?,?,?,?,?,?,?,?,?,'pending',?)
+  `).run(itemId, itemName, forLocId, quantity, vendor||null, shipping_address||null, tracking_number||null, expected_date||null, notes||null, req.user.id);
+
   res.json({ success: true });
 });
 
 router.put('/order/:id', requireRole('owner','manager'), (req, res) => {
-  const { status } = req.body;
+  const { status, tracking_number, shipping_address } = req.body;
   const valid = ['pending','approved','shipped','received'];
   if (!valid.includes(status)) return res.status(400).json({ error: 'Invalid status' });
-  db.prepare(`UPDATE supply_orders SET status=? WHERE id=?`).run(status, req.params.id);
+
+  const fields = ['status=?'], vals = [status];
+  if (tracking_number) { fields.push('tracking_number=?'); vals.push(tracking_number); }
+  if (shipping_address){ fields.push('shipping_address=?'); vals.push(shipping_address); }
+  vals.push(req.params.id);
+  db.prepare(`UPDATE supply_orders SET ${fields.join(',')} WHERE id=?`).run(...vals);
+
   if (status === 'received') {
     const order = db.prepare(`SELECT * FROM supply_orders WHERE id=?`).get(req.params.id);
-    if (order) {
+    if (order && order.item_id) {
       db.prepare(`UPDATE inventory SET quantity=quantity+? WHERE id=?`).run(order.quantity, order.item_id);
       db.prepare(`INSERT INTO inventory_transactions (item_id, to_location_id, quantity, type, user_id) VALUES (?,?,?,'in',?)`).run(order.item_id, order.location_id, order.quantity, req.user.id);
     }
@@ -39,24 +115,91 @@ router.put('/order/:id', requireRole('owner','manager'), (req, res) => {
   res.json({ success: true });
 });
 
+// ── Transfer Requests ──────────────────────────────────────
+router.get('/transfer-requests', requireRole('owner','manager','stockroom','chef'), (req, res) => {
+  const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
+  const cond = locId ? 'WHERE (tr.from_location_id=? OR tr.to_location_id=?)' : '';
+  const args = locId ? [locId, locId] : [];
+  const rows = db.prepare(`
+    SELECT tr.*,
+           lf.name as from_location_name, lt.name as to_location_name,
+           u.name as requested_by_name, ua.name as approved_by_name
+    FROM transfer_requests tr
+    JOIN locations lf ON tr.from_location_id=lf.id
+    JOIN locations lt ON tr.to_location_id=lt.id
+    JOIN users u ON tr.requested_by=u.id
+    LEFT JOIN users ua ON tr.approved_by=ua.id
+    ${cond}
+    ORDER BY tr.created_at DESC
+  `).all(...args);
+  res.json(rows);
+});
+
+router.post('/transfer-request', requireRole('owner','manager','stockroom','chef','employee'), (req, res) => {
+  const { item_name, quantity, from_location_id, to_location_id,
+          vendor, shipping_info, tracking_number, notes } = req.body;
+  if (!item_name || !quantity || !from_location_id || !to_location_id) {
+    return res.status(400).json({ error: 'item_name, quantity, from_location_id, to_location_id required' });
+  }
+  if (from_location_id == to_location_id) return res.status(400).json({ error: 'Source and destination must differ' });
+
+  db.prepare(`
+    INSERT INTO transfer_requests (item_name, quantity, from_location_id, to_location_id, requested_by, vendor, shipping_info, tracking_number, notes)
+    VALUES (?,?,?,?,?,?,?,?,?)
+  `).run(item_name, quantity, from_location_id, to_location_id, req.user.id, vendor||null, shipping_info||null, tracking_number||null, notes||null);
+  res.json({ success: true });
+});
+
+router.put('/transfer-request/:id', requireRole('owner','manager','stockroom'), (req, res) => {
+  const { status, tracking_number, notes } = req.body;
+  const valid = ['approved','in_transit','received','cancelled'];
+  if (!valid.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+
+  const tr = db.prepare(`SELECT * FROM transfer_requests WHERE id=?`).get(req.params.id);
+  if (!tr) return res.status(404).json({ error: 'Transfer request not found' });
+
+  const fields = [`status=?`, `updated_at=datetime('now')`], vals = [status];
+  if (tracking_number) { fields.push('tracking_number=?'); vals.push(tracking_number); }
+  if (notes)           { fields.push('notes=?');           vals.push(notes); }
+  if (status === 'approved') { fields.push('approved_by=?'); vals.push(req.user.id); }
+  vals.push(req.params.id);
+  db.prepare(`UPDATE transfer_requests SET ${fields.join(',')} WHERE id=?`).run(...vals);
+
+  if (status === 'received') {
+    const fromItem = db.prepare(`SELECT * FROM inventory WHERE item_name=? AND location_id=?`).get(tr.item_name, tr.from_location_id);
+    if (fromItem) {
+      db.prepare(`UPDATE inventory SET quantity=MAX(0,quantity-?) WHERE id=?`).run(tr.quantity, fromItem.id);
+      db.prepare(`INSERT INTO inventory_transactions (item_id, from_location_id, to_location_id, quantity, type, user_id) VALUES (?,?,?,?,'transfer_sent',?)`).run(fromItem.id, tr.from_location_id, tr.to_location_id, tr.quantity, req.user.id);
+    }
+    const toItem = db.prepare(`SELECT * FROM inventory WHERE item_name=? AND location_id=?`).get(tr.item_name, tr.to_location_id);
+    if (toItem) {
+      db.prepare(`UPDATE inventory SET quantity=quantity+? WHERE id=?`).run(tr.quantity, toItem.id);
+    } else if (fromItem) {
+      db.prepare(`INSERT INTO inventory (location_id, item_name, category, unit, quantity, min_quantity) SELECT ?,item_name,category,unit,?,min_quantity FROM inventory WHERE id=?`).run(tr.to_location_id, tr.quantity, fromItem.id);
+    }
+  }
+  res.json({ success: true });
+});
+
+// ── Direct transfer (immediate) ────────────────────────────
 router.post('/transfer', requireRole('owner','manager','stockroom'), (req, res) => {
   const { item_id, from_location_id, to_location_id, quantity } = req.body;
   if (!item_id || !from_location_id || !to_location_id || !quantity) return res.status(400).json({ error: 'All fields required' });
   const src = db.prepare(`SELECT * FROM inventory WHERE id=? AND location_id=?`).get(item_id, from_location_id);
   if (!src) return res.status(404).json({ error: 'Source item not found' });
   if (src.quantity < quantity) return res.status(400).json({ error: 'Insufficient stock' });
-
   db.prepare(`UPDATE inventory SET quantity=quantity-? WHERE id=? AND location_id=?`).run(quantity, item_id, from_location_id);
-  const dest = db.prepare(`SELECT * FROM inventory WHERE item_id=? AND location_id=?`).get(item_id, to_location_id);
+  const dest = db.prepare(`SELECT * FROM inventory WHERE item_name=? AND location_id=?`).get(src.item_name, to_location_id);
   if (dest) {
-    db.prepare(`UPDATE inventory SET quantity=quantity+? WHERE item_id=? AND location_id=?`).run(quantity, item_id, to_location_id);
+    db.prepare(`UPDATE inventory SET quantity=quantity+? WHERE id=?`).run(quantity, dest.id);
   } else {
-    db.prepare(`INSERT INTO inventory (location_id, item_name, category, unit, quantity, min_quantity) SELECT ?, item_name, category, unit, ?, min_quantity FROM inventory WHERE id=?`).run(to_location_id, quantity, item_id);
+    db.prepare(`INSERT INTO inventory (location_id, item_name, category, unit, quantity, min_quantity) SELECT ?,item_name,category,unit,?,min_quantity FROM inventory WHERE id=?`).run(to_location_id, quantity, item_id);
   }
   db.prepare(`INSERT INTO inventory_transactions (item_id, from_location_id, to_location_id, quantity, type, user_id) VALUES (?,?,?,?,'transfer_sent',?)`).run(item_id, from_location_id, to_location_id, quantity, req.user.id);
   res.json({ success: true });
 });
 
+// ── Transaction log ────────────────────────────────────────
 router.get('/transactions', requireRole('owner','manager','stockroom'), (req, res) => {
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
   const cond = locId ? 'WHERE (t.from_location_id=? OR t.to_location_id=?)' : '';
@@ -71,22 +214,6 @@ router.get('/transactions', requireRole('owner','manager','stockroom'), (req, re
     LEFT JOIN users u ON t.user_id=u.id
     ${cond}
     ORDER BY t.created_at DESC LIMIT 100
-  `).all(...args);
-  res.json(rows);
-});
-
-router.get('/supply-orders', requireRole('owner','manager','stockroom'), (req, res) => {
-  const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
-  const cond = locId ? 'WHERE so.location_id=?' : '';
-  const args = locId ? [locId] : [];
-  const rows = db.prepare(`
-    SELECT so.*, i.item_name, i.unit, l.name as location_name, u.name as ordered_by_name
-    FROM supply_orders so
-    JOIN inventory i ON so.item_id=i.id
-    JOIN locations l ON so.location_id=l.id
-    JOIN users u ON so.ordered_by=u.id
-    ${cond}
-    ORDER BY so.created_at DESC
   `).all(...args);
   res.json(rows);
 });

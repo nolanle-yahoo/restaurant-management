@@ -14,6 +14,41 @@
     .quick-btn:hover { border-color:var(--burgundy); color:var(--burgundy); }
     tfoot td { font-weight:800; background:#F5F0EA !important; }
     .rate-badge { background:rgba(74,124,89,.12); color:var(--success); padding:2px 8px; border-radius:12px; font-size:12px; font-weight:700; }
+    /* Warehouse table */
+    .wh-scroll { overflow-x:auto; }
+    .wh-tbl { width:100%; border-collapse:collapse; font-size:13px; }
+    .wh-tbl th { background:var(--burgundy); color:#fff; padding:10px 14px; text-align:center; white-space:nowrap; }
+    .wh-tbl th:first-child, .wh-tbl th:nth-child(2) { text-align:left; }
+    .wh-tbl td { padding:9px 14px; border-bottom:1px solid var(--border); text-align:center; }
+    .wh-tbl td:first-child { text-align:left; font-weight:700; }
+    .wh-tbl td:nth-child(2) { text-align:left; }
+    .wh-tbl tr:hover td { background:#F5F0EA; }
+    .wh-qty { display:inline-block; padding:3px 10px; border-radius:10px; font-weight:700; font-size:12px; min-width:48px; }
+    .wh-qty.ok       { background:rgba(74,124,89,.13);  color:#2d6b43; }
+    .wh-qty.low      { background:rgba(196,118,42,.13); color:#944d0f; }
+    .wh-qty.critical { background:rgba(192,57,43,.13);  color:#a42218; }
+    .wh-qty.none     { background:#f0f0f0; color:#aaa; }
+    .wh-filters { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+    .wh-filters input, .wh-filters select { padding:7px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; }
+    /* Supply / Transfer tabs */
+    .so-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+    .so-filters { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .so-filters select, .so-filters input { padding:7px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; }
+    .so-row-detail { font-size:11.5px; color:var(--muted); }
+    /* Transfer request cards */
+    .tr-list { display:flex; flex-direction:column; gap:14px; }
+    .tr-card { background:#fff; border:1.5px solid var(--border); border-radius:12px; padding:18px 20px; }
+    .tr-card.status-pending    { border-left:4px solid var(--gold); }
+    .tr-card.status-approved   { border-left:4px solid #4A7C59; }
+    .tr-card.status-in_transit { border-left:4px solid #4C86C9; }
+    .tr-card.status-received   { border-left:4px solid #888; }
+    .tr-card.status-cancelled  { border-left:4px solid #ccc; opacity:.7; }
+    .tr-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+    .tr-title  { font-size:16px; font-weight:800; color:var(--charcoal); }
+    .tr-route  { font-size:13px; color:var(--muted); margin-bottom:8px; }
+    .tr-meta   { display:flex; gap:20px; flex-wrap:wrap; font-size:12.5px; color:var(--muted); margin-bottom:12px; }
+    .tr-meta span strong { color:var(--charcoal); }
+    .tr-actions { display:flex; gap:8px; flex-wrap:wrap; }
     @media print {
       .sidebar, .topbar, .report-controls, .no-print { display:none !important; }
       .main-content { margin:0 !important; }
@@ -39,7 +74,9 @@
       <a class="nav-item" href="#" onclick="switchTab('schedule')"><span class="nav-icon">📅</span>Schedule</a>
       <a class="nav-item" href="#" onclick="switchTab('timesheets')"><span class="nav-icon">📋</span>Timesheets</a>
       <a class="nav-item" href="#" onclick="switchTab('inventory')"><span class="nav-icon">🏪</span>Inventory</a>
-      <a class="nav-item" href="#" onclick="switchTab('supply')"><span class="nav-icon">📦</span>Supply Log</a>
+      <a class="nav-item" href="#" onclick="switchTab('warehouse')"><span class="nav-icon">🏭</span>Warehouse</a>
+      <a class="nav-item" href="#" onclick="switchTab('supply')"><span class="nav-icon">📦</span>Supply Orders</a>
+      <a class="nav-item" href="#" onclick="switchTab('transfers')"><span class="nav-icon">🔄</span>Transfers</a>
     </nav>
     <div class="sidebar-footer"><button class="logout-btn">Sign Out</button></div>
   </aside>
@@ -56,7 +93,7 @@
     <div class="page-body">
       <div class="stat-grid" id="statsBar"></div>
 
-      <!-- Staff tab -->
+      <!-- ── Staff tab ── -->
       <div id="tab-staff">
         <div class="card">
           <div class="card-header">
@@ -70,7 +107,7 @@
         </div>
       </div>
 
-      <!-- Schedule tab -->
+      <!-- ── Schedule tab ── -->
       <div id="tab-schedule" class="hidden">
         <div class="card">
           <div class="card-header"><div class="card-title">Weekly Schedule</div></div>
@@ -80,7 +117,7 @@
         </div>
       </div>
 
-      <!-- Timesheets tab -->
+      <!-- ── Timesheets tab ── -->
       <div id="tab-timesheets" class="hidden">
         <div class="card" style="margin-bottom:20px">
           <div class="card-header no-print">
@@ -93,14 +130,8 @@
             </div>
           </div>
           <div class="report-controls no-print">
-            <div class="form-group">
-              <label>Start Date</label>
-              <input type="date" id="tsStart">
-            </div>
-            <div class="form-group">
-              <label>End Date</label>
-              <input type="date" id="tsEnd">
-            </div>
+            <div class="form-group"><label>Start Date</label><input type="date" id="tsStart"></div>
+            <div class="form-group"><label>End Date</label><input type="date" id="tsEnd"></div>
             <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
             <button class="btn btn-ghost" onclick="window.print()">🖨 Print</button>
             <button class="btn btn-ghost" onclick="exportCSV()">⬇ CSV</button>
@@ -109,7 +140,6 @@
 
         <div id="tsResult" class="hidden">
           <div class="stat-grid" id="tsSummaryStats" style="margin-bottom:20px"></div>
-
           <div class="card" style="margin-bottom:20px">
             <div class="card-header">
               <div class="card-title" id="tsReportTitle">Employee Summary</div>
@@ -120,7 +150,6 @@
               <tfoot><tr id="tsTotalsRow"></tr></tfoot>
             </table>
           </div>
-
           <div class="card">
             <div class="card-header">
               <div class="card-title">Detailed Records</div>
@@ -134,18 +163,17 @@
             </div>
           </div>
         </div>
-
         <div id="tsEmpty" style="text-align:center;padding:60px;color:var(--muted)">
           <div style="font-size:40px;margin-bottom:12px">📋</div>
           <div style="font-weight:700">Select a date range and click Generate Report</div>
         </div>
       </div>
 
-      <!-- Inventory tab -->
+      <!-- ── Inventory tab ── -->
       <div id="tab-inventory" class="hidden">
         <div class="card">
           <div class="card-header">
-            <div class="card-title">Inventory</div>
+            <div class="card-title">Inventory — <span id="invLocName"></span></div>
             <input id="invSearch" placeholder="Search items..." style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;width:200px;" oninput="filterInv()">
           </div>
           <table class="data-table">
@@ -155,34 +183,119 @@
         </div>
       </div>
 
-      <!-- Supply log tab -->
-      <div id="tab-supply" class="hidden">
+      <!-- ── Warehouse tab ── -->
+      <div id="tab-warehouse" class="hidden">
         <div class="card">
-          <div class="card-header"><div class="card-title">Supply Orders</div></div>
-          <table class="data-table">
-            <thead><tr><th>Item</th><th>Qty</th><th>Ordered By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+          <div class="card-header">
+            <div class="card-title">Warehouse — All Locations</div>
+          </div>
+          <div class="wh-filters no-print">
+            <input type="text" id="whSearch" placeholder="Search items…" oninput="filterWh()" style="width:200px">
+            <select id="whCatFilter" onchange="filterWh()">
+              <option value="">All Categories</option>
+              <option>Meat</option><option>Seafood</option><option>Produce</option>
+              <option>Pantry</option><option>Dairy</option><option>Beverage</option>
+            </select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+              <input type="checkbox" id="whLowOnly" onchange="filterWh()"> Low stock only
+            </label>
+          </div>
+          <div class="wh-scroll">
+            <div id="whTableWrap"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Supply Orders tab ── -->
+      <div id="tab-supply" class="hidden">
+        <div class="card" style="margin-bottom:20px">
+          <div class="so-header">
+            <div class="card-title">Supply Orders</div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <div class="so-filters">
+                <select id="soStatusFilter" onchange="filterSupply()">
+                  <option value="">All Statuses</option>
+                  <option>pending</option><option>approved</option><option>shipped</option><option>received</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openNewOrder()">+ New Supply Order</button>
+            </div>
+          </div>
+          <table class="data-table" id="soTable">
+            <thead>
+              <tr>
+                <th>Item</th><th>Qty</th><th>Vendor</th><th>Shipping Address</th>
+                <th>Expected</th><th>Tracking</th><th>Ordered By</th><th>Date</th><th>Status</th><th>Action</th>
+              </tr>
+            </thead>
             <tbody id="supplyBody"></tbody>
           </table>
         </div>
-        <div class="card mt-24">
+
+        <div class="card">
           <div class="card-header"><div class="card-title">Inventory Transactions</div></div>
           <table class="data-table">
             <thead><tr><th>Item</th><th>Type</th><th>Qty</th><th>From</th><th>To</th><th>By</th><th>Date</th></tr></thead>
-          <tbody id="txBody"></tbody>
+            <tbody id="txBody"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- ── Transfers tab ── -->
+      <div id="tab-transfers" class="hidden">
+        <div class="card" style="margin-bottom:20px">
+          <div class="so-header">
+            <div class="card-title">Transfer Requests</div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <select id="trStatusFilter" onchange="filterTransfers()">
+                <option value="">All Statuses</option>
+                <option>pending</option><option>approved</option><option>in_transit</option><option>received</option><option>cancelled</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="openNewTransfer()">+ New Transfer Request</button>
+            </div>
+          </div>
+          <div class="tr-list" id="trList">
+            <div style="text-align:center;padding:40px;color:var(--muted)">Loading transfer requests…</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Order Supply Modal -->
+<!-- ── Order Supply Modal ── -->
 <div class="modal-overlay" id="orderModal">
-  <div class="modal">
-    <div class="modal-title">Order Supply</div>
+  <div class="modal" style="width:500px">
+    <div class="modal-title" id="orderModalTitle">New Supply Order</div>
     <div id="orderAlert" class="alert hidden"></div>
-    <div class="form-group"><label>Item</label><input id="orderItemName" disabled></div>
-    <div class="form-group"><label>Quantity</label><input type="number" id="orderQty" min="1" value="10"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Item Name *</label>
+        <input id="orderItemName" placeholder="e.g. Beef Tenderloin">
+      </div>
+      <div class="form-group">
+        <label>Quantity *</label>
+        <input type="number" id="orderQty" min="1" value="10">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Vendor</label>
+        <input id="orderVendor" placeholder="Supplier name">
+      </div>
+      <div class="form-group">
+        <label>Expected Date</label>
+        <input type="date" id="orderExpDate">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Shipping Address</label>
+      <input id="orderShipAddr" placeholder="Delivery address">
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <input id="orderNotes" placeholder="Optional notes">
+    </div>
     <div style="display:flex;gap:10px;margin-top:16px">
       <button class="btn btn-primary" onclick="submitOrder()">Place Order</button>
       <button class="btn btn-ghost" onclick="hideModal('orderModal')">Cancel</button>
@@ -190,10 +303,91 @@
   </div>
 </div>
 
-<!-- Add Employee Modal -->
+<!-- ── New Transfer Request Modal ── -->
+<div class="modal-overlay" id="transferModal">
+  <div class="modal" style="width:520px">
+    <div class="modal-title">New Transfer Request</div>
+    <div id="transferAlert" class="alert hidden"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Item Name *</label>
+        <input id="trItemName" placeholder="Item to transfer">
+      </div>
+      <div class="form-group">
+        <label>Quantity *</label>
+        <input type="number" id="trQty" min="1" value="5">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>From Location *</label>
+        <select id="trFromLoc">
+          <option value="">— select source —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>To Location *</label>
+        <select id="trToLoc">
+          <option value="">— select destination —</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Vendor (if shipped externally)</label>
+      <input id="trVendor" placeholder="Leave blank for direct transfer">
+    </div>
+    <div class="form-group">
+      <label>Shipping / Delivery Info</label>
+      <input id="trShipInfo" placeholder="e.g. Refrigerated van, Driver: John">
+    </div>
+    <div class="form-group">
+      <label>Tracking Number</label>
+      <input id="trTracking" placeholder="Optional">
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <input id="trNotes" placeholder="Optional">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="submitTransfer()">Submit Request</button>
+      <button class="btn btn-ghost" onclick="hideModal('transferModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Update Transfer Status Modal ── -->
+<div class="modal-overlay" id="trUpdateModal">
+  <div class="modal" style="width:420px">
+    <div class="modal-title" id="trUpdateTitle">Update Transfer</div>
+    <div id="trUpdateAlert" class="alert hidden"></div>
+    <div class="form-group">
+      <label>New Status</label>
+      <select id="trUpdateStatus">
+        <option value="approved">Approved</option>
+        <option value="in_transit">In Transit</option>
+        <option value="received">Received</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Tracking Number</label>
+      <input id="trUpdateTracking" placeholder="Optional">
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <input id="trUpdateNotes" placeholder="Optional">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="submitTrUpdate()">Update</button>
+      <button class="btn btn-ghost" onclick="hideModal('trUpdateModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Employee Modal ── -->
 <div class="modal-overlay" id="addEmpModal">
   <div class="modal" style="width:480px">
-    <div class="modal-title" id="addEmpTitle">Add Employee</div>
+    <div class="modal-title">Add Employee</div>
     <div id="addEmpAlert" class="alert hidden"></div>
     <div class="form-row">
       <div class="form-group"><label>Full Name *</label><input id="aeName" placeholder="Full name"></div>
@@ -221,34 +415,37 @@
 <script src="/js/utils.js"></script>
 <script>
 const user = requireAuth(['manager','stockroom']);
-if (user) { populateSidebar(user); document.getElementById('sb-location-sub').textContent = user.location_name || ''; }
+if (user) {
+  populateSidebar(user);
+  document.getElementById('sb-location-sub').textContent = user.location_name || '';
+  document.getElementById('invLocName').textContent = user.location_name || '';
+}
 liveClock('topbarTime');
-onModalOverlayClick('orderModal');
-onModalOverlayClick('addEmpModal');
+['orderModal','transferModal','trUpdateModal','addEmpModal'].forEach(id => onModalOverlayClick(id));
 
-let invData = [], currentTab = 'staff', selectedItemId = null;
+const TABS = ['staff','schedule','timesheets','inventory','warehouse','supply','transfers'];
+const TAB_LABELS = { staff:'Staff', schedule:'Schedule', timesheets:'Timesheets', inventory:'Inventory', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers' };
+let invData = [], whData = null, supplyData = [], trData = [], currentTab = 'staff', selectedItemId = null, editTrId = null;
 
 function switchTab(tab) {
-  ['staff','schedule','timesheets','inventory','supply'].forEach(t => {
-    document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab);
-  });
-  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', ['staff','schedule','timesheets','inventory','supply'][i] === tab));
-  const labels = { staff:'Staff', schedule:'Schedule', timesheets:'Timesheets', inventory:'Inventory', supply:'Supply Log' };
-  document.getElementById('tabTitle').textContent = labels[tab];
+  TABS.forEach(t => document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab));
+  document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', TABS[i] === tab));
+  document.getElementById('tabTitle').textContent = TAB_LABELS[tab];
   currentTab = tab;
   if (tab === 'staff')      loadStaff();
   if (tab === 'schedule')   loadSchedule();
   if (tab === 'inventory')  loadInventory();
+  if (tab === 'warehouse')  loadWarehouse();
   if (tab === 'supply')     loadSupply();
+  if (tab === 'transfers')  loadTransfers();
   if (tab === 'timesheets') initTimesheets();
 }
 
 function refreshCurrent() { switchTab(currentTab); }
 
 async function loadStats() {
-  const emps = await API.employees(user.location_id);
+  const [emps, inv] = await Promise.all([API.employees(user.location_id), API.inventory(user.location_id)]);
   const onDuty = emps.filter(e => e.clocked_in).length;
-  const inv = await API.inventory(user.location_id);
   const lowStock = inv.filter(i => i.quantity < i.min_quantity).length;
   document.getElementById('statsBar').innerHTML = `
     <div class="stat-card"><div class="stat-icon burgundy">👥</div><div class="stat-info"><div class="stat-value">${emps.length}</div><div class="stat-label">Total Staff</div></div></div>
@@ -257,6 +454,7 @@ async function loadStats() {
   `;
 }
 
+// ── Staff ─────────────────────────────────────────────────
 async function loadStaff() {
   const emps = await API.employees(user.location_id);
   document.getElementById('staffBody').innerHTML = emps.map(e => `
@@ -277,30 +475,27 @@ async function loadStaff() {
 }
 
 function openAddEmp() {
-  document.getElementById('aeName').value = '';
-  document.getElementById('aeEmail').value = '';
-  document.getElementById('aePassword').value = '';
-  document.getElementById('aeRate').value = '';
+  ['aeName','aeEmail','aePassword','aeRate'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('aeRole').value = '';
   document.getElementById('addEmpAlert').classList.add('hidden');
   showModal('addEmpModal');
 }
 
 async function saveNewEmp() {
-  const name     = document.getElementById('aeName').value.trim();
-  const email    = document.getElementById('aeEmail').value.trim();
+  const name = document.getElementById('aeName').value.trim();
+  const email = document.getElementById('aeEmail').value.trim();
   const password = document.getElementById('aePassword').value;
-  const role     = document.getElementById('aeRole').value;
+  const role = document.getElementById('aeRole').value;
   const hourly_rate = parseFloat(document.getElementById('aeRate').value) || 0;
   if (!name || !email || !password || !role) return showAlert('addEmpAlert', 'All fields required');
   try {
     await API.createEmployee({ name, email, password, role, location_id: user.location_id, hourly_rate });
     hideModal('addEmpModal');
-    loadStaff();
-    loadStats();
+    loadStaff(); loadStats();
   } catch(e) { showAlert('addEmpAlert', e.message); }
 }
 
+// ── Schedule ──────────────────────────────────────────────
 async function loadSchedule() {
   const emps = await API.employees(user.location_id);
   const today = new Date();
@@ -320,7 +515,7 @@ async function loadSchedule() {
   document.getElementById('schedGrid').innerHTML = html;
 }
 
-// ── Timesheets ───────────────────────────────────────────
+// ── Timesheets ────────────────────────────────────────────
 function initTimesheets() {
   if (!document.getElementById('tsStart').value) setRange('week');
 }
@@ -343,29 +538,25 @@ function setRange(type) {
     start = fmt(lastMon); end = fmt(lastSun);
   } else if (type === 'month') {
     start = fmt(new Date(today.getFullYear(), today.getMonth(), 1));
-    end   = fmt(today);
+    end = fmt(today);
   }
   document.getElementById('tsStart').value = start;
-  document.getElementById('tsEnd').value   = end;
+  document.getElementById('tsEnd').value = end;
 }
 
 async function generateReport() {
   const start = document.getElementById('tsStart').value;
-  const end   = document.getElementById('tsEnd').value;
+  const end = document.getElementById('tsEnd').value;
   if (!start || !end) return;
-
   const { summary, records, totals } = await API.timesheets(start, end, user.location_id);
-
   document.getElementById('tsResult').classList.remove('hidden');
   document.getElementById('tsEmpty').classList.add('hidden');
   document.getElementById('tsReportTitle').textContent = `${user.location_name} — ${start} → ${end}`;
-
   document.getElementById('tsSummaryStats').innerHTML = `
     <div class="stat-card"><div class="stat-icon burgundy">👥</div><div class="stat-info"><div class="stat-value">${summary.length}</div><div class="stat-label">Employees</div></div></div>
     <div class="stat-card"><div class="stat-icon gold">⏱️</div><div class="stat-info"><div class="stat-value">${totals.total_hours}</div><div class="stat-label">Total Hours</div></div></div>
     <div class="stat-card"><div class="stat-icon success">💵</div><div class="stat-info"><div class="stat-value">$${totals.total_pay.toFixed(2)}</div><div class="stat-label">Total Payroll</div></div></div>
   `;
-
   document.getElementById('tsSummaryBody').innerHTML = summary.map(e => `
     <tr>
       <td class="fw-700">${e.name}</td>
@@ -375,13 +566,11 @@ async function generateReport() {
       <td class="fw-700" style="color:var(--success)">$${(e.total_pay||0).toFixed(2)}</td>
     </tr>
   `).join('') || '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">No records</td></tr>';
-
   document.getElementById('tsTotalsRow').innerHTML = `
     <td colspan="2" style="text-align:right">TOTAL</td>
     <td>${totals.total_hours} hrs</td><td>—</td>
     <td style="color:var(--success)">$${totals.total_pay.toFixed(2)}</td>
   `;
-
   document.getElementById('tsDetailBody').innerHTML = records.map(r => `
     <tr>
       <td>${r.work_date}</td>
@@ -393,7 +582,6 @@ async function generateReport() {
       <td class="fw-700">$${(r.pay||0).toFixed(2)}</td>
     </tr>
   `).join('') || '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">No detail records</td></tr>';
-
   window._tsData = { summary, records, totals, start, end };
 }
 
@@ -412,7 +600,7 @@ function exportCSV() {
   a.download = `timesheet_${start}_${end}.csv`; a.click();
 }
 
-// ── Inventory ────────────────────────────────────────────
+// ── Inventory ─────────────────────────────────────────────
 async function loadInventory() {
   invData = await API.inventory(user.location_id);
   renderInv(invData);
@@ -429,7 +617,10 @@ function renderInv(items) {
       <td>${i.min_quantity} ${i.unit}</td>
       <td><div class="inv-bar-wrap"><div class="inv-bar ${cls}" style="width:${pct}%"></div></div></td>
       <td>${i.quantity < i.min_quantity ? '<span class="badge badge-danger">Low</span>' : '<span class="badge badge-success">OK</span>'}</td>
-      <td><button class="btn btn-sm btn-ghost" onclick="openOrder(${i.id},'${i.item_name}')">Order</button></td>
+      <td>
+        <button class="btn btn-sm btn-ghost" onclick="openOrderFromInv(${i.id},'${i.item_name.replace(/'/g,"\\'")}')">Order</button>
+        <button class="btn btn-sm btn-ghost" onclick="openTransferFromInv('${i.item_name.replace(/'/g,"\\'")}')">Transfer</button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -439,36 +630,61 @@ function filterInv() {
   renderInv(invData.filter(i => i.item_name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q)));
 }
 
-function openOrder(itemId, name) {
-  selectedItemId = itemId;
-  document.getElementById('orderItemName').value = name;
-  document.getElementById('orderQty').value = 10;
-  showModal('orderModal');
+// ── Warehouse ─────────────────────────────────────────────
+async function loadWarehouse() {
+  whData = await API.warehouse();
+  renderWh();
 }
 
-async function submitOrder() {
-  const qty = parseInt(document.getElementById('orderQty').value);
-  if (!qty || qty < 1) return showAlert('orderAlert', 'Enter a valid quantity');
-  try {
-    await API.orderSupply({ item_id: selectedItemId, quantity: qty });
-    hideModal('orderModal');
-    loadSupply();
-  } catch(e) { showAlert('orderAlert', e.message); }
+function renderWh() {
+  if (!whData) return;
+  const { locations, items } = whData;
+  const search = (document.getElementById('whSearch').value || '').toLowerCase();
+  const cat = document.getElementById('whCatFilter').value;
+  const lowOnly = document.getElementById('whLowOnly').checked;
+
+  let filtered = items.filter(i => {
+    if (search && !i.item_name.toLowerCase().includes(search)) return false;
+    if (cat && i.category !== cat) return false;
+    if (lowOnly) {
+      const isLow = locations.some(l => {
+        const d = i.by_location[l.id];
+        return d && d.qty < d.min;
+      });
+      if (!isLow) return false;
+    }
+    return true;
+  });
+
+  let html = `<table class="wh-tbl">
+    <thead><tr>
+      <th>Item</th><th>Category</th>
+      ${locations.map(l => `<th>${l.name}</th>`).join('')}
+    </tr></thead><tbody>`;
+
+  filtered.forEach(i => {
+    html += `<tr><td>${i.item_name}</td><td><span class="badge badge-muted">${i.category}</span></td>`;
+    locations.forEach(l => {
+      const d = i.by_location[l.id];
+      if (!d) { html += `<td><span class="wh-qty none">—</span></td>`; return; }
+      const cls = d.qty === 0 ? 'none' : (d.qty < d.min * 0.5 ? 'critical' : (d.qty < d.min ? 'low' : 'ok'));
+      html += `<td><span class="wh-qty ${cls}" title="Min: ${d.min} ${i.unit}">${d.qty} ${i.unit}</span></td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table>`;
+  if (!filtered.length) html = `<div style="text-align:center;padding:40px;color:var(--muted)">No items match filter</div>`;
+  document.getElementById('whTableWrap').innerHTML = html;
 }
 
+function filterWh() { renderWh(); }
+
+// ── Supply Orders ─────────────────────────────────────────
 async function loadSupply() {
   const [orders, txs] = await Promise.all([API.supplyOrders(user.location_id), API.transactions(user.location_id)]);
-  document.getElementById('supplyBody').innerHTML = orders.map(r => `
-    <tr>
-      <td class="fw-700">${r.item_name}</td>
-      <td>${r.quantity} ${r.unit}</td>
-      <td>${r.ordered_by_name}</td>
-      <td class="text-sm text-muted">${fmtDate(r.created_at)}</td>
-      <td>${statusBadge(r.status)}</td>
-      <td>${r.status==='shipped'?`<button class="btn btn-sm btn-gold" onclick="markReceived(${r.id})">Mark Received</button>`:'—'}</td>
-    </tr>
-  `).join('') || '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">No orders yet</td></tr>';
-
+  supplyData = orders;
+  renderSupply();
   document.getElementById('txBody').innerHTML = txs.map(t => `
     <tr>
       <td class="fw-700">${t.item_name}</td>
@@ -482,7 +698,206 @@ async function loadSupply() {
   `).join('') || '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">No transactions</td></tr>';
 }
 
-async function markReceived(id) { await API.updateSupplyOrder(id, 'received'); loadSupply(); loadInventory(); }
+function renderSupply() {
+  const statusFilter = document.getElementById('soStatusFilter').value;
+  const filtered = statusFilter ? supplyData.filter(r => r.status === statusFilter) : supplyData;
+  document.getElementById('supplyBody').innerHTML = filtered.map(r => {
+    let action = '—';
+    if (r.status === 'pending') action = `<button class="btn btn-sm btn-ghost" onclick="updateSupplyStatus(${r.id},'approved')">Approve</button>`;
+    else if (r.status === 'approved') action = `<button class="btn btn-sm btn-ghost" onclick="updateSupplyStatus(${r.id},'shipped')">Mark Shipped</button>`;
+    else if (r.status === 'shipped') action = `<button class="btn btn-sm btn-gold btn-sm" onclick="updateSupplyStatus(${r.id},'received')">Mark Received</button>`;
+    return `<tr>
+      <td class="fw-700">${r.item_name}</td>
+      <td>${r.quantity} ${r.unit || 'units'}</td>
+      <td class="text-sm">${r.vendor || '<span class="text-muted">—</span>'}</td>
+      <td class="text-sm" style="max-width:160px;white-space:normal">${r.shipping_address || '<span class="text-muted">—</span>'}</td>
+      <td class="text-sm text-muted">${r.expected_date || '—'}</td>
+      <td class="text-sm text-muted">${r.tracking_number || '—'}</td>
+      <td class="text-sm">${r.ordered_by_name}</td>
+      <td class="text-sm text-muted">${fmtDate(r.created_at)}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td>${action}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--muted)">No orders</td></tr>';
+}
+
+function filterSupply() { renderSupply(); }
+
+function openNewOrder() {
+  ['orderItemName','orderVendor','orderShipAddr','orderNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('orderQty').value = 10;
+  document.getElementById('orderExpDate').value = '';
+  document.getElementById('orderAlert').classList.add('hidden');
+  selectedItemId = null;
+  showModal('orderModal');
+}
+
+function openOrderFromInv(itemId, name) {
+  selectedItemId = itemId;
+  document.getElementById('orderItemName').value = name;
+  document.getElementById('orderQty').value = 10;
+  ['orderVendor','orderShipAddr','orderNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('orderExpDate').value = '';
+  document.getElementById('orderAlert').classList.add('hidden');
+  showModal('orderModal');
+}
+
+async function submitOrder() {
+  const item_name = document.getElementById('orderItemName').value.trim();
+  const qty = parseInt(document.getElementById('orderQty').value);
+  if (!item_name || !qty || qty < 1) return showAlert('orderAlert', 'Item name and quantity required');
+  try {
+    const payload = {
+      quantity: qty,
+      item_name,
+      vendor: document.getElementById('orderVendor').value.trim() || undefined,
+      shipping_address: document.getElementById('orderShipAddr').value.trim() || undefined,
+      expected_date: document.getElementById('orderExpDate').value || undefined,
+      notes: document.getElementById('orderNotes').value.trim() || undefined,
+    };
+    if (selectedItemId) payload.item_id = selectedItemId;
+    await API.orderSupply(payload);
+    hideModal('orderModal');
+    loadSupply();
+  } catch(e) { showAlert('orderAlert', e.message); }
+}
+
+async function updateSupplyStatus(id, status) {
+  await API.updateSupplyOrder(id, status);
+  loadSupply();
+  if (status === 'received') loadInventory();
+}
+
+// ── Transfers ─────────────────────────────────────────────
+let allLocations = [];
+
+async function loadTransfers() {
+  if (!allLocations.length) {
+    allLocations = await API.locations();
+    populateLocSelects();
+  }
+  trData = await API.transferRequests(user.location_id);
+  renderTransfers();
+}
+
+function populateLocSelects() {
+  const opts = allLocations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  document.getElementById('trFromLoc').innerHTML = '<option value="">— select source —</option>' + opts;
+  document.getElementById('trToLoc').innerHTML   = '<option value="">— select destination —</option>' + opts;
+}
+
+function renderTransfers() {
+  const statusFilter = document.getElementById('trStatusFilter').value;
+  const filtered = statusFilter ? trData.filter(t => t.status === statusFilter) : trData;
+  if (!filtered.length) {
+    document.getElementById('trList').innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)">No transfer requests${statusFilter ? ' for this status' : ''}</div>`;
+    return;
+  }
+  const statusLabels = { pending:'Pending', approved:'Approved', in_transit:'In Transit', received:'Received', cancelled:'Cancelled' };
+  document.getElementById('trList').innerHTML = filtered.map(t => {
+    const actions = buildTrActions(t);
+    return `<div class="tr-card status-${t.status}">
+      <div class="tr-header">
+        <div>
+          <div class="tr-title">${t.item_name} — ${t.quantity} units</div>
+          <div class="tr-route">📍 ${t.from_location_name} → ${t.to_location_name}</div>
+        </div>
+        ${statusBadge(t.status)}
+      </div>
+      <div class="tr-meta">
+        <span><strong>Requested by:</strong> ${t.requested_by_name}</span>
+        ${t.approved_by_name ? `<span><strong>Approved by:</strong> ${t.approved_by_name}</span>` : ''}
+        ${t.vendor ? `<span><strong>Vendor:</strong> ${t.vendor}</span>` : ''}
+        ${t.shipping_info ? `<span><strong>Shipping:</strong> ${t.shipping_info}</span>` : ''}
+        ${t.tracking_number ? `<span><strong>Tracking:</strong> ${t.tracking_number}</span>` : ''}
+        <span class="text-muted">Created ${fmtDate(t.created_at)}</span>
+      </div>
+      ${t.notes ? `<div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">📝 ${t.notes}</div>` : ''}
+      <div class="tr-actions">${actions}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildTrActions(t) {
+  const btns = [];
+  if (t.status === 'pending')    btns.push(`<button class="btn btn-sm btn-primary" onclick="openTrUpdate(${t.id},'approved')">Approve</button>`);
+  if (t.status === 'approved')   btns.push(`<button class="btn btn-sm btn-ghost" onclick="openTrUpdate(${t.id},'in_transit')">Mark In Transit</button>`);
+  if (t.status === 'in_transit') btns.push(`<button class="btn btn-sm btn-gold" onclick="openTrUpdate(${t.id},'received')">Mark Received</button>`);
+  if (t.status !== 'received' && t.status !== 'cancelled') {
+    btns.push(`<button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="quickTrUpdate(${t.id},'cancelled')">Cancel</button>`);
+  }
+  return btns.join('');
+}
+
+function filterTransfers() { renderTransfers(); }
+
+function openNewTransfer() {
+  ['trItemName','trVendor','trShipInfo','trTracking','trNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('trQty').value = 5;
+  document.getElementById('trFromLoc').value = '';
+  document.getElementById('trToLoc').value = user.location_id || '';
+  document.getElementById('transferAlert').classList.add('hidden');
+  showModal('transferModal');
+}
+
+function openTransferFromInv(itemName) {
+  document.getElementById('trItemName').value = itemName;
+  document.getElementById('trQty').value = 5;
+  document.getElementById('trFromLoc').value = '';
+  document.getElementById('trToLoc').value = user.location_id || '';
+  ['trVendor','trShipInfo','trTracking','trNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('transferAlert').classList.add('hidden');
+  showModal('transferModal');
+}
+
+async function submitTransfer() {
+  const item_name = document.getElementById('trItemName').value.trim();
+  const quantity  = parseFloat(document.getElementById('trQty').value);
+  const from_location_id = parseInt(document.getElementById('trFromLoc').value);
+  const to_location_id   = parseInt(document.getElementById('trToLoc').value);
+  if (!item_name || !quantity || !from_location_id || !to_location_id)
+    return showAlert('transferAlert', 'Item, quantity, and both locations required');
+  if (from_location_id === to_location_id)
+    return showAlert('transferAlert', 'Source and destination must differ');
+  try {
+    await API.createTransferRequest({
+      item_name, quantity, from_location_id, to_location_id,
+      vendor:       document.getElementById('trVendor').value.trim() || undefined,
+      shipping_info:document.getElementById('trShipInfo').value.trim() || undefined,
+      tracking_number:document.getElementById('trTracking').value.trim() || undefined,
+      notes:        document.getElementById('trNotes').value.trim() || undefined,
+    });
+    hideModal('transferModal');
+    loadTransfers();
+  } catch(e) { showAlert('transferAlert', e.message); }
+}
+
+function openTrUpdate(id, defaultStatus) {
+  editTrId = id;
+  document.getElementById('trUpdateStatus').value = defaultStatus;
+  document.getElementById('trUpdateTracking').value = '';
+  document.getElementById('trUpdateNotes').value = '';
+  document.getElementById('trUpdateAlert').classList.add('hidden');
+  document.getElementById('trUpdateTitle').textContent = `Update Transfer #${id}`;
+  showModal('trUpdateModal');
+}
+
+async function submitTrUpdate() {
+  const status = document.getElementById('trUpdateStatus').value;
+  const tracking_number = document.getElementById('trUpdateTracking').value.trim() || undefined;
+  const notes = document.getElementById('trUpdateNotes').value.trim() || undefined;
+  try {
+    await API.updateTransferRequest(editTrId, { status, tracking_number, notes });
+    hideModal('trUpdateModal');
+    loadTransfers();
+    if (status === 'received') loadInventory();
+  } catch(e) { showAlert('trUpdateAlert', e.message); }
+}
+
+async function quickTrUpdate(id, status) {
+  await API.updateTransferRequest(id, { status });
+  loadTransfers();
+}
 
 loadStats();
 loadStaff();

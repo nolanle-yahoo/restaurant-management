@@ -105,8 +105,32 @@ function createSchema() {
     );
   `);
 
-  // Migration: add hourly_rate to existing databases that predate this column
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS transfer_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_name TEXT NOT NULL,
+      quantity REAL NOT NULL,
+      from_location_id INTEGER NOT NULL REFERENCES locations(id),
+      to_location_id INTEGER NOT NULL REFERENCES locations(id),
+      requested_by INTEGER NOT NULL REFERENCES users(id),
+      approved_by INTEGER REFERENCES users(id),
+      status TEXT DEFAULT 'pending' CHECK(status IN ('pending','approved','in_transit','received','cancelled')),
+      vendor TEXT,
+      shipping_info TEXT,
+      tracking_number TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Column migrations — safe to run on existing databases
   try { db.exec(`ALTER TABLE users ADD COLUMN hourly_rate REAL DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE supply_orders ADD COLUMN item_name TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE supply_orders ADD COLUMN vendor TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE supply_orders ADD COLUMN shipping_address TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE supply_orders ADD COLUMN tracking_number TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE supply_orders ADD COLUMN expected_date TEXT`); } catch {}
 }
 
 module.exports = { createSchema };

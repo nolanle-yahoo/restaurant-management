@@ -166,13 +166,32 @@ function seed() {
   });
 
   // ── Supply Orders ────────────────────────────────────────────────
-  const insertSO = db.prepare(`INSERT INTO supply_orders (item_id, location_id, quantity, status, ordered_by, created_at) VALUES (?,?,?,?,?,datetime('now',?))`);
-  insertSO.run(3,  1, 20, 'pending',  9, '-1 days');
-  insertSO.run(6,  1, 15, 'approved', 2, '-2 days');
-  insertSO.run(17, 2, 24, 'shipped',  3, '-3 days');
-  insertSO.run(8,  3, 10, 'received', 4, '-4 days');
-  insertSO.run(4,  4, 25, 'pending',  5, '-1 days');
-  insertSO.run(11, 5, 5,  'approved', 6, '-2 days');
+  const insertSO = db.prepare(`
+    INSERT INTO supply_orders (item_id, item_name, location_id, quantity, status, ordered_by, vendor, shipping_address, tracking_number, expected_date, created_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,datetime('now',?))
+  `);
+  insertSO.run(3, 'Atlantic Salmon',  1, 20, 'pending',  9, 'Pacific Fresh Co.',      '123 Harbor Blvd, Seattle WA', null,       date(3),  '-1 days');
+  insertSO.run(6, 'Mixed Greens',     1, 15, 'approved', 2, 'Green Valley Farms',     '456 Farm Rd, Salinas CA',     null,       date(5),  '-2 days');
+  insertSO.run(17,'Red Wine',         2, 24, 'shipped',  3, 'Napa Valley Imports',    '789 Vine St, Napa CA',        'NVI-28341',date(2),  '-3 days');
+  insertSO.run(8, 'Garlic',           3, 10, 'received', 4, 'Sun Valley Produce',     '321 Orchard Ln, Fresno CA',   null,       null,     '-4 days');
+  insertSO.run(4, 'Shrimp',           4, 25, 'pending',  5, 'Gulf Coast Seafood LLC', '99 Marina Dr, Tampa FL',      null,       date(7),  '-1 days');
+  insertSO.run(11,'Black Pepper',     5, 5,  'approved', 6, 'Spice World International','200 Trade Ave, Miami FL',   null,       date(4),  '-2 days');
+
+  function date(daysAhead) {
+    const d = new Date(); d.setDate(d.getDate() + daysAhead);
+    return d.toISOString().slice(0,10);
+  }
+
+  // ── Transfer Requests ─────────────────────────────────────────────
+  const insertTR = db.prepare(`
+    INSERT INTO transfer_requests (item_name, quantity, from_location_id, to_location_id, requested_by, status, vendor, shipping_info, tracking_number, notes, created_at, updated_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,datetime('now',?),datetime('now',?))
+  `);
+  insertTR.run('Beef Tenderloin', 10, 2, 1, 2,  'pending',    null,                     null,                        null,        'Needed for weekend banquet',  '-1 days', '-1 days');
+  insertTR.run('Heavy Cream',     5,  3, 1, 4,  'approved',   null,                     'Refrigerated van delivery', null,        'For pastry station',          '-2 days', '-1 days');
+  insertTR.run('Olive Oil',       8,  4, 3, 5,  'in_transit', null,                     'Driver: John (555-9201)',   'TRK-8821',  'Urgent — stock critical',     '-3 days', '-1 days');
+  insertTR.run('Coffee Beans',    3,  5, 2, 6,  'received',   'Artisan Roasters Inc.',  'Standard ground shipping',  'AR-44120',  null,                          '-5 days', '-2 days');
+  insertTR.run('Parmesan',        4,  1, 5, 9,  'pending',    null,                     null,                        null,        'For new pasta menu items',    '-1 days', '-1 days');
 
   console.log('✅  Database seeded successfully!');
   console.log('');

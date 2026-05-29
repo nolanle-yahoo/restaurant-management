@@ -66,11 +66,15 @@ const API = {
   updateOrder(id, status) { return this.put(`/orders/${id}`, { status }); },
 
   inventory(locId)   { return this.get('/inventory' + (locId ? `?location_id=${locId}` : '')); },
+  warehouse()        { return this.get('/inventory/warehouse'); },
   orderSupply(data)  { return this.post('/inventory/order', data); },
-  updateSupplyOrder(id, status) { return this.put(`/inventory/order/${id}`, { status }); },
+  updateSupplyOrder(id, data) { return this.put(`/inventory/order/${id}`, typeof data === 'string' ? { status: data } : data); },
   transfer(data)     { return this.post('/inventory/transfer', data); },
   transactions(locId){ return this.get('/inventory/transactions' + (locId ? `?location_id=${locId}` : '')); },
   supplyOrders(locId){ return this.get('/inventory/supply-orders' + (locId ? `?location_id=${locId}` : '')); },
+  transferRequests(locId) { return this.get('/inventory/transfer-requests' + (locId ? `?location_id=${locId}` : '')); },
+  createTransferRequest(data)    { return this.post('/inventory/transfer-request', data); },
+  updateTransferRequest(id, data){ return this.put(`/inventory/transfer-request/${id}`, data); },
 
   locations()        { return this.get('/locations'); },
   locationsSummary() { return this.get('/locations/summary'); },
