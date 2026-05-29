@@ -185,12 +185,21 @@ function tableClick(id) {
   const t = allTables.find(x => x.id === id);
   if (!t) return;
 
-  // If it's a waiting_order table: offer take order or just status change
   if (t.status === 'waiting_order') {
-    return openOrderModal(id, t.table_number);
+    // Offer both options: take order or just change status
+    statusTableId = id;
+    const info = tableStatusInfo(t.status);
+    document.getElementById('statusModalTitle').textContent = `Table ${t.table_number} · ${info.emoji} ${info.label}`;
+    document.getElementById('statusModalBtns').innerHTML =
+      `<button class="btn btn-primary" style="grid-column:1/-1;justify-content:center" onclick="hideModal('statusModal');openOrderModal(${id},${t.table_number})">📋 Take Order</button>` +
+      TABLE_STATUSES.map(s => `
+        <button class="btn ${s.value===t.status?'btn-primary':'btn-ghost'}" style="justify-content:center;gap:6px" onclick="changeTableStatus('${s.value}')">
+          ${s.emoji} ${s.label}
+        </button>`).join('');
+    showModal('statusModal');
+    return;
   }
 
-  // Otherwise open status change modal
   openStatusModal(id);
 }
 
