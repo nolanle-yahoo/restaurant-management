@@ -16,6 +16,11 @@
     .rate-badge { background:rgba(74,124,89,.12); color:var(--success); padding:2px 8px; border-radius:12px; font-size:12px; font-weight:700; }
     .wh-filter { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
     .wh-filter input, .wh-filter select { padding:7px 11px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; }
+    .wh-cell { position:relative; }
+    .wh-cell-actions { display:none; gap:3px; margin-top:4px; justify-content:center; }
+    .wh-cell:hover .wh-cell-actions { display:flex; }
+    .wh-cell-actions .wh-btn { font-size:10px; padding:1px 6px; border-radius:6px; border:1px solid var(--border); background:#fff; color:var(--burgundy); cursor:pointer; white-space:nowrap; }
+    .wh-cell-actions .wh-btn:hover { background:var(--burgundy); color:#fff; }
     @media print {
       .sidebar, .topbar, .no-print { display:none !important; }
       .main-content { margin:0 !important; }
@@ -514,7 +519,8 @@ function renderWarehouse() {
       if (!d) return `<td><span class="wh-qty none">—</span></td>`;
       const cls = d.qty === 0 ? 'none' : d.qty < d.min ? (d.qty < d.min * 0.5 ? 'critical' : 'low') : 'ok';
       if (cls === 'low' || cls === 'critical') lowCount++;
-      return `<td><span class="wh-qty ${cls}">${d.qty}</span><div style="font-size:10px;color:var(--muted)">min ${d.min}</div></td>`;
+      const n = item.item_name.replace(/'/g,"\\'"), ln = l.name.replace(/'/g,"\\'");
+      return `<td class="wh-cell"><span class="wh-qty ${cls}">${d.qty}</span><div style="font-size:10px;color:var(--muted)">min ${d.min}</div><div class="wh-cell-actions"><button class="wh-btn" onclick="openOrderFromWh('${n}',${l.id},'${ln}')">Order</button><button class="wh-btn" onclick="openTransferFromWh('${n}',${l.id},'${ln}')">Transfer</button></div></td>`;
     });
     const total = locs.reduce((s,l) => s + (item.by_location[l.id]?.qty || 0), 0);
     const hasLow = locs.some(l => { const d = item.by_location[l.id]; return d && d.qty < d.min; });
@@ -529,8 +535,23 @@ function renderWarehouse() {
 // ── Supply Orders ────────────────────────────────────────
 function openSupplyModal() {
   document.getElementById('supplyAlert').classList.add('hidden');
+  document.querySelector('#supplyModal .modal-title').textContent = 'New Supply Order';
   ['soItem','soQty','soVendor','soShipping','soExpected','soTracking','soNotes'].forEach(id => document.getElementById(id).value = '');
   showModal('supplyModal');
+}
+
+function openOrderFromWh(itemName, locId, locName) {
+  openSupplyModal();
+  document.getElementById('soItem').value = itemName;
+  document.getElementById('soLocation').value = locId;
+  document.querySelector('#supplyModal .modal-title').textContent = `Order Supply — ${locName}`;
+}
+
+function openTransferFromWh(itemName, toLocId, toLocName) {
+  openTransferModal();
+  document.getElementById('trItem').value = itemName;
+  document.getElementById('trTo').value = toLocId;
+  document.querySelector('#transferModal .modal-title').textContent = `Request Transfer → ${toLocName}`;
 }
 
 async function submitSupplyOrder() {
@@ -579,6 +600,7 @@ async function updateSupply(id, status) { await API.updateSupplyOrder(id, { stat
 // ── Transfer Requests ────────────────────────────────────
 function openTransferModal() {
   document.getElementById('transferAlert').classList.add('hidden');
+  document.querySelector('#transferModal .modal-title').textContent = 'New Transfer Request';
   ['trItem','trQty','trVendor','trShipping','trTracking','trNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('trFrom').value = '';
   document.getElementById('trTo').value = '';

@@ -28,6 +28,11 @@
     .wh-qty.low      { background:rgba(196,118,42,.13); color:#944d0f; }
     .wh-qty.critical { background:rgba(192,57,43,.13);  color:#a42218; }
     .wh-qty.none     { background:#f0f0f0; color:#aaa; }
+    .wh-cell { position:relative; }
+    .wh-cell-actions { display:none; gap:3px; margin-top:4px; justify-content:center; }
+    .wh-cell:hover .wh-cell-actions { display:flex; }
+    .wh-cell-actions .wh-btn { font-size:10px; padding:1px 6px; border-radius:6px; border:1px solid var(--border); background:#fff; color:var(--burgundy); cursor:pointer; white-space:nowrap; }
+    .wh-cell-actions .wh-btn:hover { background:var(--burgundy); color:#fff; }
     .wh-filters { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
     .wh-filters input, .wh-filters select { padding:7px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; }
     /* Supply / Transfer tabs */
@@ -668,7 +673,8 @@ function renderWh() {
       const d = i.by_location[l.id];
       if (!d) { html += `<td><span class="wh-qty none">—</span></td>`; return; }
       const cls = d.qty === 0 ? 'none' : (d.qty < d.min * 0.5 ? 'critical' : (d.qty < d.min ? 'low' : 'ok'));
-      html += `<td><span class="wh-qty ${cls}" title="Min: ${d.min} ${i.unit}">${d.qty} ${i.unit}</span></td>`;
+      const n = i.item_name.replace(/'/g,"\\'"), ln = l.name.replace(/'/g,"\\'");
+      html += `<td class="wh-cell"><span class="wh-qty ${cls}" title="Min: ${d.min} ${i.unit}">${d.qty} ${i.unit}</span><div class="wh-cell-actions"><button class="wh-btn" onclick="openOrderFromWh('${n}')">Order</button><button class="wh-btn" onclick="openTransferFromWh('${n}',${l.id},'${ln}')">Transfer</button></div></td>`;
     });
     html += `</tr>`;
   });
@@ -848,6 +854,16 @@ function openTransferFromInv(itemName) {
   ['trVendor','trShipInfo','trTracking','trNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('transferAlert').classList.add('hidden');
   showModal('transferModal');
+}
+
+function openOrderFromWh(itemName) {
+  openNewOrder();
+  document.getElementById('orderItemName').value = itemName;
+}
+
+function openTransferFromWh(itemName, fromLocId, fromLocName) {
+  openTransferFromInv(itemName);
+  document.getElementById('trFromLoc').value = fromLocId;
 }
 
 async function submitTransfer() {
