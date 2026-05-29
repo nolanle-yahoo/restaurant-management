@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Owner Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🍷</div>
+      <div class="logo-name">Restaurant Mgmt</div>
+      <div class="logo-sub">Owner Dashboard</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-name" id="sb-name"></div>
+      <div class="user-role" id="sb-role"></div>
+      <div class="user-loc" id="sb-location"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#overview" onclick="showSection('overview')"><span class="nav-icon">📊</span>Overview</a>
+      <a class="nav-item" href="#locations" onclick="showSection('locations')"><span class="nav-icon">📍</span>Locations</a>
+      <a class="nav-item" href="#employees" onclick="showSection('employees')"><span class="nav-icon">👥</span>All Staff</a>
+      <a class="nav-item" href="#supply" onclick="showSection('supply')"><span class="nav-icon">📦</span>Supply Orders</a>
+      <a class="nav-item" href="#inventory" onclick="showSection('inventory')"><span class="nav-icon">🏪</span>Inventory</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn">Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title" id="pageTitle">Overview</div>
+      <div class="topbar-right">
+        <span class="text-muted text-sm" id="topbarTime"></span>
+        <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Overview -->
+      <section id="sec-overview">
+        <div class="stat-grid" id="globalStats"></div>
+        <div class="loc-grid" id="locCards"></div>
+        <div class="card mt-24">
+          <div class="card-header"><div class="card-title">Recent Staff Activity</div></div>
+          <table class="data-table" id="activityTable">
+            <thead><tr><th>Name</th><th>Role</th><th>Location</th><th>Action</th><th>Time</th></tr></thead>
+            <tbody id="activityBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Locations detail -->
+      <section id="sec-locations" class="hidden">
+        <div class="loc-grid" id="locDetailCards"></div>
+      </section>
+
+      <!-- All Employees -->
+      <section id="sec-employees" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">All Staff</div>
+            <select id="empLocFilter" class="form-group" style="margin:0;width:200px;" onchange="loadEmployees()">
+              <option value="">All Locations</option>
+            </select>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Location</th><th>Status</th><th>Clocked In</th><th>Actions</th></tr></thead>
+            <tbody id="empBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Supply Orders -->
+      <section id="sec-supply" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Supply Orders</div></div>
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>Location</th><th>Qty</th><th>Ordered By</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="supplyBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Inventory overview -->
+      <section id="sec-inventory" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Inventory — All Locations</div>
+            <select id="invLocFilter" style="width:200px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;" onchange="loadInventory()">
+              <option value="">All Locations</option>
+            </select>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>Category</th><th>Location</th><th>Stock</th><th>Level</th><th>Status</th></tr></thead>
+          <tbody id="invBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script>
+const user = requireAuth(['owner']);
+if (user) populateSidebar(user);
+liveClock('topbarTime');
+
+let currentSection = 'overview';
+let locations = [];
+
+function showSection(name) {
+  document.querySelectorAll('.main-content section').forEach(s => s.classList.add('hidden'));
+  document.getElementById('sec-' + name).classList.remove('hidden');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`[onclick*="${name}"]`).classList.add('active');
+  document.getElementById('pageTitle').textContent = { overview:'Overview', locations:'Locations', employees:'All Staff', supply:'Supply Orders', inventory:'Inventory' }[name];
+  currentSection = name;
+  if (name === 'employees') loadEmployees();
+  if (name === 'supply') loadSupply();
+  if (name === 'inventory') loadInventory();
+}
+
+async function loadAll() {
+  await loadSummary();
+  if (currentSection === 'employees') loadEmployees();
+  if (currentSection === 'supply') loadSupply();
+  if (currentSection === 'inventory') loadInventory();
+}
+
+async function loadSummary() {
+  const { locations: locs, totals } = await API.locationsSummary();
+  locations = locs;
+
+  document.getElementById('globalStats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon burgundy">👥</div><div class="stat-info"><div class="stat-value">${totals.staff_on_duty}</div><div class="stat-label">Staff On Duty</div></div></div>
+    <div class="stat-card"><div class="stat-icon gold">🍽️</div><div class="stat-info"><div class="stat-value">${totals.open_orders}</div><div class="stat-label">Open Orders</div></div></div>
+    <div class="stat-card"><div class="stat-icon warning">⚠️</div><div class="stat-info"><div class="stat-value">${totals.low_stock_count}</div><div class="stat-label">Low Stock Alerts</div></div></div>
+    <div class="stat-card"><div class="stat-icon danger">📦</div><div class="stat-info"><div class="stat-value">${totals.pending_supply_orders}</div><div class="stat-label">Pending Supply Orders</div></div></div>
+  `;
+
+  const locHtml = locs.map(l => `
+    <div class="loc-card">
+      <div class="loc-name">📍 ${l.name}</div>
+      <div class="text-sm text-muted" style="margin-bottom:10px">${l.address}</div>
+      <div class="loc-stats">
+        <div class="loc-stat"><div class="ls-val">${l.staff_on_duty}</div><div class="ls-lab">On Duty</div></div>
+        <div class="loc-stat"><div class="ls-val">${l.occupancy_pct}%</div><div class="ls-lab">Occupancy</div></div>
+        <div class="loc-stat"><div class="ls-val">${l.open_orders}</div><div class="ls-lab">Open Orders</div></div>
+        <div class="loc-stat"><div class="ls-val ${l.low_stock_count > 0 ? 'text-warning' : ''}">${l.low_stock_count}</div><div class="ls-lab">Low Stock</div></div>
+      </div>
+      <div class="progress-wrap mt-16"><div class="progress-bar" style="width:${l.occupancy_pct}%"></div></div>
+    </div>
+  `).join('');
+  document.getElementById('locCards').innerHTML = locHtml;
+  document.getElementById('locDetailCards').innerHTML = locHtml;
+
+  const sel1 = document.getElementById('empLocFilter');
+  const sel2 = document.getElementById('invLocFilter');
+  const opts = locs.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  sel1.innerHTML = '<option value="">All Locations</option>' + opts;
+  sel2.innerHTML = '<option value="">All Locations</option>' + opts;
+
+  const recent = await API.clockRecent();
+  document.getElementById('activityBody').innerHTML = recent.map(r => `
+    <tr>
+      <td class="fw-700">${r.name}</td>
+      <td><span class="badge badge-info">${r.role}</span></td>
+      <td>${r.location_name || '—'}</td>
+      <td>${r.check_out ? 'Clocked Out' : 'Clocked In'}</td>
+      <td class="text-muted text-sm">${timeAgo(r.check_out || r.check_in)}</td>
+    </tr>
+  `).join('');
+}
+
+async function loadEmployees() {
+  const locId = document.getElementById('empLocFilter').value;
+  const emps = await API.employees(locId);
+  document.getElementById('empBody').innerHTML = emps.map(e => `
+    <tr>
+      <td class="fw-700">${e.name}</td>
+      <td class="text-sm text-muted">${e.email}</td>
+      <td><span class="badge badge-info">${e.role}</span></td>
+      <td>${e.location_name || '—'}</td>
+      <td>${e.is_active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-muted">Inactive</span>'}</td>
+      <td>${e.clocked_in ? '<span class="badge badge-gold">●  On Duty</span>' : '<span class="badge badge-muted">Off</span>'}</td>
+      <td>
+        <select class="text-sm" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;" onchange="changeRole(${e.id},this.value)">
+          ${['owner','manager','stockroom','chef','waiter','frontdesk','employee'].map(r=>`<option ${r===e.role?'selected':''}>${r}</option>`).join('')}
+        </select>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function changeRole(id, role) {
+  await API.updateEmployee(id, { role });
+}
+
+async function loadSupply() {
+  const rows = await API.supplyOrders();
+  document.getElementById('supplyBody').innerHTML = rows.map(r => `
+    <tr>
+      <td class="fw-700">${r.item_name}</td>
+      <td>${r.location_name}</td>
+      <td>${r.quantity} ${r.unit}</td>
+      <td>${r.ordered_by_name}</td>
+      <td class="text-sm text-muted">${fmtDate(r.created_at)}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td>
+        ${r.status === 'pending' ? `<button class="btn btn-sm btn-success" onclick="updateSupply(${r.id},'approved')">Approve</button>` : ''}
+        ${r.status === 'approved' ? `<button class="btn btn-sm btn-primary" onclick="updateSupply(${r.id},'shipped')">Mark Shipped</button>` : ''}
+        ${r.status === 'shipped' ? `<button class="btn btn-sm btn-gold" onclick="updateSupply(${r.id},'received')">Mark Received</button>` : ''}
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No supply orders</td></tr>';
+}
+
+async function updateSupply(id, status) {
+  await API.updateSupplyOrder(id, status);
+  loadSupply();
+}
+
+async function loadInventory() {
+  const locId = document.getElementById('invLocFilter').value;
+  const items = await API.inventory(locId);
+  document.getElementById('invBody').innerHTML = items.map(i => {
+    const pct = Math.min(100, Math.round(i.quantity / (i.min_quantity * 2) * 100));
+    const cls = i.quantity < i.min_quantity ? (i.quantity < i.min_quantity * 0.5 ? 'critical' : 'low') : 'ok';
+    return `<tr>
+      <td class="fw-700">${i.item_name}</td>
+      <td><span class="badge badge-muted">${i.category}</span></td>
+      <td>${i.location_name || '—'}</td>
+      <td>${i.quantity} ${i.unit}</td>
+      <td><div class="inv-bar-wrap"><div class="inv-bar ${cls}" style="width:${pct}%"></div></div></td>
+      <td>${i.quantity < i.min_quantity ? '<span class="badge badge-danger">Low Stock</span>' : '<span class="badge badge-success">OK</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+loadAll();
+setInterval(loadAll, 30000);
+</script>
+</body>
+</html>

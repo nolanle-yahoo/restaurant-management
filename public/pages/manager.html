@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manager Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🍷</div>
+      <div class="logo-name">Restaurant Mgmt</div>
+      <div class="logo-sub" id="sb-location-sub"></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-name" id="sb-name"></div>
+      <div class="user-role" id="sb-role"></div>
+      <div class="user-loc" id="sb-location"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#" onclick="switchTab('staff')"><span class="nav-icon">👥</span>Staff</a>
+      <a class="nav-item" href="#" onclick="switchTab('schedule')"><span class="nav-icon">📅</span>Schedule</a>
+      <a class="nav-item" href="#" onclick="switchTab('inventory')"><span class="nav-icon">🏪</span>Inventory</a>
+      <a class="nav-item" href="#" onclick="switchTab('supply')"><span class="nav-icon">📦</span>Supply Log</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn">Sign Out</button></div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title" id="tabTitle">Staff</div>
+      <div class="topbar-right">
+        <span class="text-muted text-sm" id="topbarTime"></span>
+        <button class="btn btn-ghost btn-sm" onclick="refreshCurrent()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="stat-grid" id="statsBar"></div>
+
+      <!-- Staff tab -->
+      <div id="tab-staff">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Team Members</div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Status</th><th>Clocked In</th><th>Actions</th></tr></thead>
+            <tbody id="staffBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Schedule tab -->
+      <div id="tab-schedule" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Weekly Schedule</div></div>
+          <div style="overflow-x:auto">
+            <div class="sched-grid" id="schedGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory tab -->
+      <div id="tab-inventory" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Inventory</div>
+            <input id="invSearch" placeholder="Search items..." style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;width:200px;" oninput="filterInv()">
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>Category</th><th>Stock</th><th>Min</th><th>Level</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="invBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Supply log tab -->
+      <div id="tab-supply" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Supply Orders</div></div>
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>Qty</th><th>Ordered By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="supplyBody"></tbody>
+          </table>
+        </div>
+        <div class="card mt-24">
+          <div class="card-header"><div class="card-title">Inventory Transactions</div></div>
+          <table class="data-table">
+            <thead><tr><th>Item</th><th>Type</th><th>Qty</th><th>From</th><th>To</th><th>By</th><th>Date</th></tr></thead>
+            <tbody id="txBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Supply Modal -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal">
+    <div class="modal-title">Order Supply</div>
+    <div id="orderAlert" class="alert hidden"></div>
+    <div class="form-group"><label>Item</label><input id="orderItemName" disabled></div>
+    <div class="form-group"><label>Quantity</label><input type="number" id="orderQty" min="1" value="10"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="submitOrder()">Place Order</button>
+      <button class="btn btn-ghost" onclick="hideModal('orderModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script>
+const user = requireAuth(['manager','stockroom']);
+if (user) { populateSidebar(user); document.getElementById('sb-location-sub').textContent = user.location_name || ''; }
+liveClock('topbarTime');
+onModalOverlayClick('orderModal');
+
+let invData = [], currentTab = 'staff', selectedItemId = null;
+
+function switchTab(tab) {
+  ['staff','schedule','inventory','supply'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab);
+  });
+  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', ['staff','schedule','inventory','supply'][i] === tab));
+  const labels = { staff:'Staff', schedule:'Schedule', inventory:'Inventory', supply:'Supply Log' };
+  document.getElementById('tabTitle').textContent = labels[tab];
+  currentTab = tab;
+  if (tab === 'staff') loadStaff();
+  if (tab === 'schedule') loadSchedule();
+  if (tab === 'inventory') loadInventory();
+  if (tab === 'supply') loadSupply();
+}
+
+function refreshCurrent() { switchTab(currentTab); }
+
+async function loadStats() {
+  const emps = await API.employees(user.location_id);
+  const onDuty = emps.filter(e => e.clocked_in).length;
+  const inv = await API.inventory(user.location_id);
+  const lowStock = inv.filter(i => i.quantity < i.min_quantity).length;
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-card"><div class="stat-icon burgundy">👥</div><div class="stat-info"><div class="stat-value">${emps.length}</div><div class="stat-label">Total Staff</div></div></div>
+    <div class="stat-card"><div class="stat-icon success">✅</div><div class="stat-info"><div class="stat-value">${onDuty}</div><div class="stat-label">On Duty Now</div></div></div>
+    <div class="stat-card"><div class="stat-icon warning">⚠️</div><div class="stat-info"><div class="stat-value">${lowStock}</div><div class="stat-label">Low Stock Items</div></div></div>
+  `;
+}
+
+async function loadStaff() {
+  const emps = await API.employees(user.location_id);
+  document.getElementById('staffBody').innerHTML = emps.map(e => `
+    <tr>
+      <td class="fw-700">${e.name}</td>
+      <td><span class="badge badge-info">${e.role}</span></td>
+      <td class="text-sm text-muted">${e.email}</td>
+      <td>${e.is_active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-muted">Inactive</span>'}</td>
+      <td>${e.clocked_in ? '<span class="badge badge-gold">● On Duty</span>' : '<span class="badge badge-muted">Off</span>'}</td>
+      <td>
+        <select style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;" onchange="API.updateEmployee(${e.id},{role:this.value})">
+          ${['manager','stockroom','chef','waiter','frontdesk','employee'].map(r=>`<option ${r===e.role?'selected':''}>${r}</option>`).join('')}
+        </select>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function loadSchedule() {
+  const emps = await API.employees(user.location_id);
+  const days = ['Today','Mon','Tue','Wed','Thu','Fri','Sun'];
+  const offsets = [0,1,2,3,4,5,6];
+  const now = new Date();
+  const dateLabels = offsets.map(d => {
+    const dt = new Date(now); dt.setDate(dt.getDate() + d);
+    return dt.toLocaleDateString([], { weekday:'short', month:'short', day:'numeric' });
+  });
+
+  let html = `<div class="sched-head">Employee</div>${dateLabels.map(d=>`<div class="sched-head">${d}</div>`).join('')}`;
+
+  for (const emp of emps.slice(0, 10)) {
+    html += `<div class="sched-name">${emp.name}<br><span class="text-sm text-muted">${emp.role}</span></div>`;
+    for (let d = 0; d < 7; d++) {
+      html += `<div class="sched-cell"><span class="sched-shift">08:00–16:00</span></div>`;
+    }
+  }
+  document.getElementById('schedGrid').innerHTML = html;
+}
+
+async function loadInventory() {
+  invData = await API.inventory(user.location_id);
+  renderInv(invData);
+}
+
+function renderInv(items) {
+  document.getElementById('invBody').innerHTML = items.map(i => {
+    const pct = Math.min(100, Math.round(i.quantity / (i.min_quantity * 2) * 100));
+    const cls = i.quantity < i.min_quantity ? (i.quantity < i.min_quantity * 0.5 ? 'critical' : 'low') : 'ok';
+    return `<tr>
+      <td class="fw-700">${i.item_name}</td>
+      <td><span class="badge badge-muted">${i.category}</span></td>
+      <td>${i.quantity} ${i.unit}</td>
+      <td>${i.min_quantity} ${i.unit}</td>
+      <td><div class="inv-bar-wrap"><div class="inv-bar ${cls}" style="width:${pct}%"></div></div></td>
+      <td>${i.quantity < i.min_quantity ? '<span class="badge badge-danger">Low</span>' : '<span class="badge badge-success">OK</span>'}</td>
+      <td><button class="btn btn-sm btn-ghost" onclick="openOrder(${i.id},'${i.item_name}')">Order</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterInv() {
+  const q = document.getElementById('invSearch').value.toLowerCase();
+  renderInv(invData.filter(i => i.item_name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q)));
+}
+
+function openOrder(itemId, name) {
+  selectedItemId = itemId;
+  document.getElementById('orderItemName').value = name;
+  document.getElementById('orderQty').value = 10;
+  showModal('orderModal');
+}
+
+async function submitOrder() {
+  const qty = parseInt(document.getElementById('orderQty').value);
+  if (!qty || qty < 1) return showAlert('orderAlert', 'Enter a valid quantity');
+  try {
+    await API.orderSupply({ item_id: selectedItemId, quantity: qty });
+    hideModal('orderModal');
+    loadSupply();
+  } catch(e) { showAlert('orderAlert', e.message); }
+}
+
+async function loadSupply() {
+  const [orders, txs] = await Promise.all([API.supplyOrders(user.location_id), API.transactions(user.location_id)]);
+  document.getElementById('supplyBody').innerHTML = orders.map(r => `
+    <tr>
+      <td class="fw-700">${r.item_name}</td>
+      <td>${r.quantity} ${r.unit}</td>
+      <td>${r.ordered_by_name}</td>
+      <td class="text-sm text-muted">${fmtDate(r.created_at)}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td>${r.status==='shipped'?`<button class="btn btn-sm btn-gold" onclick="markReceived(${r.id})">Mark Received</button>`:'—'}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">No orders yet</td></tr>';
+
+  document.getElementById('txBody').innerHTML = txs.map(t => `
+    <tr>
+      <td class="fw-700">${t.item_name}</td>
+      <td><span class="badge badge-muted">${t.type}</span></td>
+      <td>${t.quantity} ${t.unit}</td>
+      <td>${t.from_location_name || '—'}</td>
+      <td>${t.to_location_name || '—'}</td>
+      <td>${t.user_name}</td>
+      <td class="text-sm text-muted">${fmtDate(t.created_at)}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">No transactions</td></tr>';
+}
+
+async function markReceived(id) {
+  await API.updateSupplyOrder(id, 'received');
+  loadSupply();
+  loadInventory();
+}
+
+loadStats();
+loadStaff();
+setInterval(loadStats, 30000);
+</script>
+</body>
+</html>

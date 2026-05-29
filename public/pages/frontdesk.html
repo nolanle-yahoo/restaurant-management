@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Front Desk</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+    .legend-dot { width: 14px; height: 14px; border-radius: 3px; }
+    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .filter-btn { padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--border); background: #fff; cursor: pointer; font-size: 12px; font-weight: 600; transition: all .15s; }
+    .filter-btn.active { background: var(--burgundy); color: #fff; border-color: var(--burgundy); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🍷</div>
+      <div class="logo-name">Restaurant Mgmt</div>
+      <div class="logo-sub">Front Desk</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-name" id="sb-name"></div>
+      <div class="user-role" id="sb-role"></div>
+      <div class="user-loc" id="sb-location"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#"><span class="nav-icon">🪑</span>Table Map</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn">Sign Out</button></div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">Table Map</div>
+      <div class="topbar-right">
+        <span class="text-muted text-sm" id="lastRefresh"></span>
+        <span class="text-muted text-sm" id="topbarTime"></span>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#fff;border:2px solid #D1C9BB"></div> Empty</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,.2);border:2px solid #C9A84C"></div> Waiting Order</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(196,118,42,.2);border:2px solid #C4762A"></div> Ordered</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(230,126,34,.2);border:2px solid #E67E22"></div> Waiting Food</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(74,124,89,.2);border:2px solid #4A7C59"></div> Ready to Clean</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F5F5F5;border:2px solid #999"></div> Cleaning</div>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('empty',this)">Empty</button>
+        <button class="filter-btn" onclick="setFilter('waiting_order',this)">Waiting Order</button>
+        <button class="filter-btn" onclick="setFilter('ordered',this)">Ordered</button>
+        <button class="filter-btn" onclick="setFilter('waiting_food',this)">Waiting Food</button>
+        <button class="filter-btn" onclick="setFilter('ready_clean',this)">Ready to Clean</button>
+        <button class="filter-btn" onclick="setFilter('cleaning',this)">Cleaning</button>
+      </div>
+
+      <div class="floor-grid" id="floorGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Table modal -->
+<div class="modal-overlay" id="tableModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTableTitle">Table 1</div>
+    <div id="tableAlert" class="alert hidden"></div>
+    <p style="margin-bottom:16px;color:var(--muted);font-size:13.5px;">Update the status of this table:</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="statusButtons"></div>
+    <button class="btn btn-ghost" style="width:100%;margin-top:14px" onclick="hideModal('tableModal')">Cancel</button>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script>
+const user = requireAuth(['frontdesk','manager','owner']);
+if (user) populateSidebar(user);
+liveClock('topbarTime');
+onModalOverlayClick('tableModal');
+
+let allTables = [], filterStatus = 'all', selectedTable = null;
+const STATUSES = ['empty','waiting_order','ordered','waiting_food','ready_clean','cleaning'];
+const STATUS_COLORS = { empty:'#fff', waiting_order:'rgba(201,168,76,.15)', ordered:'rgba(196,118,42,.15)', waiting_food:'rgba(230,126,34,.15)', ready_clean:'rgba(74,124,89,.15)', cleaning:'#F5F5F5' };
+const STATUS_BORDERS = { empty:'#D1C9BB', waiting_order:'#C9A84C', ordered:'#C4762A', waiting_food:'#E67E22', ready_clean:'#4A7C59', cleaning:'#999' };
+
+function setFilter(status, btn) {
+  filterStatus = status;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+}
+
+function renderGrid() {
+  const tables = filterStatus === 'all' ? allTables : allTables.filter(t => t.status === filterStatus);
+  document.getElementById('floorGrid').innerHTML = tables.map(t => `
+    <div class="table-card ts-${t.status}" style="background:${STATUS_COLORS[t.status]};border-color:${STATUS_BORDERS[t.status]};" onclick="openTableModal(${t.id})">
+      <div class="table-num">T${t.table_number}</div>
+      <div class="table-cap">Seats ${t.capacity}</div>
+      <div class="table-stat" style="color:${STATUS_BORDERS[t.status]}">${tableStatusLabel(t.status)}</div>
+    </div>
+  `).join('') || '<div style="color:var(--muted);grid-column:1/-1;text-align:center;padding:24px">No tables match filter</div>';
+}
+
+async function loadTables() {
+  allTables = await API.tables(user.location_id);
+  renderGrid();
+  document.getElementById('lastRefresh').textContent = 'Refreshed ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + ' · ';
+}
+
+function openTableModal(id) {
+  selectedTable = allTables.find(t => t.id === id);
+  document.getElementById('modalTableTitle').textContent = `Table ${selectedTable.table_number} — ${tableStatusLabel(selectedTable.status)}`;
+  document.getElementById('statusButtons').innerHTML = STATUSES.map(s => `
+    <button class="btn ${s===selectedTable.status?'btn-primary':'btn-ghost'}" style="justify-content:center" onclick="changeStatus('${s}')">${tableStatusLabel(s)}</button>
+  `).join('');
+  showModal('tableModal');
+}
+
+async function changeStatus(status) {
+  try {
+    await API.updateTable(selectedTable.id, status);
+    hideModal('tableModal');
+    loadTables();
+  } catch(e) {
+    showAlert('tableAlert', e.message);
+  }
+}
+
+loadTables();
+setInterval(loadTables, 5000);
+</script>
+</body>
+</html>

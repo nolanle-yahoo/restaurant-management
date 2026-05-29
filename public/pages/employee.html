@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Employee Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .week-table { width: 100%; border-collapse: collapse; }
+    .week-table th, .week-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); text-align: left; font-size: 13.5px; }
+    .week-table th { background: #F5F0EA; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .4px; }
+    .session-info { display: flex; gap: 24px; justify-content: center; margin-top: 12px; }
+    .session-item { text-align: center; }
+    .session-val { font-size: 22px; font-weight: 800; color: var(--burgundy); }
+    .session-lab { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🍷</div>
+      <div class="logo-name">Restaurant Mgmt</div>
+      <div class="logo-sub">Employee Portal</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-name" id="sb-name"></div>
+      <div class="user-role" id="sb-role"></div>
+      <div class="user-loc" id="sb-location"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#"><span class="nav-icon">⏱️</span>My Time</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn">Sign Out</button></div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">My Time & Attendance</div>
+      <div class="topbar-right">
+        <span id="topbarTime" class="text-muted text-sm"></span>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div style="max-width:600px;margin:0 auto;">
+
+        <!-- Clock hero -->
+        <div class="card" style="text-align:center;padding:36px 24px;">
+          <div class="clock-hero">
+            <div class="clock-time" id="liveTime">--:--:--</div>
+            <div id="clockStatus" class="text-muted" style="margin-top:6px;font-size:14px;">Checking status...</div>
+            <button id="clockBtn" class="clock-btn in" onclick="toggleClock()">Clock In</button>
+          </div>
+          <div class="session-info" id="sessionInfo" style="display:none">
+            <div class="session-item"><div class="session-val" id="checkInTime">—</div><div class="session-lab">Clocked In At</div></div>
+            <div class="session-item"><div class="session-val" id="hoursToday">0h 0m</div><div class="session-lab">Hours Today</div></div>
+          </div>
+        </div>
+
+        <div id="alertBox" class="alert hidden mt-16"></div>
+
+        <!-- Week nav -->
+        <div class="card mt-24">
+          <div class="card-header">
+            <div class="card-title">Weekly Hours</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button class="btn btn-ghost btn-sm" onclick="changeWeek(1)">◀ Prev</button>
+              <span id="weekLabel" class="text-sm fw-700 text-muted">This Week</span>
+              <button class="btn btn-ghost btn-sm" onclick="changeWeek(-1)" id="nextWeekBtn" disabled>Next ▶</button>
+            </div>
+          </div>
+          <table class="week-table">
+            <thead><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Hours</th></tr></thead>
+            <tbody id="weekBody"></tbody>
+          </table>
+          <div style="padding:12px 14px;border-top:1px solid var(--border);text-align:right;">
+            Total: <strong id="weekTotal">0.00</strong> hrs
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script>
+const user = requireAuth(['employee','waiter','chef','frontdesk','stockroom','manager','owner']);
+if (user) populateSidebar(user);
+liveClock('topbarTime');
+
+let clockedIn = false, currentWeek = 0, liveTimer = null;
+
+document.getElementById('liveTime').textContent = '';
+setInterval(() => {
+  document.getElementById('liveTime').textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}, 1000);
+
+async function loadStatus() {
+  const { clocked_in, record } = await API.clockStatus();
+  clockedIn = clocked_in;
+  const btn = document.getElementById('clockBtn');
+  const statusEl = document.getElementById('clockStatus');
+  const sessionInfo = document.getElementById('sessionInfo');
+
+  if (clocked_in && record) {
+    btn.className = 'clock-btn out';
+    btn.textContent = 'Clock Out';
+    statusEl.textContent = 'You are currently on duty';
+    sessionInfo.style.display = 'flex';
+    document.getElementById('checkInTime').textContent = fmtTime(record.check_in);
+    updateElapsed(record.check_in);
+    if (liveTimer) clearInterval(liveTimer);
+    liveTimer = setInterval(() => updateElapsed(record.check_in), 60000);
+  } else {
+    btn.className = 'clock-btn in';
+    btn.textContent = 'Clock In';
+    statusEl.textContent = 'You are not clocked in';
+    sessionInfo.style.display = 'none';
+    if (liveTimer) clearInterval(liveTimer);
+  }
+}
+
+function updateElapsed(checkIn) {
+  const diff = Math.floor((Date.now() - new Date(checkIn + 'Z')) / 60000);
+  const h = Math.floor(diff / 60), m = diff % 60;
+  document.getElementById('hoursToday').textContent = `${h}h ${m}m`;
+}
+
+async function toggleClock() {
+  const btn = document.getElementById('clockBtn');
+  btn.disabled = true;
+  try {
+    if (clockedIn) {
+      const r = await API.clockOut();
+      showAlert('alertBox', `Clocked out. Hours worked: ${r.hours_worked}`, 'success');
+    } else {
+      await API.clockIn();
+      showAlert('alertBox', 'Clocked in successfully!', 'success');
+    }
+    await loadStatus();
+    loadWeek(currentWeek);
+  } catch(e) {
+    showAlert('alertBox', e.message, 'danger');
+  }
+  btn.disabled = false;
+}
+
+let weekOffset = 0;
+async function changeWeek(dir) {
+  weekOffset += dir;
+  document.getElementById('weekLabel').textContent = weekOffset === 0 ? 'This Week' : `${Math.abs(weekOffset)} Week${Math.abs(weekOffset)>1?'s':''} Ago`;
+  document.getElementById('nextWeekBtn').disabled = weekOffset >= 0;
+  await loadWeek(weekOffset);
+}
+
+async function loadWeek(week) {
+  const { records, total_hours } = await API.clockHours(user.id, week);
+  document.getElementById('weekBody').innerHTML = records.length
+    ? records.map(r => `
+        <tr>
+          <td>${r.work_date}</td>
+          <td>${r.clock_in_time ? r.clock_in_time.slice(0,5) : '—'}</td>
+          <td>${r.clock_out_time ? r.clock_out_time.slice(0,5) : '—'}</td>
+          <td class="fw-700">${r.hours_worked ?? '—'}</td>
+        </tr>
+      `).join('')
+    : '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted)">No records this week</td></tr>';
+  document.getElementById('weekTotal').textContent = total_hours.toFixed(2);
+}
+
+loadStatus();
+loadWeek(0);
+setInterval(loadStatus, 15000);
+</script>
+</body>
+</html>
