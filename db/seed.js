@@ -152,16 +152,16 @@ function seed() {
   // ── Inventory (must be before supply orders) ─────────────────────
   const insertInv = db.prepare(`INSERT INTO inventory (location_id, item_name, category, unit, quantity, min_quantity) VALUES (?,?,?,?,?,?)`);
   const inventoryItems = [
-    ['Beef Tenderloin', 'Meat',    'kg',     45, 20], ['Chicken Breast', 'Meat',     'kg',     60, 25],
-    ['Atlantic Salmon', 'Seafood', 'kg',      8, 15], ['Shrimp',         'Seafood',  'kg',     30, 10],
-    ['Roma Tomatoes',   'Produce', 'kg',     40, 15], ['Mixed Greens',   'Produce',  'kg',      5,  8],
-    ['Potatoes',        'Produce', 'kg',     80, 30], ['Garlic',         'Produce',  'kg',     12,  5],
-    ['Olive Oil',       'Pantry',  'liters', 18, 10], ['Sea Salt',       'Pantry',   'kg',     20,  5],
-    ['Black Pepper',    'Pantry',  'kg',      8,  3], ['Flour',          'Pantry',   'kg',     55, 20],
-    ['Sugar',           'Pantry',  'kg',     30, 10], ['Butter',         'Dairy',    'kg',     25, 10],
-    ['Heavy Cream',     'Dairy',   'liters', 12,  8], ['Parmesan',       'Dairy',    'kg',      9,  5],
-    ['Red Wine',        'Beverage','bottles',40, 15], ['White Wine',     'Beverage', 'bottles',35, 15],
-    ['Sparkling Water', 'Beverage','cases',  20,  8], ['Coffee Beans',   'Beverage', 'kg',     15,  5],
+    ['Beef Tenderloin', 'Meat',    'lbs',    100, 44], ['Chicken Breast', 'Meat',     'lbs',   132, 55],
+    ['Atlantic Salmon', 'Seafood', 'lbs',     18, 33], ['Shrimp',         'Seafood',  'lbs',    66, 22],
+    ['Roma Tomatoes',   'Produce', 'lbs',     88, 33], ['Mixed Greens',   'Produce',  'lbs',    11, 18],
+    ['Potatoes',        'Produce', 'lbs',    176, 66], ['Garlic',         'Produce',  'lbs',    26, 11],
+    ['Olive Oil',       'Pantry',  'gal',      5,  3], ['Sea Salt',       'Pantry',   'lbs',    44, 11],
+    ['Black Pepper',    'Pantry',  'lbs',     18,  7], ['Flour',          'Pantry',   'lbs',   121, 44],
+    ['Sugar',           'Pantry',  'lbs',     66, 22], ['Butter',         'Dairy',    'lbs',    55, 22],
+    ['Heavy Cream',     'Dairy',   'qt',      13,  8], ['Parmesan',       'Dairy',    'lbs',    20, 11],
+    ['Red Wine',        'Beverage','bottles', 40, 15], ['White Wine',     'Beverage', 'bottles',35, 15],
+    ['Sparkling Water', 'Beverage','cases',   20,  8], ['Coffee Beans',   'Beverage', 'lbs',    33, 11],
   ];
   // Inventory IDs: loc1=1-20, loc2=21-40, loc3=41-60, loc4=61-80, loc5=81-100
   [1,2,3,4,5].forEach(locId => {
