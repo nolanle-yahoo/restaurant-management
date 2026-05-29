@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Restaurant — Mobile</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; background: #F2EDE8; }
+  </style>
+</head>
+<body>
+<div class="mob-app">
+
+  <!-- Header -->
+  <header class="mob-header">
+    <div class="mob-logo">🍷</div>
+    <div class="mob-header-info">
+      <div class="mob-header-name" id="mobHeaderName">Loading…</div>
+      <div class="mob-header-status" id="mobHeaderStatus"></div>
+    </div>
+    <div class="mob-header-time" id="mobTime"></div>
+    <button class="mob-refresh-btn" onclick="refresh()">↻</button>
+  </header>
+
+  <!-- Main content -->
+  <main class="mob-main">
+
+    <!-- Floor tab -->
+    <div class="mob-tab-content active" id="tab-floor">
+      <div class="mob-legend" id="mobLegend"></div>
+      <div id="mobFloor"></div>
+    </div>
+
+    <!-- My Area tab (waiter/frontdesk) -->
+    <div class="mob-tab-content" id="tab-mine">
+      <div id="mobMineContent"></div>
+    </div>
+
+    <!-- Orders tab (waiter/chef) -->
+    <div class="mob-tab-content" id="tab-orders">
+      <div class="mob-section-heading">Active Orders</div>
+      <div class="mob-order-list" id="mobOrderList"></div>
+    </div>
+
+    <!-- Me tab -->
+    <div class="mob-tab-content" id="tab-me">
+      <div class="mob-profile-card" id="mobProfileCard"></div>
+      <div class="mob-clock-section">
+        <div class="mob-clock-elapsed" id="mobElapsed">—</div>
+        <div class="mob-clock-label" id="mobClockLabel">Not clocked in</div>
+        <button class="mob-clock-btn in" id="mobClockBtn" onclick="toggleClock()">Clock In</button>
+        <div id="mobClockAlert" style="text-align:center;font-size:13px;color:var(--danger);margin-top:8px"></div>
+      </div>
+      <div class="mob-stat-row" id="mobWeekStats"></div>
+      <div style="padding:0 14px 20px">
+        <button class="btn btn-ghost" style="width:100%" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav class="mob-nav">
+    <button class="mob-nav-btn active" onclick="switchTab('floor', this)" id="nav-floor">
+      <span class="mob-nav-icon">🗺️</span><span>Floor</span>
+    </button>
+    <button class="mob-nav-btn" onclick="switchTab('mine', this)" id="nav-mine">
+      <span class="mob-nav-icon">⭐</span><span id="navMineLabel">My Area</span>
+    </button>
+    <button class="mob-nav-btn" onclick="switchTab('orders', this)" id="nav-orders">
+      <span class="mob-nav-icon">🍽️</span><span>Orders</span>
+    </button>
+    <button class="mob-nav-btn" onclick="switchTab('me', this)" id="nav-me">
+      <span class="mob-nav-icon">👤</span><span>Me</span>
+    </button>
+  </nav>
+</div>
+
+<!-- Status picker sheet -->
+<div class="mob-sheet-overlay" id="statusSheet">
+  <div class="mob-sheet">
+    <div class="mob-sheet-handle"></div>
+    <div class="mob-sheet-title" id="sheetTitle">Update Table Status</div>
+    <div class="mob-status-grid" id="sheetStatusGrid"></div>
+    <button class="btn btn-ghost" style="width:100%;margin-top:12px" onclick="closeSheet()">Cancel</button>
+  </div>
+</div>
+
+<!-- Take Order Sheet -->
+<div class="mob-sheet-overlay" id="orderSheet">
+  <div class="mob-sheet">
+    <div class="mob-sheet-handle"></div>
+    <div class="mob-sheet-title" id="orderSheetTitle">Take Order</div>
+    <div id="orderSheetAlert" style="color:var(--danger);font-size:13px;text-align:center;margin-bottom:8px;display:none"></div>
+    <div id="orderSheetItems"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addOrderItem()" style="margin-bottom:10px">+ Add Item</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn btn-primary" onclick="submitMobOrder()">Place Order</button>
+      <button class="btn btn-ghost" onclick="closeOrderSheet()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script>
+const user = requireAuth(['waiter','frontdesk','chef','employee','manager','stockroom']);
+if (!user) throw new Error('Not authorized');
+
+// Populate header
+document.getElementById('mobHeaderName').textContent = user.name;
+
+// Live clock
+setInterval(() => {
+  document.getElementById('mobTime').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}, 1000);
+document.getElementById('mobTime').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+// Role-specific nav labels
+if (user.role === 'chef') document.getElementById('navMineLabel').textContent = 'Kitchen';
+
+// Legend
+const legendStatuses = ['empty','occupied','waiting_order','waiting_food','need_help','waiting_payment','ready_clean'];
+document.getElementById('mobLegend').innerHTML = legendStatuses.map(s => {
+  const info = tableStatusInfo(s);
+  return `<div class="mob-legend-item"><div class="mob-legend-dot" style="background:${info.bg};border-color:${info.border}"></div>${info.label}</div>`;
+}).join('');
+
+let allTables = [], areaData = [], clockedIn = false, clockInTime = null, currentTabId = 'floor';
+let sheetTableId = null, orderItemCount = 0, orderTableId = null;
+let elapsedInterval = null;
+
+// ── Tab switching ──────────────────────────────────────────
+function switchTab(tab, btn) {
+  document.querySelectorAll('.mob-tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (btn) btn.classList.add('active');
+  currentTabId = tab;
+  if (tab === 'floor')  renderFloor();
+  if (tab === 'mine')   renderMine();
+  if (tab === 'orders') loadOrders();
+  if (tab === 'me')     loadMe();
+}
+
+// ── Refresh ────────────────────────────────────────────────
+async function refresh() {
+  await loadData();
+  switchTab(currentTabId, document.getElementById('nav-' + currentTabId));
+}
+
+async function loadData() {
+  [allTables, areaData] = await Promise.all([
+    API.tables(user.location_id),
+    API.tablesByArea(user.location_id),
+  ]);
+}
+
+// ── Floor tab ──────────────────────────────────────────────
+function renderFloor() {
+  const html = areaData.map(area => `
+    <div class="mob-area-section">
+      <div class="mob-area-label">
+        <div class="mob-area-dot" style="background:${area.color || '#999'}"></div>
+        ${area.name}
+        ${area.waiters && area.waiters.length ? `<span class="mob-area-waiter">${area.waiters.map(w=>w.name.split(' ')[0]).join(', ')}</span>` : ''}
+      </div>
+      <div class="mob-table-grid">
+        ${area.tables.map(t => renderTableCard(t)).join('')}
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('mobFloor').innerHTML = html || '<div style="padding:30px;text-align:center;color:var(--muted)">No tables found</div>';
+}
+
+function renderTableCard(t) {
+  const info = tableStatusInfo(t.status);
+  const isMyTable = user.role === 'waiter' && t.waiter_id === user.id;
+  return `<div class="mob-table-card ${t.status}" style="background:${info.bg};border-color:${info.border};${isMyTable?'box-shadow:0 0 0 3px '+info.border+';':''}"
+    onclick="openTableSheet(${t.id})">
+    <div class="mob-table-num" style="color:${info.border}">T${t.table_number}</div>
+    <div class="mob-table-emoji">${info.emoji}</div>
+    <div class="mob-table-label" style="color:${info.text}">${info.label}</div>
+    <div class="mob-table-cap">${t.capacity} seats</div>
+  </div>`;
+}
+
+// ── My Area / Mine tab ─────────────────────────────────────
+function renderMine() {
+  const el = document.getElementById('mobMineContent');
+
+  if (user.role === 'chef') {
+    el.innerHTML = '<div class="mob-section-heading">Kitchen — Order Queue</div>';
+    loadOrders('mine-orders', true);
+    return;
+  }
+
+  // For waiters: show assigned area tables
+  const myAreas = areaData.filter(a => a.waiters && a.waiters.some(w => w.id === user.id));
+  if (!myAreas.length) {
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">No area assigned yet.<br>Ask your manager to assign you to an area.</div>';
+    return;
+  }
+
+  el.innerHTML = myAreas.map(area => `
+    <div class="mob-area-section">
+      <div class="mob-area-label">
+        <div class="mob-area-dot" style="background:${area.color}"></div>
+        ${area.name}
+      </div>
+      <div class="mob-table-grid">
+        ${area.tables.map(t => renderTableCard(t)).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Orders tab ─────────────────────────────────────────────
+async function loadOrders(containerId, chefView) {
+  const elId = containerId || 'mobOrderList';
+  try {
+    const orders = await API.orders(user.location_id);
+    const mine = user.role === 'chef' ? orders.filter(o => o.status !== 'served') :
+                 user.role === 'waiter' ? orders.filter(o => o.waiter_id === user.id && o.status !== 'served') :
+                 orders.filter(o => o.status !== 'served');
+
+    const el = document.getElementById(elId) || document.getElementById('mobOrderList');
+    if (!el) return;
+
+    if (!mine.length) {
+      el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted)">No active orders</div>';
+      return;
+    }
+
+    el.innerHTML = mine.map(o => {
+      const actions = [];
+      if (user.role === 'chef') {
+        if (o.status === 'pending') actions.push(`<button class="btn btn-sm btn-ghost" onclick="updateOrder(${o.id},'preparing')">Start Preparing</button>`);
+        if (o.status === 'preparing') actions.push(`<button class="btn btn-sm btn-success" onclick="updateOrder(${o.id},'ready')">Mark Ready</button>`);
+      }
+      if (user.role === 'waiter') {
+        if (o.status === 'ready') actions.push(`<button class="btn btn-sm btn-success" onclick="updateOrder(${o.id},'served')">Mark Served</button>`);
+      }
+      return `<div class="mob-order-card status-${o.status}">
+        <div class="mob-order-header">
+          <div class="mob-order-table">Table ${o.table_number || '?'} ${o.area_name ? '<span style="font-size:11px;color:var(--muted)">· '+o.area_name+'</span>' : ''}</div>
+          ${statusBadge(o.status)}
+        </div>
+        <div class="mob-order-items">${(o.items||[]).map(i=>`${i.item_name} ×${i.quantity}`).join(' · ') || '—'}</div>
+        <div class="mob-order-time">${timeAgo(o.created_at)}</div>
+        ${actions.length ? `<div class="mob-order-actions" style="margin-top:8px">${actions.join('')}</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch {}
+}
+
+async function updateOrder(id, status) {
+  await API.updateOrder(id, status);
+  loadOrders();
+  await loadData();
+  renderFloor();
+}
+
+// ── Me tab ─────────────────────────────────────────────────
+async function loadMe() {
+  document.getElementById('mobProfileCard').innerHTML = `
+    <div class="mob-profile-name">${user.name}</div>
+    <div class="mob-profile-role">${user.role} · ${user.location_name || ''}</div>
+  `;
+  await loadClockStatus();
+  await loadWeekStats();
+}
+
+async function loadClockStatus() {
+  try {
+    const s = await API.clockStatus();
+    clockedIn = s.clocked_in;
+    clockInTime = s.check_in || null;
+
+    const btn = document.getElementById('mobClockBtn');
+    const label = document.getElementById('mobClockLabel');
+    const elapsed = document.getElementById('mobElapsed');
+
+    if (clockedIn) {
+      btn.className = 'mob-clock-btn out';
+      btn.textContent = 'Clock Out';
+      label.textContent = 'Clocked in at ' + (clockInTime ? new Date(clockInTime + (clockInTime.includes('T')?'':'Z')).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—');
+      document.getElementById('mobHeaderStatus').textContent = '● On duty · ' + elapsedFrom(clockInTime);
+      startElapsedTick(clockInTime, elapsed);
+    } else {
+      btn.className = 'mob-clock-btn in';
+      btn.textContent = 'Clock In';
+      label.textContent = 'Not clocked in';
+      elapsed.textContent = '—';
+      document.getElementById('mobHeaderStatus').textContent = '○ Off duty';
+      if (elapsedInterval) { clearInterval(elapsedInterval); elapsedInterval = null; }
+    }
+  } catch {}
+}
+
+function elapsedFrom(dt) {
+  if (!dt) return '';
+  const m = Math.floor((Date.now() - new Date(dt + (dt.includes('T') ? '' : 'Z'))) / 60000);
+  if (m < 60) return m + 'm';
+  return Math.floor(m/60) + 'h ' + (m%60) + 'm';
+}
+
+function startElapsedTick(clockIn, el) {
+  if (elapsedInterval) clearInterval(elapsedInterval);
+  const tick = () => { el.textContent = elapsedFrom(clockIn); };
+  tick();
+  elapsedInterval = setInterval(tick, 30000);
+}
+
+async function toggleClock() {
+  const alert = document.getElementById('mobClockAlert');
+  alert.style.display = 'none';
+  try {
+    if (clockedIn) await API.clockOut(); else await API.clockIn();
+    await loadClockStatus();
+    await loadWeekStats();
+  } catch(e) {
+    alert.textContent = e.message;
+    alert.style.display = 'block';
+  }
+}
+
+async function loadWeekStats() {
+  try {
+    const data = await API.clockHours(user.id, 0);
+    const todayHrs = data.days?.find(d => {
+      const today = new Date().toISOString().slice(0,10);
+      return d.work_date === today;
+    })?.hours || 0;
+    document.getElementById('mobWeekStats').innerHTML = `
+      <div class="mob-stat-box"><div class="mob-stat-val">${(data.total_hours||0).toFixed(1)}</div><div class="mob-stat-lab">Week Hrs</div></div>
+      <div class="mob-stat-box"><div class="mob-stat-val">${todayHrs}</div><div class="mob-stat-lab">Today Hrs</div></div>
+      <div class="mob-stat-box"><div class="mob-stat-val">$${((data.total_hours||0)*(user.hourly_rate||0)).toFixed(0)}</div><div class="mob-stat-lab">Est. Pay</div></div>
+    `;
+  } catch {}
+}
+
+// ── Table status sheet ─────────────────────────────────────
+function openTableSheet(tableId) {
+  sheetTableId = tableId;
+  const t = allTables.find(x => x.id === tableId);
+  if (!t) return;
+  document.getElementById('sheetTitle').textContent = `Table ${t.table_number}${t.area_name ? ' · ' + t.area_name : ''}`;
+
+  document.getElementById('sheetStatusGrid').innerHTML = TABLE_STATUSES.map(s => {
+    const active = s.value === t.status ? 'active' : '';
+    return `<button class="mob-status-btn ${active}" style="border-color:${active?s.border:'transparent'};background:${active?s.bg:'#F8F6F2'}"
+      onclick="setTableStatus('${s.value}')">
+      <span class="mob-status-emoji">${s.emoji}</span>${s.label}
+    </button>`;
+  }).join('');
+
+  // If waiter and table is waiting_order, add Take Order button
+  if (user.role === 'waiter' && t.status === 'waiting_order') {
+    document.getElementById('sheetStatusGrid').insertAdjacentHTML('beforebegin',
+      `<button class="btn btn-primary" style="width:100%;margin-bottom:10px;font-size:14px;padding:12px" onclick="openOrderSheet(${t.id},${t.table_number})">📋 Take Order</button>`);
+  }
+
+  document.getElementById('statusSheet').classList.add('open');
+}
+
+async function setTableStatus(status) {
+  try {
+    await API.updateTable(sheetTableId, status);
+    closeSheet();
+    await loadData();
+    renderFloor();
+    if (currentTabId === 'mine') renderMine();
+  } catch(e) { alert(e.message); }
+}
+
+function closeSheet() { document.getElementById('statusSheet').classList.remove('open'); }
+
+// Swipe down to close sheet
+document.getElementById('statusSheet').addEventListener('click', e => {
+  if (e.target === document.getElementById('statusSheet')) closeSheet();
+});
+
+// ── Take Order sheet ───────────────────────────────────────
+function openOrderSheet(tableId, tableNum) {
+  closeSheet();
+  orderTableId = tableId;
+  orderItemCount = 0;
+  document.getElementById('orderSheetTitle').textContent = `Take Order — Table ${tableNum}`;
+  document.getElementById('orderSheetItems').innerHTML = '';
+  document.getElementById('orderSheetAlert').style.display = 'none';
+  addOrderItem();
+  document.getElementById('orderSheet').classList.add('open');
+}
+
+function addOrderItem() {
+  const id = ++orderItemCount;
+  const div = document.createElement('div');
+  div.id = 'mob-item-' + id;
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 60px 70px 28px;gap:6px;margin-bottom:8px;align-items:center';
+  div.innerHTML = `
+    <input type="text" placeholder="Item name" id="mob-iname-${id}" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+    <input type="number" placeholder="Qty" id="mob-iqty-${id}" value="1" min="1" style="padding:8px 6px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;text-align:center">
+    <input type="number" placeholder="$" id="mob-iprice-${id}" value="0" min="0" step="0.01" style="padding:8px 6px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;text-align:center">
+    <button onclick="this.parentNode.remove()" style="background:none;border:none;color:var(--danger);font-size:20px;cursor:pointer">×</button>
+  `;
+  document.getElementById('orderSheetItems').appendChild(div);
+}
+
+async function submitMobOrder() {
+  const items = [];
+  for (let i = 1; i <= orderItemCount; i++) {
+    const nameEl = document.getElementById('mob-iname-' + i);
+    if (!nameEl || !nameEl.closest('#orderSheetItems')) continue;
+    const name = nameEl.value.trim();
+    if (!name) continue;
+    items.push({ name, quantity: parseInt(document.getElementById('mob-iqty-'+i).value)||1, price: parseFloat(document.getElementById('mob-iprice-'+i).value)||0 });
+  }
+  const alertEl = document.getElementById('orderSheetAlert');
+  if (!items.length) { alertEl.textContent = 'Add at least one item'; alertEl.style.display = 'block'; return; }
+  try {
+    await API.createOrder({ table_id: orderTableId, items });
+    closeOrderSheet();
+    await loadData();
+    renderFloor();
+    if (currentTabId === 'mine') renderMine();
+  } catch(e) { alertEl.textContent = e.message; alertEl.style.display = 'block'; }
+}
+
+function closeOrderSheet() { document.getElementById('orderSheet').classList.remove('open'); }
+document.getElementById('orderSheet').addEventListener('click', e => {
+  if (e.target === document.getElementById('orderSheet')) closeOrderSheet();
+});
+
+// ── Init ───────────────────────────────────────────────────
+async function init() {
+  await loadData();
+  renderFloor();
+  await loadClockStatus();
+}
+
+setInterval(async () => {
+  await loadData();
+  if (currentTabId === 'floor')  renderFloor();
+  if (currentTabId === 'mine')   renderMine();
+  if (currentTabId === 'orders') loadOrders();
+}, 8000);
+
+init();
+</script>
+</body>
+</html>

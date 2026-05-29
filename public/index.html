@@ -16,6 +16,8 @@
     .login-footer { text-align: center; color: rgba(255,255,255,.55); font-size: 12px; margin-top: 18px; }
     #loginError { margin-bottom: 14px; }
     .login-btn { width: 100%; padding: 12px; font-size: 15px; }
+    .mobile-hint { text-align:center; margin-top:12px; }
+    .mobile-hint a { color: var(--gold); font-size:13px; font-weight:600; }
   </style>
 </head>
 <body>
@@ -38,15 +40,27 @@
       </div>
       <button type="submit" class="btn btn-primary login-btn">Sign In</button>
     </form>
+    <div class="mobile-hint"><a href="/pages/mobile.html">📱 Open Mobile Version</a></div>
   </div>
-  <div class="login-footer">© 2024 Restaurant Management System</div>
+  <div class="login-footer">© 2025 Restaurant Management System</div>
 </div>
 <script src="/js/api.js"></script>
 <script>
+  const MOBILE_ROLES = ['waiter','frontdesk','chef','employee'];
+
+  function isMobileDevice() {
+    return window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  }
+
+  function getDestination(role, mobile) {
+    if (mobile && MOBILE_ROLES.includes(role)) return '/pages/mobile.html';
+    const map = { owner:'owner', manager:'manager', employee:'employee', frontdesk:'frontdesk', waiter:'waiter', chef:'chef', stockroom:'manager' };
+    return '/pages/' + (map[role] || 'employee') + '.html';
+  }
+
   if (localStorage.getItem('token') && localStorage.getItem('user')) {
     const u = JSON.parse(localStorage.getItem('user'));
-    const map = { owner:'owner', manager:'manager', employee:'employee', frontdesk:'frontdesk', waiter:'waiter', chef:'chef', stockroom:'manager' };
-    location.href = '/pages/' + (map[u.role] || 'employee') + '.html';
+    location.href = getDestination(u.role, isMobileDevice());
   }
 
   document.getElementById('loginForm').addEventListener('submit', async e => {
@@ -59,8 +73,7 @@
       const data = await API.login(email, password);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      const map = { owner:'owner', manager:'manager', employee:'employee', frontdesk:'frontdesk', waiter:'waiter', chef:'chef', stockroom:'manager' };
-      location.href = '/pages/' + (map[data.user.role] || 'employee') + '.html';
+      location.href = getDestination(data.user.role, isMobileDevice());
     } catch (err) {
       errEl.textContent = err.message;
       errEl.classList.remove('hidden');

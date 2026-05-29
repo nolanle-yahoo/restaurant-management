@@ -6,12 +6,13 @@
   <title>Front Desk</title>
   <link rel="stylesheet" href="/css/style.css">
   <style>
-    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
-    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
-    .legend-dot { width: 14px; height: 14px; border-radius: 3px; }
-    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-    .filter-btn { padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--border); background: #fff; cursor: pointer; font-size: 12px; font-weight: 600; transition: all .15s; }
-    .filter-btn.active { background: var(--burgundy); color: #fff; border-color: var(--burgundy); }
+    .legend { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+    .legend-item { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--muted); }
+    .legend-dot { width:14px; height:14px; border-radius:50%; border:2px solid; flex-shrink:0; }
+    .filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+    .filter-btn { padding:5px 13px; border-radius:20px; border:1.5px solid var(--border); background:#fff; cursor:pointer; font-size:12px; font-weight:600; transition:all .15s; }
+    .filter-btn.active { background:var(--burgundy); color:#fff; border-color:var(--burgundy); }
+    .assign-select { padding:5px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:12px; background:#fff; }
   </style>
 </head>
 <body>
@@ -28,52 +29,55 @@
       <div class="user-loc" id="sb-location"></div>
     </div>
     <nav class="sidebar-nav">
-      <a class="nav-item active" href="#"><span class="nav-icon">🪑</span>Table Map</a>
+      <a class="nav-item active" href="#" onclick="switchView('map')"><span class="nav-icon">🗺️</span>Floor Map</a>
+      <a class="nav-item" href="#" onclick="switchView('areas')"><span class="nav-icon">📍</span>Areas & Staff</a>
     </nav>
     <div class="sidebar-footer"><button class="logout-btn">Sign Out</button></div>
   </aside>
 
   <div class="main-content">
     <div class="topbar">
-      <div class="topbar-title">Table Map</div>
+      <div class="topbar-title" id="pageTitle">Floor Map</div>
       <div class="topbar-right">
         <span class="text-muted text-sm" id="lastRefresh"></span>
         <span class="text-muted text-sm" id="topbarTime"></span>
+        <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻ Refresh</button>
       </div>
     </div>
 
     <div class="page-body">
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#fff;border:2px solid #D1C9BB"></div> Empty</div>
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,.2);border:2px solid #C9A84C"></div> Waiting Order</div>
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(196,118,42,.2);border:2px solid #C4762A"></div> Ordered</div>
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(230,126,34,.2);border:2px solid #E67E22"></div> Waiting Food</div>
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(74,124,89,.2);border:2px solid #4A7C59"></div> Ready to Clean</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#F5F5F5;border:2px solid #999"></div> Cleaning</div>
+
+      <!-- Floor map view -->
+      <div id="view-map">
+        <div class="legend" id="statusLegend"></div>
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+          <button class="filter-btn" onclick="setFilter('empty',this)">Empty</button>
+          <button class="filter-btn" onclick="setFilter('occupied',this)">Occupied</button>
+          <button class="filter-btn" onclick="setFilter('waiting_order',this)">Ready to Order</button>
+          <button class="filter-btn" onclick="setFilter('waiting_food',this)">Waiting Food</button>
+          <button class="filter-btn" onclick="setFilter('need_help',this)">Needs Help</button>
+          <button class="filter-btn" onclick="setFilter('waiting_payment',this)">Waiting to Pay</button>
+          <button class="filter-btn" onclick="setFilter('ready_clean',this)">Ready to Clean</button>
+        </div>
+        <div id="floorContent"></div>
       </div>
 
-      <div class="filter-bar">
-        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
-        <button class="filter-btn" onclick="setFilter('empty',this)">Empty</button>
-        <button class="filter-btn" onclick="setFilter('waiting_order',this)">Waiting Order</button>
-        <button class="filter-btn" onclick="setFilter('ordered',this)">Ordered</button>
-        <button class="filter-btn" onclick="setFilter('waiting_food',this)">Waiting Food</button>
-        <button class="filter-btn" onclick="setFilter('ready_clean',this)">Ready to Clean</button>
-        <button class="filter-btn" onclick="setFilter('cleaning',this)">Cleaning</button>
+      <!-- Areas & Staff view -->
+      <div id="view-areas" class="hidden">
+        <div class="assign-grid" id="areaAssignGrid"></div>
       </div>
-
-      <div class="floor-grid" id="floorGrid"></div>
     </div>
   </div>
 </div>
 
-<!-- Table modal -->
+<!-- Table status modal -->
 <div class="modal-overlay" id="tableModal">
   <div class="modal">
     <div class="modal-title" id="modalTableTitle">Table 1</div>
     <div id="tableAlert" class="alert hidden"></div>
-    <p style="margin-bottom:16px;color:var(--muted);font-size:13.5px;">Update the status of this table:</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="statusButtons"></div>
+    <p style="margin-bottom:14px;color:var(--muted);font-size:13px">Update this table's status:</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="statusButtons"></div>
     <button class="btn btn-ghost" style="width:100%;margin-top:14px" onclick="hideModal('tableModal')">Cancel</button>
   </div>
 </div>
@@ -86,40 +90,107 @@ if (user) populateSidebar(user);
 liveClock('topbarTime');
 onModalOverlayClick('tableModal');
 
-let allTables = [], filterStatus = 'all', selectedTable = null;
-const STATUSES = ['empty','waiting_order','ordered','waiting_food','ready_clean','cleaning'];
-const STATUS_COLORS = { empty:'#fff', waiting_order:'rgba(201,168,76,.15)', ordered:'rgba(196,118,42,.15)', waiting_food:'rgba(230,126,34,.15)', ready_clean:'rgba(74,124,89,.15)', cleaning:'#F5F5F5' };
-const STATUS_BORDERS = { empty:'#D1C9BB', waiting_order:'#C9A84C', ordered:'#C4762A', waiting_food:'#E67E22', ready_clean:'#4A7C59', cleaning:'#999' };
+let allTables = [], areaData = [], filterStatus = 'all', selectedTable = null, currentView = 'map';
+
+// Build legend
+document.getElementById('statusLegend').innerHTML = TABLE_STATUSES.map(s =>
+  `<div class="legend-item"><div class="legend-dot" style="background:${s.bg};border-color:${s.border}"></div>${s.label}</div>`
+).join('');
+
+function switchView(v) {
+  document.getElementById('view-map').classList.toggle('hidden', v !== 'map');
+  document.getElementById('view-areas').classList.toggle('hidden', v !== 'areas');
+  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', ['map','areas'][i] === v));
+  document.getElementById('pageTitle').textContent = v === 'map' ? 'Floor Map' : 'Areas & Staff';
+  currentView = v;
+  if (v === 'areas') loadAreas();
+}
 
 function setFilter(status, btn) {
   filterStatus = status;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  renderGrid();
+  renderFloor();
 }
 
-function renderGrid() {
-  const tables = filterStatus === 'all' ? allTables : allTables.filter(t => t.status === filterStatus);
-  document.getElementById('floorGrid').innerHTML = tables.map(t => `
-    <div class="table-card ts-${t.status}" style="background:${STATUS_COLORS[t.status]};border-color:${STATUS_BORDERS[t.status]};" onclick="openTableModal(${t.id})">
-      <div class="table-num">T${t.table_number}</div>
-      <div class="table-cap">Seats ${t.capacity}</div>
-      <div class="table-stat" style="color:${STATUS_BORDERS[t.status]}">${tableStatusLabel(t.status)}</div>
+function renderFloor() {
+  const filtered = filterStatus === 'all' ? allTables : allTables.filter(t => t.status === filterStatus);
+
+  if (filterStatus !== 'all') {
+    // Flat grid when filtered
+    document.getElementById('floorContent').innerHTML = `
+      <div class="floor-grid">
+        ${filtered.map(t => renderTableCard(t)).join('') || '<div style="color:var(--muted);grid-column:1/-1;text-align:center;padding:24px">No tables match filter</div>'}
+      </div>`;
+    return;
+  }
+
+  // Group by area
+  document.getElementById('floorContent').innerHTML = areaData.map(area => {
+    const areaTables = area.tables;
+    if (!areaTables.length) return '';
+    return `<div class="area-section">
+      <div class="area-header">
+        <div class="area-dot" style="background:${area.color || '#999'}"></div>
+        <div class="area-name">${area.name}</div>
+        <div class="area-meta">${areaTables.length} tables</div>
+        ${area.waiters?.length ? `<div class="area-waiter-badge">👤 ${area.waiters.map(w=>w.name).join(', ')}</div>` : ''}
+      </div>
+      <div class="floor-grid">${areaTables.map(t => renderTableCard(t)).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderTableCard(t) {
+  const info = tableStatusInfo(t.status);
+  return `<div class="table-card ts-${t.status}" style="background:${info.bg};border-color:${info.border};" onclick="openTableModal(${t.id})">
+    <div class="table-num" style="color:${info.border}">T${t.table_number}</div>
+    <div class="table-cap" style="color:var(--muted)">${t.capacity} seats</div>
+    <div style="font-size:18px;margin:4px 0">${info.emoji}</div>
+    <div class="table-stat" style="color:${info.text}">${info.label}</div>
+    ${t.waiter_name ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">${t.waiter_name.split(' ')[0]}</div>` : ''}
+  </div>`;
+}
+
+async function loadAll() {
+  [allTables, areaData] = await Promise.all([
+    API.tables(user.location_id),
+    API.tablesByArea(user.location_id),
+  ]);
+  renderFloor();
+  document.getElementById('lastRefresh').textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + ' · ';
+}
+
+async function loadAreas() {
+  const [areas, assignments] = await Promise.all([
+    API.areas(user.location_id),
+    API.areaAssignments(user.location_id),
+  ]);
+  document.getElementById('areaAssignGrid').innerHTML = areas.map(a => `
+    <div class="assign-card">
+      <div class="area-title">
+        <div class="area-dot" style="background:${a.color};width:10px;height:10px;border-radius:50%;flex-shrink:0"></div>
+        ${a.name}
+        <span style="font-size:12px;color:var(--muted);font-weight:400">${a.table_count} tables</span>
+      </div>
+      <div id="chips-${a.id}">
+        ${(a.waiters||[]).length ? a.waiters.map(w => {
+          const asgn = assignments.find(x => x.area_id === a.id && x.user_id === w.id);
+          return `<div class="assign-chip">👤 ${w.name}<button class="remove-chip" onclick="removeAssignment(${asgn?.id})">×</button></div>`;
+        }).join('') : '<span style="font-size:12px;color:var(--muted)">No waiter assigned</span>'}
+      </div>
     </div>
-  `).join('') || '<div style="color:var(--muted);grid-column:1/-1;text-align:center;padding:24px">No tables match filter</div>';
-}
-
-async function loadTables() {
-  allTables = await API.tables(user.location_id);
-  renderGrid();
-  document.getElementById('lastRefresh').textContent = 'Refreshed ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + ' · ';
+  `).join('');
 }
 
 function openTableModal(id) {
   selectedTable = allTables.find(t => t.id === id);
-  document.getElementById('modalTableTitle').textContent = `Table ${selectedTable.table_number} — ${tableStatusLabel(selectedTable.status)}`;
-  document.getElementById('statusButtons').innerHTML = STATUSES.map(s => `
-    <button class="btn ${s===selectedTable.status?'btn-primary':'btn-ghost'}" style="justify-content:center" onclick="changeStatus('${s}')">${tableStatusLabel(s)}</button>
+  const info = tableStatusInfo(selectedTable.status);
+  document.getElementById('modalTableTitle').textContent = `Table ${selectedTable.table_number} · ${selectedTable.area_name || ''} — ${info.emoji} ${info.label}`;
+  document.getElementById('statusButtons').innerHTML = TABLE_STATUSES.map(s => `
+    <button class="btn ${s.value===selectedTable.status?'btn-primary':'btn-ghost'}" style="justify-content:center;gap:6px" onclick="changeStatus('${s.value}')">
+      ${s.emoji} ${s.label}
+    </button>
   `).join('');
   showModal('tableModal');
 }
@@ -128,14 +199,18 @@ async function changeStatus(status) {
   try {
     await API.updateTable(selectedTable.id, status);
     hideModal('tableModal');
-    loadTables();
-  } catch(e) {
-    showAlert('tableAlert', e.message);
-  }
+    loadAll();
+  } catch(e) { showAlert('tableAlert', e.message); }
 }
 
-loadTables();
-setInterval(loadTables, 5000);
+async function removeAssignment(id) {
+  if (!id) return;
+  await API.removeAssignment(id);
+  loadAreas();
+}
+
+loadAll();
+setInterval(loadAll, 5000);
 </script>
 </body>
 </html>

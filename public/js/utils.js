@@ -12,7 +12,11 @@ function requireAuth(allowedRoles) {
   return user;
 }
 
-function redirectByRole(role) {
+function redirectByRole(role, mobile) {
+  if (mobile) {
+    location.href = '/pages/mobile.html';
+    return;
+  }
   const map = {
     owner:     '/pages/owner.html',
     manager:   '/pages/manager.html',
@@ -66,34 +70,52 @@ function elapsed(dt) {
   return `${Math.floor(m/60)}h ${m%60}m`;
 }
 
+// All table statuses with display info
+const TABLE_STATUSES = [
+  { value: 'empty',           label: 'Empty',           emoji: '🪑', bg: '#fff',                    border: '#D1C9BB', text: '#999' },
+  { value: 'occupied',        label: 'Occupied',         emoji: '👥', bg: 'rgba(76,134,201,.13)',     border: '#4C86C9', text: '#2E6DB0' },
+  { value: 'waiting_order',   label: 'Ready to Order',  emoji: '📋', bg: 'rgba(201,168,76,.13)',     border: '#C9A84C', text: '#8B6B1F' },
+  { value: 'ordered',         label: 'Ordered',          emoji: '✅', bg: 'rgba(196,118,42,.13)',     border: '#C4762A', text: '#8B4B0F' },
+  { value: 'waiting_food',    label: 'Waiting Food',     emoji: '🍳', bg: 'rgba(230,126,34,.13)',     border: '#E67E22', text: '#9B5700' },
+  { value: 'need_help',       label: 'Needs Help',       emoji: '🆘', bg: 'rgba(192,57,43,.15)',      border: '#C0392B', text: '#9B1C0E' },
+  { value: 'waiting_payment', label: 'Waiting to Pay',  emoji: '💳', bg: 'rgba(155,89,182,.13)',     border: '#9B59B6', text: '#6C3483' },
+  { value: 'special_request', label: 'Special Request',  emoji: '⭐', bg: 'rgba(26,188,156,.13)',     border: '#1ABC9C', text: '#148A72' },
+  { value: 'ready_clean',     label: 'Ready to Clean',  emoji: '🧹', bg: 'rgba(74,124,89,.13)',      border: '#4A7C59', text: '#2D5E3A' },
+  { value: 'cleaning',        label: 'Cleaning',         emoji: '🫧', bg: '#F5F5F5',                  border: '#999',    text: '#666' },
+];
+
+function tableStatusInfo(status) {
+  return TABLE_STATUSES.find(s => s.value === status) || { label: status, emoji: '?', bg: '#fff', border: '#ccc', text: '#666' };
+}
+function tableStatusLabel(status) { return tableStatusInfo(status).label; }
+function tableStatusEmoji(status) { return tableStatusInfo(status).emoji; }
+
 function statusBadge(status) {
   const map = {
-    pending:       ['badge-gold',    'Pending'],
-    preparing:     ['badge-warning', 'Preparing'],
-    ready:         ['badge-success', 'Ready'],
-    served:        ['badge-muted',   'Served'],
-    approved:      ['badge-success', 'Approved'],
-    shipped:       ['badge-info',    'Shipped'],
-    received:      ['badge-muted',   'Received'],
-    active:        ['badge-success', 'Active'],
-    inactive:      ['badge-muted',   'Inactive'],
-    empty:         ['badge-muted',   'Empty'],
-    waiting_order: ['badge-gold',    'Waiting Order'],
-    ordered:       ['badge-warning', 'Ordered'],
-    waiting_food:  ['badge-warning', 'Waiting Food'],
-    ready_clean:   ['badge-success', 'Ready to Clean'],
-    cleaning:      ['badge-muted',   'Cleaning'],
+    pending:         ['badge-gold',    'Pending'],
+    preparing:       ['badge-warning', 'Preparing'],
+    ready:           ['badge-success', 'Ready'],
+    served:          ['badge-muted',   'Served'],
+    approved:        ['badge-success', 'Approved'],
+    shipped:         ['badge-info',    'Shipped'],
+    received:        ['badge-muted',   'Received'],
+    active:          ['badge-success', 'Active'],
+    inactive:        ['badge-muted',   'Inactive'],
+    in_transit:      ['badge-warning', 'In Transit'],
+    cancelled:       ['badge-danger',  'Cancelled'],
+    empty:           ['badge-muted',   'Empty'],
+    occupied:        ['badge-info',    'Occupied'],
+    waiting_order:   ['badge-gold',    'Ready to Order'],
+    ordered:         ['badge-warning', 'Ordered'],
+    waiting_food:    ['badge-warning', 'Waiting Food'],
+    need_help:       ['badge-danger',  'Needs Help'],
+    waiting_payment: ['badge-info',    'Waiting to Pay'],
+    special_request: ['badge-success', 'Special Request'],
+    ready_clean:     ['badge-success', 'Ready to Clean'],
+    cleaning:        ['badge-muted',   'Cleaning'],
   };
   const [cls, label] = map[status] || ['badge-muted', status];
   return `<span class="badge ${cls}">${label}</span>`;
-}
-
-function tableStatusLabel(status) {
-  const map = {
-    empty: 'Empty', waiting_order: 'Waiting Order', ordered: 'Ordered',
-    waiting_food: 'Waiting Food', ready_clean: 'Ready to Clean', cleaning: 'Cleaning'
-  };
-  return map[status] || status;
 }
 
 function initTabs(containerSel) {
@@ -133,4 +155,8 @@ function liveClock(elId) {
   };
   tick();
   setInterval(tick, 1000);
+}
+
+function isMobile() {
+  return window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 }

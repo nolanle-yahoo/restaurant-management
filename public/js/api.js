@@ -26,10 +26,10 @@ const API = {
     return data;
   },
 
-  get(path)          { return this._req('GET',    path); },
-  post(path, body)   { return this._req('POST',   path, body); },
-  put(path, body)    { return this._req('PUT',    path, body); },
-  delete(path)       { return this._req('DELETE', path); },
+  get(path)        { return this._req('GET',    path); },
+  post(path, body) { return this._req('POST',   path, body); },
+  put(path, body)  { return this._req('PUT',    path, body); },
+  delete(path)     { return this._req('DELETE', path); },
 
   login(email, password) { return this._req('POST', '/auth/login', { email, password }); },
   me()                   { return this._req('GET',  '/auth/me'); },
@@ -54,7 +54,16 @@ const API = {
   clockHours(userId, week) { return this.get(`/clock/hours?user_id=${userId}&week=${week || 0}`); },
   clockRecent()      { return this.get('/clock/recent'); },
 
+  areas(locId)       { return this.get('/areas' + (locId ? `?location_id=${locId}` : '')); },
+  areaAssignments(locId) { return this.get('/areas/assignments' + (locId ? `?location_id=${locId}` : '')); },
+  assignWaiter(data) { return this.post('/areas/assignments', data); },
+  removeAssignment(id) { return this.delete(`/areas/assignments/${id}`); },
+  createArea(data)   { return this.post('/areas', data); },
+  updateArea(id, data) { return this.put(`/areas/${id}`, data); },
+  deleteArea(id)     { return this.delete(`/areas/${id}`); },
+
   tables(locId)      { return this.get('/tables?location_id=' + locId); },
+  tablesByArea(locId){ return this.get('/tables/by-area?location_id=' + locId); },
   updateTable(id, status) { return this.put(`/tables/${id}`, { status }); },
 
   orders(locId, status) {

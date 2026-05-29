@@ -14,6 +14,7 @@ createSchema();
 app.use('/api/auth',        require('./routes/auth'));
 app.use('/api/employees',   require('./routes/employees'));
 app.use('/api/clock',       require('./routes/clock'));
+app.use('/api/areas',       require('./routes/areas'));
 app.use('/api/tables',      require('./routes/tables'));
 app.use('/api/orders',      require('./routes/orders'));
 app.use('/api/inventory',   require('./routes/inventory'));
