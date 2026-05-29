@@ -7,11 +7,10 @@ router.use(verifyToken);
 
 const VALID_STATUSES = ['empty','occupied','waiting_order','ordered','waiting_food','need_help','waiting_payment','special_request','ready_clean','cleaning'];
 
-// GET /tables?location_id= — all tables with area info and assigned waiter
+// GET /tables?location_id=
 router.get('/', requireRole('owner','manager','frontdesk','waiter','chef','employee'), (req, res) => {
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
   if (!locId) return res.status(400).json({ error: 'location_id required' });
-
   const rows = db.prepare(`
     SELECT t.*, a.name as area_name, a.color as area_color,
            u.name as waiter_name, u.id as waiter_id
@@ -25,11 +24,10 @@ router.get('/', requireRole('owner','manager','frontdesk','waiter','chef','emplo
   res.json(rows);
 });
 
-// GET /tables/by-area?location_id= — tables grouped by area
+// GET /tables/by-area?location_id=
 router.get('/by-area', requireRole('owner','manager','frontdesk','waiter','chef','employee'), (req, res) => {
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
   if (!locId) return res.status(400).json({ error: 'location_id required' });
-
   const areas = db.prepare(`SELECT * FROM areas WHERE location_id = ? ORDER BY sort_order, name`).all(locId);
   const tables = db.prepare(`
     SELECT t.*, u.name as waiter_name
@@ -39,30 +37,54 @@ router.get('/by-area', requireRole('owner','manager','frontdesk','waiter','chef'
     WHERE t.location_id = ?
     ORDER BY t.table_number
   `).all(locId);
-
-  const result = areas.map(a => ({
-    ...a,
-    tables: tables.filter(t => t.area_id === a.id),
-  }));
-
-  // Unassigned tables
+  const result = areas.map(a => ({ ...a, tables: tables.filter(t => t.area_id === a.id) }));
   const unassigned = tables.filter(t => !t.area_id);
   if (unassigned.length) result.push({ id: null, name: 'Unassigned', color: '#999', tables: unassigned });
-
   res.json(result);
 });
 
-// PUT /tables/:id — update status
+// POST /tables — create table
+router.post('/', requireRole('owner','manager'), (req, res) => {
+  const { location_id, table_number, capacity, area_id } = req.body;
+  const locId = req.user.role === 'owner' ? location_id : req.user.location_id;
+  if (!locId || !table_number) return res.status(400).json({ error: 'location_id and table_number required' });
+  try {
+    const r = db.prepare(`INSERT INTO tables (location_id, table_number, capacity, area_id, status) VALUES (?,?,?,?,?)`).run(locId, table_number, capacity || 4, area_id || null, 'empty');
+    res.json({ id: r.lastInsertRowid, success: true });
+  } catch(e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// PUT /tables/:id — update status and/or table metadata
 router.put('/:id', requireRole('owner','manager','frontdesk','waiter','chef','employee'), (req, res) => {
-  const { status } = req.body;
-  if (!VALID_STATUSES.includes(status)) return res.status(400).json({ error: 'Invalid status' });
-  db.prepare(`UPDATE tables SET status = ? WHERE id = ?`).run(status, req.params.id);
+  const { status, table_number, capacity, area_id } = req.body;
+  const metaChange = table_number !== undefined || capacity !== undefined || area_id !== undefined;
+  if (metaChange && !['owner','manager'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Only owner or manager can update table structure' });
+  }
+  const fields = [], vals = [];
+  if (status !== undefined) {
+    if (!VALID_STATUSES.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+    fields.push('status=?'); vals.push(status);
+  }
+  if (table_number !== undefined) { fields.push('table_number=?'); vals.push(table_number); }
+  if (capacity !== undefined)     { fields.push('capacity=?');     vals.push(capacity); }
+  if (area_id !== undefined)      { fields.push('area_id=?');      vals.push(area_id || null); }
+  if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
+  vals.push(req.params.id);
+  db.prepare(`UPDATE tables SET ${fields.join(',')} WHERE id=?`).run(...vals);
   const updated = db.prepare(`
     SELECT t.*, a.name as area_name, a.color as area_color
-    FROM tables t LEFT JOIN areas a ON t.area_id = a.id
-    WHERE t.id = ?
+    FROM tables t LEFT JOIN areas a ON t.area_id = a.id WHERE t.id=?
   `).get(req.params.id);
   res.json(updated);
+});
+
+// DELETE /tables/:id
+router.delete('/:id', requireRole('owner','manager'), (req, res) => {
+  db.prepare(`DELETE FROM tables WHERE id=?`).run(req.params.id);
+  res.json({ success: true });
 });
 
 module.exports = router;

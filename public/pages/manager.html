@@ -82,6 +82,7 @@
       <a class="nav-item" href="#" onclick="switchTab('warehouse')"><span class="nav-icon">🏭</span>Warehouse</a>
       <a class="nav-item" href="#" onclick="switchTab('supply')"><span class="nav-icon">📦</span>Supply Orders</a>
       <a class="nav-item" href="#" onclick="switchTab('transfers')"><span class="nav-icon">🔄</span>Transfers</a>
+      <a class="nav-item" href="#" onclick="switchTab('floorplan')"><span class="nav-icon">🗺️</span>Floor Plan</a>
     </nav>
     <div class="sidebar-footer"><button class="logout-btn">Sign Out</button></div>
   </aside>
@@ -264,6 +265,17 @@
           </div>
         </div>
       </div>
+
+      <!-- ── Floor Plan tab ── -->
+      <div id="tab-floorplan" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Floor Plan</div>
+            <button class="btn btn-ghost btn-sm" onclick="openMgrTableModal()">+ Add Table</button>
+          </div>
+          <div id="mgrFpContent" style="padding:4px 0"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -416,6 +428,37 @@
   </div>
 </div>
 
+<!-- ── Manager Table Modal (Floor Plan) ── -->
+<div class="modal-overlay" id="mgrTableModal">
+  <div class="modal" style="width:440px">
+    <div class="modal-title" id="mgrTableModalTitle">Add Table</div>
+    <div id="mgrTableAlert" class="alert hidden"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Table Number *</label><input type="number" id="mgrTableNum" min="1" placeholder="e.g. 5"></div>
+      <div class="form-group"><label>Capacity (seats)</label><input type="number" id="mgrTableCap" min="1" value="4"></div>
+    </div>
+    <div class="form-group"><label>Area</label><select id="mgrTableArea"><option value="">— Unassigned —</option></select></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="submitMgrTable()">Save Table</button>
+      <button class="btn btn-ghost" onclick="hideModal('mgrTableModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Manager Assign Staff Modal ── -->
+<div class="modal-overlay" id="mgrAssignModal">
+  <div class="modal" style="width:400px">
+    <div class="modal-title">Assign Staff to Area</div>
+    <p id="mgrAssignAreaLabel" style="color:var(--muted);font-size:13px;margin-bottom:14px"></p>
+    <div id="mgrAssignAlert" class="alert hidden"></div>
+    <div class="form-group"><label>Employee</label><select id="mgrAssignEmp"><option value="">— select —</option></select></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="submitMgrAssign()">Assign</button>
+      <button class="btn btn-ghost" onclick="hideModal('mgrAssignModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script>
@@ -426,11 +469,12 @@ if (user) {
   document.getElementById('invLocName').textContent = user.location_name || '';
 }
 liveClock('topbarTime');
-['orderModal','transferModal','trUpdateModal','addEmpModal'].forEach(id => onModalOverlayClick(id));
+['orderModal','transferModal','trUpdateModal','addEmpModal','mgrTableModal','mgrAssignModal'].forEach(id => onModalOverlayClick(id));
 
-const TABS = ['staff','schedule','timesheets','inventory','warehouse','supply','transfers'];
-const TAB_LABELS = { staff:'Staff', schedule:'Schedule', timesheets:'Timesheets', inventory:'Inventory', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers' };
+const TABS = ['staff','schedule','timesheets','inventory','warehouse','supply','transfers','floorplan'];
+const TAB_LABELS = { staff:'Staff', schedule:'Schedule', timesheets:'Timesheets', inventory:'Inventory', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan' };
 let invData = [], whData = null, supplyData = [], trData = [], currentTab = 'staff', selectedItemId = null, editTrId = null;
+let editingMgrTableId = null, mgrAssignAreaId = null;
 
 function switchTab(tab) {
   TABS.forEach(t => document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab));
@@ -444,6 +488,7 @@ function switchTab(tab) {
   if (tab === 'supply')     loadSupply();
   if (tab === 'transfers')  loadTransfers();
   if (tab === 'timesheets') initTimesheets();
+  if (tab === 'floorplan')  loadMgrFloorPlan();
 }
 
 function refreshCurrent() { switchTab(currentTab); }
@@ -913,6 +958,116 @@ async function submitTrUpdate() {
 async function quickTrUpdate(id, status) {
   await API.updateTransferRequest(id, { status });
   loadTransfers();
+}
+
+// ── Manager Floor Plan ────────────────────────────────────
+async function loadMgrFloorPlan() {
+  const locId = user.location_id;
+  const [areasData, byAreaData] = await Promise.all([API.areas(locId), API.tablesByArea(locId)]);
+  // Refresh area options in table modal
+  const areaOpts = areasData.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+  document.getElementById('mgrTableArea').innerHTML = '<option value="">— Unassigned —</option>' + areaOpts;
+  renderMgrFloorPlan(areasData, byAreaData, locId);
+}
+
+function renderMgrFloorPlan(areasData, byAreaData, locId) {
+  const el = document.getElementById('mgrFpContent');
+  if (!byAreaData.length) { el.innerHTML = '<p style="padding:24px;color:var(--muted)">No areas configured for this location yet.</p>'; return; }
+  el.innerHTML = byAreaData.map(a => {
+    const areaInfo = areasData.find(x => x.id === a.id) || {};
+    const staff = areaInfo.waiters || [];
+    const color = a.color || '#999';
+    const isUnassigned = !a.id;
+    const tables = (a.tables || []).map(t => `
+      <div style="display:inline-flex;flex-direction:column;align-items:center;background:#fff;border:1.5px solid ${color};border-radius:10px;padding:8px 12px;min-width:72px">
+        <div style="font-size:18px;font-weight:800;color:var(--charcoal)">T${t.table_number}</div>
+        <div style="font-size:11px;color:var(--muted)">${t.capacity} seats</div>
+        <div style="display:flex;gap:4px;margin-top:6px">
+          <button class="wh-btn" onclick="openMgrTableModal(${t.id},${a.id||'null'})">✎</button>
+          <button class="wh-btn" style="color:var(--danger)" onclick="deleteMgrTable(${t.id})">✕</button>
+        </div>
+      </div>`).join('');
+    const staffChips = staff.map(w => `
+      <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(107,26,26,.08);border:1px solid rgba(107,26,26,.2);border-radius:20px;padding:3px 10px;font-size:12px">
+        ${w.name} <span style="color:var(--muted)">(${w.role})</span>
+        <button onclick="removeMgrAssignment(${w.assignment_id})" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:13px;line-height:1;padding:0 2px">✕</button>
+      </span>`).join('');
+    return `
+      <div style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid ${color};margin-bottom:12px">
+          <span style="width:14px;height:14px;border-radius:50%;background:${color};flex-shrink:0"></span>
+          <span style="font-weight:700;font-size:15px">${a.name}</span>
+          <span class="badge badge-muted">${(a.tables||[]).length} tables</span>
+          ${!isUnassigned ? `
+            <div style="margin-left:auto;display:flex;gap:6px">
+              <button class="btn btn-sm btn-ghost" onclick="openMgrTableModal(null,${a.id})" style="color:var(--burgundy)">+ Table</button>
+              <button class="btn btn-sm btn-ghost" onclick="openMgrAssignModal(${a.id},'${a.name.replace(/'/g,"\\'")}')">+ Staff</button>
+            </div>` : ''}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px">${tables || '<span style="color:var(--muted);font-size:13px">No tables yet</span>'}</div>
+        ${!isUnassigned && staffChips ? `<div style="display:flex;flex-wrap:wrap;gap:6px;padding-top:6px">${staffChips}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function openMgrTableModal(id = null, areaId = null) {
+  editingMgrTableId = id;
+  document.getElementById('mgrTableModalTitle').textContent = id ? 'Edit Table' : 'Add Table';
+  document.getElementById('mgrTableAlert').classList.add('hidden');
+  document.getElementById('mgrTableNum').value = '';
+  document.getElementById('mgrTableCap').value = 4;
+  document.getElementById('mgrTableArea').value = areaId || '';
+  if (id) {
+    API.tables(user.location_id).then(tables => {
+      const t = tables.find(x => x.id === id);
+      if (t) { document.getElementById('mgrTableNum').value = t.table_number; document.getElementById('mgrTableCap').value = t.capacity; document.getElementById('mgrTableArea').value = t.area_id || ''; }
+    });
+  }
+  showModal('mgrTableModal');
+}
+
+async function submitMgrTable() {
+  const table_number = parseInt(document.getElementById('mgrTableNum').value);
+  const capacity = parseInt(document.getElementById('mgrTableCap').value) || 4;
+  const area_id = document.getElementById('mgrTableArea').value || null;
+  if (!table_number) return showAlert('mgrTableAlert', 'Table number is required');
+  try {
+    if (editingMgrTableId) await API.updateTableMeta(editingMgrTableId, { table_number, capacity, area_id });
+    else await API.createTable({ location_id: user.location_id, table_number, capacity, area_id });
+    hideModal('mgrTableModal');
+    loadMgrFloorPlan();
+  } catch(e) { showAlert('mgrTableAlert', e.message); }
+}
+
+async function deleteMgrTable(id) {
+  if (!confirm('Delete this table?')) return;
+  await API.deleteTable(id);
+  loadMgrFloorPlan();
+}
+
+async function openMgrAssignModal(areaId, areaName) {
+  mgrAssignAreaId = areaId;
+  document.getElementById('mgrAssignAreaLabel').textContent = `Assigning staff to: ${areaName}`;
+  document.getElementById('mgrAssignAlert').classList.add('hidden');
+  const emps = await API.employees(user.location_id);
+  document.getElementById('mgrAssignEmp').innerHTML = '<option value="">— select —</option>' +
+    emps.filter(e => e.is_active).map(e => `<option value="${e.id}">${e.name} (${e.role})</option>`).join('');
+  showModal('mgrAssignModal');
+}
+
+async function submitMgrAssign() {
+  const user_id = parseInt(document.getElementById('mgrAssignEmp').value);
+  if (!user_id) return showAlert('mgrAssignAlert', 'Select an employee');
+  try {
+    await API.assignWaiter({ user_id, area_id: mgrAssignAreaId });
+    hideModal('mgrAssignModal');
+    loadMgrFloorPlan();
+  } catch(e) { showAlert('mgrAssignAlert', e.message); }
+}
+
+async function removeMgrAssignment(assignmentId) {
+  await API.removeAssignment(assignmentId);
+  loadMgrFloorPlan();
 }
 
 loadStats();

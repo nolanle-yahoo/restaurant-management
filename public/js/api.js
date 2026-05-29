@@ -65,6 +65,9 @@ const API = {
   tables(locId)      { return this.get('/tables?location_id=' + locId); },
   tablesByArea(locId){ return this.get('/tables/by-area?location_id=' + locId); },
   updateTable(id, status) { return this.put(`/tables/${id}`, { status }); },
+  createTable(data)        { return this.post('/tables', data); },
+  updateTableMeta(id, data){ return this.put(`/tables/${id}`, data); },
+  deleteTable(id)          { return this.delete(`/tables/${id}`); },
 
   orders(locId, status) {
     let qs = locId ? `?location_id=${locId}` : '?';

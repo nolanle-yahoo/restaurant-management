@@ -20,9 +20,9 @@ router.get('/', requireRole('owner','manager','frontdesk','waiter','chef','stock
     ORDER BY a.sort_order, a.name
   `).all(locId);
 
-  // Attach assigned waiters per area
+  // Attach assigned staff per area
   const assignments = db.prepare(`
-    SELECT wa.area_id, u.id, u.name, u.role
+    SELECT wa.id as assignment_id, wa.area_id, u.id, u.name, u.role
     FROM waiter_assignments wa
     JOIN users u ON wa.user_id = u.id
     WHERE wa.area_id IN (SELECT id FROM areas WHERE location_id = ?)
@@ -58,8 +58,8 @@ router.post('/assignments', requireRole('owner','manager'), (req, res) => {
   const { user_id, area_id } = req.body;
   if (!user_id || !area_id) return res.status(400).json({ error: 'user_id and area_id required' });
 
-  const waiter = db.prepare(`SELECT * FROM users WHERE id = ? AND role = 'waiter'`).get(user_id);
-  if (!waiter) return res.status(404).json({ error: 'Waiter not found' });
+  const waiter = db.prepare(`SELECT * FROM users WHERE id = ? AND is_active = 1`).get(user_id);
+  if (!waiter) return res.status(404).json({ error: 'Employee not found' });
 
   try {
     db.prepare(`INSERT INTO waiter_assignments (user_id, area_id, assigned_by) VALUES (?,?,?)`).run(user_id, area_id, req.user.id);

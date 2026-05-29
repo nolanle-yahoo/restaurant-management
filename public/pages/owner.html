@@ -48,6 +48,7 @@
       <a class="nav-item" href="#" onclick="showSection('warehouse')"><span class="nav-icon">🏭</span>Warehouse</a>
       <a class="nav-item" href="#" onclick="showSection('supply')"><span class="nav-icon">📦</span>Supply Orders</a>
       <a class="nav-item" href="#" onclick="showSection('transfers')"><span class="nav-icon">🔄</span>Transfers</a>
+      <a class="nav-item" href="#" onclick="showSection('floorplan')"><span class="nav-icon">🗺️</span>Floor Plan</a>
       <a class="nav-item" href="#" onclick="showSection('admin')"><span class="nav-icon">⚙️</span>Admin Panel</a>
     </nav>
     <div class="sidebar-footer"><button class="logout-btn">Sign Out</button></div>
@@ -204,6 +205,23 @@
         </div>
       </section>
 
+      <!-- ── Floor Plan ────────────────────────────────── -->
+      <section id="sec-floorplan" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Floor Plan</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select id="fpLocSelect" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px" onchange="loadFloorPlan()">
+                <option value="">— select location —</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="openAreaModal()">+ Add Area</button>
+              <button class="btn btn-ghost btn-sm" onclick="openFpTableModal()">+ Add Table</button>
+            </div>
+          </div>
+          <div id="fpContent" style="padding:4px 0"></div>
+        </div>
+      </section>
+
       <!-- ── Admin Panel ────────────────────────────────── -->
       <section id="sec-admin" class="hidden">
         <div class="card">
@@ -351,17 +369,66 @@
   </div>
 </div>
 
+<!-- ── Area Modal ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="areaModal">
+  <div class="modal" style="width:420px">
+    <div class="modal-title" id="areaModalTitle">Add Area</div>
+    <div id="areaAlert" class="alert hidden"></div>
+    <div class="form-group"><label>Area Name *</label><input id="areaName" placeholder="e.g. Main Hall"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Color</label><input type="color" id="areaColor" value="#6B1A1A" style="height:38px;padding:2px 6px"></div>
+      <div class="form-group"><label>Sort Order</label><input type="number" id="areaSortOrder" value="0" min="0"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="submitArea()">Save Area</button>
+      <button class="btn btn-ghost" onclick="hideModal('areaModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Table Modal (Floor Plan) ───────────────────────────── -->
+<div class="modal-overlay" id="fpTableModal">
+  <div class="modal" style="width:440px">
+    <div class="modal-title" id="fpTableModalTitle">Add Table</div>
+    <div id="fpTableAlert" class="alert hidden"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Table Number *</label><input type="number" id="fpTableNum" min="1" placeholder="e.g. 5"></div>
+      <div class="form-group"><label>Capacity (seats)</label><input type="number" id="fpTableCap" min="1" value="4"></div>
+    </div>
+    <div class="form-group"><label>Area</label><select id="fpTableArea"><option value="">— Unassigned —</option></select></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="submitFpTable()">Save Table</button>
+      <button class="btn btn-ghost" onclick="hideModal('fpTableModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Assign Staff Modal ─────────────────────────────────── -->
+<div class="modal-overlay" id="fpAssignModal">
+  <div class="modal" style="width:400px">
+    <div class="modal-title">Assign Staff to Area</div>
+    <p id="fpAssignAreaLabel" style="color:var(--muted);font-size:13px;margin-bottom:14px"></p>
+    <div id="fpAssignAlert" class="alert hidden"></div>
+    <div class="form-group"><label>Employee</label><select id="fpAssignEmp"><option value="">— select —</option></select></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="submitFpAssign()">Assign</button>
+      <button class="btn btn-ghost" onclick="hideModal('fpAssignModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script>
 const user = requireAuth(['owner']);
 if (user) populateSidebar(user);
 liveClock('topbarTime');
-['supplyModal','transferModal','reassignModal','empModal','deleteModal'].forEach(onModalOverlayClick);
+['supplyModal','transferModal','reassignModal','empModal','deleteModal','areaModal','fpTableModal','fpAssignModal'].forEach(onModalOverlayClick);
 
-const NAV_LABELS = { overview:'Overview', staff:'Staff & Locations', timesheets:'Timesheets', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', admin:'Admin Panel' };
+const NAV_LABELS = { overview:'Overview', staff:'Staff & Locations', timesheets:'Timesheets', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan', admin:'Admin Panel' };
 const NAV_KEYS   = Object.keys(NAV_LABELS);
 let currentSection = 'overview', locations = [], allEmpsRaw = [], whData = null, editingEmpId = null, deletingEmpId = null, reassignEmpId = null, allInvItems = [];
+let editingAreaId = null, editingFpTableId = null, fpAssignAreaId = null, fpAssignLocId = null;
 
 function showSection(name) {
   document.querySelectorAll('.main-content section').forEach(s => s.classList.add('hidden'));
@@ -369,7 +436,7 @@ function showSection(name) {
   document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', NAV_KEYS[i] === name));
   document.getElementById('pageTitle').textContent = NAV_LABELS[name];
   currentSection = name;
-  const loaders = { staff: loadStaffLocations, warehouse: loadWarehouse, supply: loadSupply, transfers: loadTransfers, admin: loadAdmin, timesheets: initTimesheets };
+  const loaders = { staff: loadStaffLocations, warehouse: loadWarehouse, supply: loadSupply, transfers: loadTransfers, admin: loadAdmin, timesheets: initTimesheets, floorplan: loadFloorPlan };
   if (loaders[name]) loaders[name]();
 }
 
@@ -382,7 +449,7 @@ async function loadSummary() {
   const [{ locations: locs, totals }, recent] = await Promise.all([API.locationsSummary(), API.clockRecent()]);
   locations = locs;
   const locOpts = locs.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
-  ['tsLocFilter','supplyLocFilter','soLocation','trFrom','trTo','empLocation','reassignLoc','adminLocFilter'].forEach(id => {
+  ['tsLocFilter','supplyLocFilter','soLocation','trFrom','trTo','empLocation','reassignLoc','adminLocFilter','fpLocSelect'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const pre = el.id === 'tsLocFilter' || el.id === 'supplyLocFilter' || el.id === 'adminLocFilter'
@@ -832,6 +899,152 @@ function exportCSV() {
   summary.forEach(e => { csv += `"${e.name}","${e.role}","${e.location_name||''}",${e.total_hours},${(e.hourly_rate||0).toFixed(2)},${(e.total_pay||0).toFixed(2)}\n`; });
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download = `timesheet_${start}_${end}.csv`; a.click();
+}
+
+// ── Floor Plan ────────────────────────────────────────────
+async function loadFloorPlan() {
+  const locId = document.getElementById('fpLocSelect').value;
+  const el = document.getElementById('fpContent');
+  if (!locId) { el.innerHTML = '<p style="padding:24px;color:var(--muted)">Select a location to view its floor plan.</p>'; return; }
+  const [areasData, byAreaData] = await Promise.all([API.areas(locId), API.tablesByArea(locId)]);
+  renderFloorPlan(areasData, byAreaData, locId);
+  // Refresh area options in table modal
+  const areaOpts = areasData.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+  document.getElementById('fpTableArea').innerHTML = '<option value="">— Unassigned —</option>' + areaOpts;
+}
+
+function renderFloorPlan(areasData, byAreaData, locId) {
+  const el = document.getElementById('fpContent');
+  if (!byAreaData.length) { el.innerHTML = '<p style="padding:24px;color:var(--muted)">No areas or tables yet. Add an area to get started.</p>'; return; }
+  el.innerHTML = byAreaData.map(a => {
+    const areaInfo = areasData.find(x => x.id === a.id) || {};
+    const staff    = areaInfo.waiters || [];
+    const color    = a.color || '#999';
+    const isUnassigned = !a.id;
+    const tables = (a.tables || []).map(t => `
+      <div style="display:inline-flex;flex-direction:column;align-items:center;background:#fff;border:1.5px solid ${color};border-radius:10px;padding:8px 12px;min-width:72px;position:relative">
+        <div style="font-size:18px;font-weight:800;color:var(--charcoal)">T${t.table_number}</div>
+        <div style="font-size:11px;color:var(--muted)">${t.capacity} seats</div>
+        <div style="display:flex;gap:4px;margin-top:6px">
+          <button class="wh-btn" onclick="openFpTableModal(${t.id},${a.id||'null'},${locId})">✎</button>
+          <button class="wh-btn" style="color:var(--danger)" onclick="deleteFpTable(${t.id},${locId})">✕</button>
+        </div>
+      </div>`).join('');
+    const staffChips = staff.map(w => `
+      <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(107,26,26,.08);border:1px solid rgba(107,26,26,.2);border-radius:20px;padding:3px 10px;font-size:12px">
+        ${w.name} <span style="color:var(--muted)">(${w.role})</span>
+        <button onclick="removeFpAssignment(${w.assignment_id},${locId})" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:13px;line-height:1;padding:0 2px">✕</button>
+      </span>`).join('');
+    return `
+      <div style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid ${color};margin-bottom:12px">
+          <span style="width:14px;height:14px;border-radius:50%;background:${color};flex-shrink:0"></span>
+          <span style="font-weight:700;font-size:15px">${a.name}</span>
+          <span class="badge badge-muted">${(a.tables||[]).length} tables</span>
+          ${!isUnassigned ? `
+            <div style="margin-left:auto;display:flex;gap:6px">
+              <button class="btn btn-sm btn-ghost" onclick="openAreaModal(${a.id},'${a.name.replace(/'/g,"\\'")}','${color}',${areaInfo.sort_order||0})">Edit Area</button>
+              <button class="btn btn-sm btn-ghost" onclick="openFpTableModal(null,${a.id},${locId})" style="color:var(--burgundy)">+ Table</button>
+              <button class="btn btn-sm btn-ghost" onclick="openFpAssignModal(${a.id},'${a.name.replace(/'/g,"\\'")}',${locId})">+ Staff</button>
+              <button class="btn btn-sm" style="color:var(--danger);border:1px solid var(--danger);border-radius:8px;padding:4px 10px;background:none;cursor:pointer;font-size:12px" onclick="deleteFpArea(${a.id},${locId})">Delete</button>
+            </div>` : ''}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px">${tables || '<span style="color:var(--muted);font-size:13px">No tables yet</span>'}</div>
+        ${!isUnassigned && staffChips ? `<div style="display:flex;flex-wrap:wrap;gap:6px;padding-top:6px">${staffChips}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function openAreaModal(id = null, name = '', color = '#6B1A1A', sortOrder = 0) {
+  editingAreaId = id;
+  document.getElementById('areaModalTitle').textContent = id ? 'Edit Area' : 'Add Area';
+  document.getElementById('areaAlert').classList.add('hidden');
+  document.getElementById('areaName').value = name;
+  document.getElementById('areaColor').value = color;
+  document.getElementById('areaSortOrder').value = sortOrder;
+  showModal('areaModal');
+}
+
+async function submitArea() {
+  const locId = document.getElementById('fpLocSelect').value;
+  const name = document.getElementById('areaName').value.trim();
+  const color = document.getElementById('areaColor').value;
+  const sort_order = parseInt(document.getElementById('areaSortOrder').value) || 0;
+  if (!name) return showAlert('areaAlert', 'Area name is required');
+  try {
+    if (editingAreaId) await API.updateArea(editingAreaId, { name, color, sort_order });
+    else await API.createArea({ location_id: locId, name, color, sort_order });
+    hideModal('areaModal');
+    loadFloorPlan();
+  } catch(e) { showAlert('areaAlert', e.message); }
+}
+
+async function deleteFpArea(id, locId) {
+  if (!confirm('Delete this area? Tables will become unassigned.')) return;
+  await API.deleteArea(id);
+  loadFloorPlan();
+}
+
+function openFpTableModal(id = null, areaId = null, locId = null) {
+  editingFpTableId = id;
+  document.getElementById('fpTableModalTitle').textContent = id ? 'Edit Table' : 'Add Table';
+  document.getElementById('fpTableAlert').classList.add('hidden');
+  document.getElementById('fpTableNum').value = '';
+  document.getElementById('fpTableCap').value = 4;
+  document.getElementById('fpTableArea').value = areaId || '';
+  if (id) {
+    API.tables(document.getElementById('fpLocSelect').value).then(tables => {
+      const t = tables.find(x => x.id === id);
+      if (t) { document.getElementById('fpTableNum').value = t.table_number; document.getElementById('fpTableCap').value = t.capacity; document.getElementById('fpTableArea').value = t.area_id || ''; }
+    });
+  }
+  showModal('fpTableModal');
+}
+
+async function submitFpTable() {
+  const locId = document.getElementById('fpLocSelect').value;
+  const table_number = parseInt(document.getElementById('fpTableNum').value);
+  const capacity = parseInt(document.getElementById('fpTableCap').value) || 4;
+  const area_id = document.getElementById('fpTableArea').value || null;
+  if (!table_number) return showAlert('fpTableAlert', 'Table number is required');
+  try {
+    if (editingFpTableId) await API.updateTableMeta(editingFpTableId, { table_number, capacity, area_id });
+    else await API.createTable({ location_id: locId, table_number, capacity, area_id });
+    hideModal('fpTableModal');
+    loadFloorPlan();
+  } catch(e) { showAlert('fpTableAlert', e.message); }
+}
+
+async function deleteFpTable(id, locId) {
+  if (!confirm('Delete this table?')) return;
+  await API.deleteTable(id);
+  loadFloorPlan();
+}
+
+async function openFpAssignModal(areaId, areaName, locId) {
+  fpAssignAreaId = areaId;
+  fpAssignLocId  = locId;
+  document.getElementById('fpAssignAreaLabel').textContent = `Assigning staff to: ${areaName}`;
+  document.getElementById('fpAssignAlert').classList.add('hidden');
+  const emps = await API.employees(locId);
+  document.getElementById('fpAssignEmp').innerHTML = '<option value="">— select —</option>' +
+    emps.filter(e => e.is_active).map(e => `<option value="${e.id}">${e.name} (${e.role})</option>`).join('');
+  showModal('fpAssignModal');
+}
+
+async function submitFpAssign() {
+  const user_id = parseInt(document.getElementById('fpAssignEmp').value);
+  if (!user_id) return showAlert('fpAssignAlert', 'Select an employee');
+  try {
+    await API.assignWaiter({ user_id, area_id: fpAssignAreaId });
+    hideModal('fpAssignModal');
+    loadFloorPlan();
+  } catch(e) { showAlert('fpAssignAlert', e.message); }
+}
+
+async function removeFpAssignment(assignmentId, locId) {
+  await API.removeAssignment(assignmentId);
+  loadFloorPlan();
 }
 
 loadAll();
