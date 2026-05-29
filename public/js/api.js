@@ -34,9 +34,19 @@ const API = {
   login(email, password) { return this._req('POST', '/auth/login', { email, password }); },
   me()                   { return this._req('GET',  '/auth/me'); },
 
-  employees(locId)   { return this.get('/employees' + (locId ? `?location_id=${locId}` : '')); },
-  onDuty(locId)      { return this.get('/employees/on-duty' + (locId ? `?location_id=${locId}` : '')); },
+  employees(locId)         { return this.get('/employees' + (locId ? `?location_id=${locId}` : '')); },
+  allEmployees()           { return this.get('/employees/all'); },
+  getEmployee(id)          { return this.get(`/employees/${id}`); },
+  onDuty(locId)            { return this.get('/employees/on-duty' + (locId ? `?location_id=${locId}` : '')); },
+  createEmployee(data)     { return this.post('/employees', data); },
   updateEmployee(id, data) { return this.put(`/employees/${id}`, data); },
+  deleteEmployee(id)       { return this.delete(`/employees/${id}`); },
+
+  timesheets(start, end, locId) {
+    let qs = `?start=${start}&end=${end}`;
+    if (locId) qs += `&location_id=${locId}`;
+    return this.get('/timesheets' + qs);
+  },
 
   clockIn()          { return this.post('/clock/in'); },
   clockOut()         { return this.post('/clock/out'); },

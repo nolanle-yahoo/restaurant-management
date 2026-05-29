@@ -18,6 +18,7 @@ function createSchema() {
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL CHECK(role IN ('owner','manager','stockroom','employee','frontdesk','waiter','chef')),
       location_id INTEGER REFERENCES locations(id),
+      hourly_rate REAL DEFAULT 0,
       is_active INTEGER DEFAULT 1,
       created_at TEXT DEFAULT (datetime('now'))
     );
@@ -103,6 +104,9 @@ function createSchema() {
       created_by INTEGER REFERENCES users(id)
     );
   `);
+
+  // Migration: add hourly_rate to existing databases that predate this column
+  try { db.exec(`ALTER TABLE users ADD COLUMN hourly_rate REAL DEFAULT 0`); } catch {}
 }
 
 module.exports = { createSchema };

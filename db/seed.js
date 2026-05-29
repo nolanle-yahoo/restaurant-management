@@ -22,48 +22,48 @@ function seed() {
   insertLoc.run('Harbor View',       '654 Harbor Dr, Waterfront', '(555) 100-0005', 'active');
 
   // ── Users ────────────────────────────────────────────────────────
-  const insertUser = db.prepare(`INSERT INTO users (name, email, password_hash, role, location_id) VALUES (?,?,?,?,?)`);
+  const insertUser = db.prepare(`INSERT INTO users (name, email, password_hash, role, location_id, hourly_rate) VALUES (?,?,?,?,?,?)`);
   const h = (pw) => bcrypt.hashSync(pw, 10);
 
-  // Owner (no location)
-  insertUser.run('Alexandra Chen', 'owner@restaurant.com', h('owner123'), 'owner', null);
+  // Owner (no location, salaried)
+  insertUser.run('Alexandra Chen', 'owner@restaurant.com', h('owner123'), 'owner', null, 0);
 
-  // Managers (one per location)
-  insertUser.run('Marco Rivera',   'manager@downtown.com',  h('mgr123'),  'manager',   1);
-  insertUser.run('Priya Sharma',   'manager@uptown.com',    h('mgr123'),  'manager',   2);
-  insertUser.run('James Okafor',   'manager@airport.com',   h('mgr123'),  'manager',   3);
-  insertUser.run('Sofia Martinez', 'manager@westside.com',  h('mgr123'),  'manager',   4);
-  insertUser.run('Lena Kim',       'manager@harbor.com',    h('mgr123'),  'manager',   5);
+  // Managers (one per location) — $25/hr
+  insertUser.run('Marco Rivera',   'manager@downtown.com',  h('mgr123'),  'manager',   1, 25.00);
+  insertUser.run('Priya Sharma',   'manager@uptown.com',    h('mgr123'),  'manager',   2, 25.00);
+  insertUser.run('James Okafor',   'manager@airport.com',   h('mgr123'),  'manager',   3, 25.00);
+  insertUser.run('Sofia Martinez', 'manager@westside.com',  h('mgr123'),  'manager',   4, 24.00);
+  insertUser.run('Lena Kim',       'manager@harbor.com',    h('mgr123'),  'manager',   5, 25.00);
 
-  // Stockroom controllers
-  insertUser.run('David Park',     'stock@uptown.com',      h('stock123'),'stockroom', 2);
-  insertUser.run('Nina Patel',     'stock@downtown.com',    h('stock123'),'stockroom', 1);
+  // Stockroom controllers — $18/hr
+  insertUser.run('David Park',     'stock@uptown.com',      h('stock123'),'stockroom', 2, 18.00);
+  insertUser.run('Nina Patel',     'stock@downtown.com',    h('stock123'),'stockroom', 1, 18.00);
 
-  // Chefs
-  insertUser.run('Antonio Garcia', 'chef@downtown.com',     h('chef123'), 'chef',      1);
-  insertUser.run('Yuki Tanaka',    'chef@uptown.com',       h('chef123'), 'chef',      2);
-  insertUser.run('Olu Adeyemi',    'chef@airport.com',      h('chef123'), 'chef',      3);
-  insertUser.run('Rosa Mendez',    'chef@westside.com',     h('chef123'), 'chef',      4);
-  insertUser.run('Hans Mueller',   'chef@harbor.com',       h('chef123'), 'chef',      5);
+  // Chefs — $21–23/hr
+  insertUser.run('Antonio Garcia', 'chef@downtown.com',     h('chef123'), 'chef',      1, 23.00);
+  insertUser.run('Yuki Tanaka',    'chef@uptown.com',       h('chef123'), 'chef',      2, 22.00);
+  insertUser.run('Olu Adeyemi',    'chef@airport.com',      h('chef123'), 'chef',      3, 21.00);
+  insertUser.run('Rosa Mendez',    'chef@westside.com',     h('chef123'), 'chef',      4, 21.00);
+  insertUser.run('Hans Mueller',   'chef@harbor.com',       h('chef123'), 'chef',      5, 23.00);
 
-  // Waiters
-  insertUser.run('Emily Johnson',  'waiter@downtown.com',   h('wait123'), 'waiter',    1);
-  insertUser.run('Carlos Diaz',    'waiter2@downtown.com',  h('wait123'), 'waiter',    1);
-  insertUser.run('Amara Nwosu',    'waiter@uptown.com',     h('wait123'), 'waiter',    2);
-  insertUser.run('Tom Baker',      'waiter@airport.com',    h('wait123'), 'waiter',    3);
+  // Waiters — $15/hr
+  insertUser.run('Emily Johnson',  'waiter@downtown.com',   h('wait123'), 'waiter',    1, 15.00);
+  insertUser.run('Carlos Diaz',    'waiter2@downtown.com',  h('wait123'), 'waiter',    1, 15.00);
+  insertUser.run('Amara Nwosu',    'waiter@uptown.com',     h('wait123'), 'waiter',    2, 15.00);
+  insertUser.run('Tom Baker',      'waiter@airport.com',    h('wait123'), 'waiter',    3, 14.50);
 
-  // Front desk
-  insertUser.run('Jessica Lee',    'desk@downtown.com',     h('desk123'), 'frontdesk', 1);
-  insertUser.run('Omar Hassan',    'desk@uptown.com',       h('desk123'), 'frontdesk', 2);
-  insertUser.run('Claire Dupont',  'desk@airport.com',      h('desk123'), 'frontdesk', 3);
+  // Front desk — $16/hr
+  insertUser.run('Jessica Lee',    'desk@downtown.com',     h('desk123'), 'frontdesk', 1, 16.00);
+  insertUser.run('Omar Hassan',    'desk@uptown.com',       h('desk123'), 'frontdesk', 2, 16.00);
+  insertUser.run('Claire Dupont',  'desk@airport.com',      h('desk123'), 'frontdesk', 3, 16.00);
 
-  // Employees
-  insertUser.run('Ryan Torres',    'emp@downtown.com',      h('emp123'),  'employee',  1);
-  insertUser.run('Mia Wong',       'emp2@downtown.com',     h('emp123'),  'employee',  1);
-  insertUser.run('Ethan Brown',    'emp@uptown.com',        h('emp123'),  'employee',  2);
-  insertUser.run('Zara Ahmed',     'emp@airport.com',       h('emp123'),  'employee',  3);
-  insertUser.run('Lucas Silva',    'emp@westside.com',      h('emp123'),  'employee',  4);
-  insertUser.run('Aisha Diallo',   'emp@harbor.com',        h('emp123'),  'employee',  5);
+  // Employees — $13.50–14/hr
+  insertUser.run('Ryan Torres',    'emp@downtown.com',      h('emp123'),  'employee',  1, 14.00);
+  insertUser.run('Mia Wong',       'emp2@downtown.com',     h('emp123'),  'employee',  1, 14.00);
+  insertUser.run('Ethan Brown',    'emp@uptown.com',        h('emp123'),  'employee',  2, 14.00);
+  insertUser.run('Zara Ahmed',     'emp@airport.com',       h('emp123'),  'employee',  3, 13.50);
+  insertUser.run('Lucas Silva',    'emp@westside.com',      h('emp123'),  'employee',  4, 13.50);
+  insertUser.run('Aisha Diallo',   'emp@harbor.com',        h('emp123'),  'employee',  5, 14.00);
 
   // ── Tables ───────────────────────────────────────────────────────
   const insertTable = db.prepare(`INSERT INTO tables (location_id, table_number, capacity, status) VALUES (?,?,?,?)`);

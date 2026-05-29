@@ -5,6 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Owner Dashboard</title>
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .report-controls { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:20px; }
+    .report-controls .form-group { margin:0; }
+    .report-controls label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.3px; display:block; margin-bottom:4px; }
+    .report-controls input, .report-controls select { padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:13.5px; }
+    .quick-range { display:flex; gap:6px; }
+    .quick-btn { padding:6px 12px; border-radius:6px; border:1.5px solid var(--border); background:#fff; cursor:pointer; font-size:12.5px; font-weight:600; transition:all .15s; }
+    .quick-btn:hover { border-color:var(--burgundy); color:var(--burgundy); }
+    tfoot td { font-weight:800; background:#F5F0EA !important; }
+    .print-area { display:none; }
+    @media print {
+      .sidebar, .topbar, .report-controls, .no-print { display:none !important; }
+      .main-content { margin:0 !important; }
+      .print-area { display:block; }
+      .card { box-shadow:none !important; border:1px solid #ccc !important; }
+    }
+    .rate-badge { background:rgba(74,124,89,.12); color:var(--success); padding:2px 8px; border-radius:12px; font-size:12px; font-weight:700; }
+    .delete-confirm { color:var(--danger); }
+  </style>
 </head>
 <body>
 <div class="app-shell">
@@ -21,15 +40,14 @@
       <div class="user-loc" id="sb-location"></div>
     </div>
     <nav class="sidebar-nav">
-      <a class="nav-item active" href="#overview" onclick="showSection('overview')"><span class="nav-icon">📊</span>Overview</a>
-      <a class="nav-item" href="#locations" onclick="showSection('locations')"><span class="nav-icon">📍</span>Locations</a>
-      <a class="nav-item" href="#employees" onclick="showSection('employees')"><span class="nav-icon">👥</span>All Staff</a>
-      <a class="nav-item" href="#supply" onclick="showSection('supply')"><span class="nav-icon">📦</span>Supply Orders</a>
-      <a class="nav-item" href="#inventory" onclick="showSection('inventory')"><span class="nav-icon">🏪</span>Inventory</a>
+      <a class="nav-item active" href="#" onclick="showSection('overview')"><span class="nav-icon">📊</span>Overview</a>
+      <a class="nav-item" href="#" onclick="showSection('locations')"><span class="nav-icon">📍</span>Locations</a>
+      <a class="nav-item" href="#" onclick="showSection('timesheets')"><span class="nav-icon">📋</span>Timesheets</a>
+      <a class="nav-item" href="#" onclick="showSection('admin')"><span class="nav-icon">⚙️</span>Admin Panel</a>
+      <a class="nav-item" href="#" onclick="showSection('supply')"><span class="nav-icon">📦</span>Supply Orders</a>
+      <a class="nav-item" href="#" onclick="showSection('inventory')"><span class="nav-icon">🏪</span>Inventory</a>
     </nav>
-    <div class="sidebar-footer">
-      <button class="logout-btn">Sign Out</button>
-    </div>
+    <div class="sidebar-footer"><button class="logout-btn">Sign Out</button></div>
   </aside>
 
   <!-- Main -->
@@ -38,58 +56,143 @@
       <div class="topbar-title" id="pageTitle">Overview</div>
       <div class="topbar-right">
         <span class="text-muted text-sm" id="topbarTime"></span>
-        <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻ Refresh</button>
+        <button class="btn btn-ghost btn-sm no-print" onclick="loadAll()">↻ Refresh</button>
       </div>
     </div>
 
     <div class="page-body">
 
-      <!-- Overview -->
+      <!-- ── Overview ─────────────────────────────────── -->
       <section id="sec-overview">
         <div class="stat-grid" id="globalStats"></div>
         <div class="loc-grid" id="locCards"></div>
         <div class="card mt-24">
           <div class="card-header"><div class="card-title">Recent Staff Activity</div></div>
-          <table class="data-table" id="activityTable">
+          <table class="data-table">
             <thead><tr><th>Name</th><th>Role</th><th>Location</th><th>Action</th><th>Time</th></tr></thead>
             <tbody id="activityBody"></tbody>
           </table>
         </div>
       </section>
 
-      <!-- Locations detail -->
+      <!-- ── Locations ─────────────────────────────────── -->
       <section id="sec-locations" class="hidden">
         <div class="loc-grid" id="locDetailCards"></div>
       </section>
 
-      <!-- All Employees -->
-      <section id="sec-employees" class="hidden">
+      <!-- ── Timesheets ─────────────────────────────────── -->
+      <section id="sec-timesheets" class="hidden">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header no-print">
+            <div class="card-title">Generate Timesheet Report</div>
+            <div class="quick-range">
+              <button class="quick-btn" onclick="setRange('today')">Today</button>
+              <button class="quick-btn" onclick="setRange('week')">This Week</button>
+              <button class="quick-btn" onclick="setRange('lastweek')">Last Week</button>
+              <button class="quick-btn" onclick="setRange('month')">This Month</button>
+            </div>
+          </div>
+          <div class="report-controls no-print">
+            <div class="form-group">
+              <label>Location</label>
+              <select id="tsLocFilter" style="width:180px">
+                <option value="">All Locations</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Start Date</label>
+              <input type="date" id="tsStart">
+            </div>
+            <div class="form-group">
+              <label>End Date</label>
+              <input type="date" id="tsEnd">
+            </div>
+            <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
+            <button class="btn btn-ghost" onclick="window.print()">🖨 Print</button>
+            <button class="btn btn-ghost" onclick="exportCSV()">⬇ CSV</button>
+          </div>
+        </div>
+
+        <div id="tsResult" class="hidden">
+          <!-- Summary card -->
+          <div class="stat-grid" id="tsSummaryStats" style="margin-bottom:20px"></div>
+
+          <!-- By employee summary table -->
+          <div class="card" style="margin-bottom:20px">
+            <div class="card-header">
+              <div class="card-title" id="tsReportTitle">Employee Summary</div>
+            </div>
+            <table class="data-table" id="tsSummaryTable">
+              <thead>
+                <tr>
+                  <th>Employee</th><th>Role</th><th>Location</th>
+                  <th>Total Hours</th><th>Hourly Rate</th><th>Total Pay</th>
+                </tr>
+              </thead>
+              <tbody id="tsSummaryBody"></tbody>
+              <tfoot><tr id="tsTotalsRow"></tr></tfoot>
+            </table>
+          </div>
+
+          <!-- Detail records -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Detailed Records</div>
+              <button class="btn btn-ghost btn-sm no-print" onclick="toggleDetails()">Toggle Details</button>
+            </div>
+            <div id="tsDetailWrap">
+              <table class="data-table" id="tsDetailTable">
+                <thead>
+                  <tr><th>Date</th><th>Employee</th><th>Role</th><th>Location</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Rate</th><th>Pay</th></tr>
+                </thead>
+                <tbody id="tsDetailBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="tsEmpty" class="hidden" style="text-align:center;padding:60px;color:var(--muted)">
+          <div style="font-size:40px;margin-bottom:12px">📋</div>
+          <div style="font-weight:700">Select a date range and click Generate Report</div>
+        </div>
+      </section>
+
+      <!-- ── Admin Panel ────────────────────────────────── -->
+      <section id="sec-admin" class="hidden">
         <div class="card">
           <div class="card-header">
-            <div class="card-title">All Staff</div>
-            <select id="empLocFilter" class="form-group" style="margin:0;width:200px;" onchange="loadEmployees()">
-              <option value="">All Locations</option>
-            </select>
+            <div class="card-title">All Employees</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="adminSearch" placeholder="Search by name or email…" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;width:220px;" oninput="filterAdmin()">
+              <select id="adminRoleFilter" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;" onchange="filterAdmin()">
+                <option value="">All Roles</option>
+                <option>owner</option><option>manager</option><option>stockroom</option>
+                <option>chef</option><option>waiter</option><option>frontdesk</option><option>employee</option>
+              </select>
+              <button class="btn btn-primary" onclick="openEmpModal()">+ Add Employee</button>
+            </div>
           </div>
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Location</th><th>Status</th><th>Clocked In</th><th>Actions</th></tr></thead>
-            <tbody id="empBody"></tbody>
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Role</th><th>Location</th><th>Hourly Rate</th><th>Status</th><th>On Duty</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="adminBody"></tbody>
           </table>
         </div>
       </section>
 
-      <!-- Supply Orders -->
+      <!-- ── Supply Orders ──────────────────────────────── -->
       <section id="sec-supply" class="hidden">
         <div class="card">
           <div class="card-header"><div class="card-title">Supply Orders</div></div>
           <table class="data-table">
             <thead><tr><th>Item</th><th>Location</th><th>Qty</th><th>Ordered By</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="supplyBody"></tbody>
+          <tbody id="supplyBody"></tbody>
           </table>
         </div>
       </section>
 
-      <!-- Inventory overview -->
+      <!-- ── Inventory ───────────────────────────────────── -->
       <section id="sec-inventory" class="hidden">
         <div class="card">
           <div class="card-header">
@@ -100,11 +203,62 @@
           </div>
           <table class="data-table">
             <thead><tr><th>Item</th><th>Category</th><th>Location</th><th>Stock</th><th>Level</th><th>Status</th></tr></thead>
-          <tbody id="invBody"></tbody>
+            <tbody id="invBody"></tbody>
           </table>
         </div>
       </section>
 
+    </div>
+  </div>
+</div>
+
+<!-- ── Employee Modal (Add / Edit) ─────────────────────── -->
+<div class="modal-overlay" id="empModal">
+  <div class="modal" style="width:500px">
+    <div class="modal-title" id="empModalTitle">Add Employee</div>
+    <div id="empAlert" class="alert hidden"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Full Name *</label><input id="empName" placeholder="Full name"></div>
+      <div class="form-group"><label>Email *</label><input type="email" id="empEmail" placeholder="email@example.com"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Password <span id="pwHint" style="color:var(--muted);font-weight:400">(required for new)</span></label><input type="password" id="empPassword" placeholder="Leave blank to keep current"></div>
+      <div class="form-group"><label>Hourly Rate ($)</label><input type="number" id="empRate" min="0" step="0.50" placeholder="0.00"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Role *</label>
+        <select id="empRole">
+          <option value="">— select —</option>
+          <option>manager</option><option>stockroom</option><option>chef</option>
+          <option>waiter</option><option>frontdesk</option><option>employee</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <select id="empLocation"><option value="">— none —</option></select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select id="empActive"><option value="1">Active</option><option value="0">Inactive</option></select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-primary" id="empSaveBtn" onclick="saveEmployee()">Save Employee</button>
+      <button class="btn btn-ghost" onclick="hideModal('empModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete Confirm Modal ─────────────────────────────── -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal" style="width:380px">
+    <div class="modal-title" style="color:var(--danger)">Deactivate Employee</div>
+    <p id="deleteMsg" style="margin:12px 0;color:var(--charcoal);font-size:14px;"></p>
+    <p style="font-size:13px;color:var(--muted)">This will deactivate the account. Clock records are preserved.</p>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-danger" onclick="confirmDelete()">Deactivate</button>
+      <button class="btn btn-ghost" onclick="hideModal('deleteModal')">Cancel</button>
     </div>
   </div>
 </div>
@@ -115,27 +269,29 @@
 const user = requireAuth(['owner']);
 if (user) populateSidebar(user);
 liveClock('topbarTime');
+onModalOverlayClick('empModal');
+onModalOverlayClick('deleteModal');
 
-let currentSection = 'overview';
-let locations = [];
+let currentSection = 'overview', locations = [], allEmpsRaw = [], editingEmpId = null, deletingEmpId = null;
+
+const SECTIONS = { overview:'Overview', locations:'Locations', timesheets:'Timesheets', admin:'Admin Panel', supply:'Supply Orders', inventory:'Inventory' };
 
 function showSection(name) {
   document.querySelectorAll('.main-content section').forEach(s => s.classList.add('hidden'));
   document.getElementById('sec-' + name).classList.remove('hidden');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelector(`[onclick*="${name}"]`).classList.add('active');
-  document.getElementById('pageTitle').textContent = { overview:'Overview', locations:'Locations', employees:'All Staff', supply:'Supply Orders', inventory:'Inventory' }[name];
+  document.querySelectorAll('.nav-item')[['overview','locations','timesheets','admin','supply','inventory'].indexOf(name)].classList.add('active');
+  document.getElementById('pageTitle').textContent = SECTIONS[name];
   currentSection = name;
-  if (name === 'employees') loadEmployees();
-  if (name === 'supply') loadSupply();
+  if (name === 'admin')     loadAdmin();
+  if (name === 'supply')    loadSupply();
   if (name === 'inventory') loadInventory();
+  if (name === 'timesheets') initTimesheets();
 }
 
 async function loadAll() {
   await loadSummary();
-  if (currentSection === 'employees') loadEmployees();
-  if (currentSection === 'supply') loadSupply();
-  if (currentSection === 'inventory') loadInventory();
+  if (currentSection !== 'overview' && currentSection !== 'locations') showSection(currentSection);
 }
 
 async function loadSummary() {
@@ -157,7 +313,7 @@ async function loadSummary() {
         <div class="loc-stat"><div class="ls-val">${l.staff_on_duty}</div><div class="ls-lab">On Duty</div></div>
         <div class="loc-stat"><div class="ls-val">${l.occupancy_pct}%</div><div class="ls-lab">Occupancy</div></div>
         <div class="loc-stat"><div class="ls-val">${l.open_orders}</div><div class="ls-lab">Open Orders</div></div>
-        <div class="loc-stat"><div class="ls-val ${l.low_stock_count > 0 ? 'text-warning' : ''}">${l.low_stock_count}</div><div class="ls-lab">Low Stock</div></div>
+        <div class="loc-stat"><div class="ls-val ${l.low_stock_count > 0 ? '' : ''}">${l.low_stock_count}</div><div class="ls-lab">Low Stock</div></div>
       </div>
       <div class="progress-wrap mt-16"><div class="progress-bar" style="width:${l.occupancy_pct}%"></div></div>
     </div>
@@ -165,11 +321,11 @@ async function loadSummary() {
   document.getElementById('locCards').innerHTML = locHtml;
   document.getElementById('locDetailCards').innerHTML = locHtml;
 
-  const sel1 = document.getElementById('empLocFilter');
-  const sel2 = document.getElementById('invLocFilter');
+  // Populate location selectors
   const opts = locs.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
-  sel1.innerHTML = '<option value="">All Locations</option>' + opts;
-  sel2.innerHTML = '<option value="">All Locations</option>' + opts;
+  document.getElementById('tsLocFilter').innerHTML = '<option value="">All Locations</option>' + opts;
+  document.getElementById('invLocFilter').innerHTML = '<option value="">All Locations</option>' + opts;
+  document.getElementById('empLocation').innerHTML  = '<option value="">— none —</option>' + opts;
 
   const recent = await API.clockRecent();
   document.getElementById('activityBody').innerHTML = recent.map(r => `
@@ -183,30 +339,206 @@ async function loadSummary() {
   `).join('');
 }
 
-async function loadEmployees() {
-  const locId = document.getElementById('empLocFilter').value;
-  const emps = await API.employees(locId);
-  document.getElementById('empBody').innerHTML = emps.map(e => `
+// ── Admin Panel ─────────────────────────────────────────
+async function loadAdmin() {
+  allEmpsRaw = await API.allEmployees();
+  renderAdmin(allEmpsRaw);
+}
+
+function renderAdmin(emps) {
+  document.getElementById('adminBody').innerHTML = emps.map(e => `
     <tr>
       <td class="fw-700">${e.name}</td>
-      <td class="text-sm text-muted">${e.email}</td>
+      <td class="text-sm text-muted">${e.email.replace(/_deleted_\d+$/, ' (deleted)')}</td>
       <td><span class="badge badge-info">${e.role}</span></td>
       <td>${e.location_name || '—'}</td>
+      <td><span class="rate-badge">$${(e.hourly_rate || 0).toFixed(2)}/hr</span></td>
       <td>${e.is_active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-muted">Inactive</span>'}</td>
-      <td>${e.clocked_in ? '<span class="badge badge-gold">●  On Duty</span>' : '<span class="badge badge-muted">Off</span>'}</td>
-      <td>
-        <select class="text-sm" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;" onchange="changeRole(${e.id},this.value)">
-          ${['owner','manager','stockroom','chef','waiter','frontdesk','employee'].map(r=>`<option ${r===e.role?'selected':''}>${r}</option>`).join('')}
-        </select>
+      <td>${e.clocked_in ? '<span class="badge badge-gold">● On Duty</span>' : '<span class="badge badge-muted">Off</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-ghost" onclick="openEmpModal(${e.id})">Edit</button>
+        ${e.role !== 'owner' && e.is_active ? `<button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="openDelete(${e.id},'${e.name.replace(/'/g,"\\'")}')">Deactivate</button>` : ''}
       </td>
     </tr>
-  `).join('');
+  `).join('') || '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No employees found</td></tr>';
 }
 
-async function changeRole(id, role) {
-  await API.updateEmployee(id, { role });
+function filterAdmin() {
+  const q    = document.getElementById('adminSearch').value.toLowerCase();
+  const role = document.getElementById('adminRoleFilter').value;
+  const filtered = allEmpsRaw.filter(e =>
+    (e.name.toLowerCase().includes(q) || e.email.toLowerCase().includes(q)) &&
+    (!role || e.role === role)
+  );
+  renderAdmin(filtered);
 }
 
+function openEmpModal(id = null) {
+  editingEmpId = id;
+  document.getElementById('empAlert').classList.add('hidden');
+  if (id) {
+    const emp = allEmpsRaw.find(e => e.id === id);
+    document.getElementById('empModalTitle').textContent = 'Edit Employee';
+    document.getElementById('empName').value     = emp.name;
+    document.getElementById('empEmail').value    = emp.email;
+    document.getElementById('empPassword').value = '';
+    document.getElementById('empRate').value     = emp.hourly_rate || 0;
+    document.getElementById('empRole').value     = emp.role;
+    document.getElementById('empLocation').value = emp.location_id || '';
+    document.getElementById('empActive').value   = emp.is_active ? '1' : '0';
+    document.getElementById('pwHint').textContent = '(leave blank to keep current)';
+  } else {
+    document.getElementById('empModalTitle').textContent = 'Add Employee';
+    document.getElementById('empName').value     = '';
+    document.getElementById('empEmail').value    = '';
+    document.getElementById('empPassword').value = '';
+    document.getElementById('empRate').value     = '';
+    document.getElementById('empRole').value     = '';
+    document.getElementById('empLocation').value = '';
+    document.getElementById('empActive').value   = '1';
+    document.getElementById('pwHint').textContent = '(required)';
+  }
+  showModal('empModal');
+}
+
+async function saveEmployee() {
+  const name        = document.getElementById('empName').value.trim();
+  const email       = document.getElementById('empEmail').value.trim();
+  const password    = document.getElementById('empPassword').value;
+  const hourly_rate = parseFloat(document.getElementById('empRate').value) || 0;
+  const role        = document.getElementById('empRole').value;
+  const location_id = document.getElementById('empLocation').value || null;
+  const is_active   = parseInt(document.getElementById('empActive').value);
+
+  if (!name || !email || !role) return showAlert('empAlert', 'Name, email and role are required');
+  if (!editingEmpId && !password) return showAlert('empAlert', 'Password is required for new employees');
+
+  try {
+    if (editingEmpId) {
+      const payload = { name, email, role, location_id, hourly_rate, is_active };
+      if (password) payload.password = password;
+      await API.updateEmployee(editingEmpId, payload);
+    } else {
+      await API.createEmployee({ name, email, password, role, location_id, hourly_rate });
+    }
+    hideModal('empModal');
+    loadAdmin();
+  } catch(e) { showAlert('empAlert', e.message); }
+}
+
+function openDelete(id, name) {
+  deletingEmpId = id;
+  document.getElementById('deleteMsg').textContent = `Are you sure you want to deactivate "${name}"?`;
+  showModal('deleteModal');
+}
+
+async function confirmDelete() {
+  await API.deleteEmployee(deletingEmpId);
+  hideModal('deleteModal');
+  loadAdmin();
+}
+
+// ── Timesheets ───────────────────────────────────────────
+function initTimesheets() {
+  if (!document.getElementById('tsStart').value) setRange('week');
+}
+
+function setRange(type) {
+  const today = new Date();
+  const fmt = d => d.toISOString().slice(0,10);
+  let start, end;
+  if (type === 'today') {
+    start = end = fmt(today);
+  } else if (type === 'week') {
+    const dow = today.getDay();
+    const mon = new Date(today); mon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+    start = fmt(mon); end = fmt(today);
+  } else if (type === 'lastweek') {
+    const dow = today.getDay();
+    const thisMon = new Date(today); thisMon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+    const lastMon = new Date(thisMon); lastMon.setDate(thisMon.getDate() - 7);
+    const lastSun = new Date(thisMon); lastSun.setDate(thisMon.getDate() - 1);
+    start = fmt(lastMon); end = fmt(lastSun);
+  } else if (type === 'month') {
+    start = fmt(new Date(today.getFullYear(), today.getMonth(), 1));
+    end   = fmt(today);
+  }
+  document.getElementById('tsStart').value = start;
+  document.getElementById('tsEnd').value   = end;
+}
+
+async function generateReport() {
+  const start = document.getElementById('tsStart').value;
+  const end   = document.getElementById('tsEnd').value;
+  const locId = document.getElementById('tsLocFilter').value;
+  if (!start || !end) return showAlert('', 'Please select start and end dates', 'warning');
+
+  const { summary, records, totals } = await API.timesheets(start, end, locId);
+
+  document.getElementById('tsResult').classList.remove('hidden');
+  document.getElementById('tsEmpty').classList.add('hidden');
+  document.getElementById('tsReportTitle').textContent = `Employee Summary  (${start} → ${end})`;
+
+  document.getElementById('tsSummaryStats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon burgundy">👥</div><div class="stat-info"><div class="stat-value">${summary.length}</div><div class="stat-label">Employees</div></div></div>
+    <div class="stat-card"><div class="stat-icon gold">⏱️</div><div class="stat-info"><div class="stat-value">${totals.total_hours}</div><div class="stat-label">Total Hours</div></div></div>
+    <div class="stat-card"><div class="stat-icon success">💵</div><div class="stat-info"><div class="stat-value">$${totals.total_pay.toFixed(2)}</div><div class="stat-label">Total Payroll</div></div></div>
+    <div class="stat-card"><div class="stat-icon warning">💰</div><div class="stat-info"><div class="stat-value">$${summary.length ? (totals.total_pay / summary.length).toFixed(2) : '0.00'}</div><div class="stat-label">Avg Pay / Employee</div></div></div>
+  `;
+
+  document.getElementById('tsSummaryBody').innerHTML = summary.map(e => `
+    <tr>
+      <td class="fw-700">${e.name}</td>
+      <td><span class="badge badge-info">${e.role}</span></td>
+      <td>${e.location_name || '—'}</td>
+      <td class="fw-700">${e.total_hours}</td>
+      <td>$${(e.hourly_rate || 0).toFixed(2)}/hr</td>
+      <td class="fw-700" style="color:var(--success)">$${(e.total_pay || 0).toFixed(2)}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">No records for this period</td></tr>';
+
+  document.getElementById('tsTotalsRow').innerHTML = `
+    <td colspan="3" style="text-align:right">TOTAL</td>
+    <td>${totals.total_hours} hrs</td>
+    <td>—</td>
+    <td style="color:var(--success)">$${totals.total_pay.toFixed(2)}</td>
+  `;
+
+  document.getElementById('tsDetailBody').innerHTML = records.map(r => `
+    <tr>
+      <td>${r.work_date}</td>
+      <td class="fw-700">${r.name}</td>
+      <td><span class="badge badge-muted">${r.role}</span></td>
+      <td>${r.location_name || '—'}</td>
+      <td>${r.clock_in_time ? r.clock_in_time.slice(0,5) : '—'}</td>
+      <td>${r.clock_out_time ? r.clock_out_time.slice(0,5) : '—'}</td>
+      <td>${r.hours_worked ?? '—'}</td>
+      <td>$${(r.hourly_rate || 0).toFixed(2)}</td>
+      <td class="fw-700">$${(r.pay || 0).toFixed(2)}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted)">No detail records</td></tr>';
+
+  window._tsData = { summary, records, totals, start, end };
+}
+
+function toggleDetails() {
+  const w = document.getElementById('tsDetailWrap');
+  w.style.display = w.style.display === 'none' ? '' : 'none';
+}
+
+function exportCSV() {
+  if (!window._tsData) return;
+  const { summary, start, end } = window._tsData;
+  let csv = 'Employee,Role,Location,Total Hours,Hourly Rate,Total Pay\n';
+  summary.forEach(e => {
+    csv += `"${e.name}","${e.role}","${e.location_name || ''}",${e.total_hours},${(e.hourly_rate||0).toFixed(2)},${(e.total_pay||0).toFixed(2)}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `timesheet_${start}_${end}.csv`; a.click();
+}
+
+// ── Supply Orders ────────────────────────────────────────
 async function loadSupply() {
   const rows = await API.supplyOrders();
   document.getElementById('supplyBody').innerHTML = rows.map(r => `
@@ -218,19 +550,17 @@ async function loadSupply() {
       <td class="text-sm text-muted">${fmtDate(r.created_at)}</td>
       <td>${statusBadge(r.status)}</td>
       <td>
-        ${r.status === 'pending' ? `<button class="btn btn-sm btn-success" onclick="updateSupply(${r.id},'approved')">Approve</button>` : ''}
-        ${r.status === 'approved' ? `<button class="btn btn-sm btn-primary" onclick="updateSupply(${r.id},'shipped')">Mark Shipped</button>` : ''}
-        ${r.status === 'shipped' ? `<button class="btn btn-sm btn-gold" onclick="updateSupply(${r.id},'received')">Mark Received</button>` : ''}
+        ${r.status==='pending'   ? `<button class="btn btn-sm btn-success" onclick="updateSupply(${r.id},'approved')">Approve</button>` : ''}
+        ${r.status==='approved'  ? `<button class="btn btn-sm btn-primary" onclick="updateSupply(${r.id},'shipped')">Mark Shipped</button>` : ''}
+        ${r.status==='shipped'   ? `<button class="btn btn-sm btn-gold"    onclick="updateSupply(${r.id},'received')">Mark Received</button>` : ''}
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No supply orders</td></tr>';
+  `).join('') || '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">No supply orders</td></tr>';
 }
 
-async function updateSupply(id, status) {
-  await API.updateSupplyOrder(id, status);
-  loadSupply();
-}
+async function updateSupply(id, status) { await API.updateSupplyOrder(id, status); loadSupply(); }
 
+// ── Inventory ────────────────────────────────────────────
 async function loadInventory() {
   const locId = document.getElementById('invLocFilter').value;
   const items = await API.inventory(locId);
@@ -249,7 +579,7 @@ async function loadInventory() {
 }
 
 loadAll();
-setInterval(loadAll, 30000);
+setInterval(() => { if (currentSection === 'overview') loadSummary(); }, 30000);
 </script>
 </body>
 </html>
