@@ -616,13 +616,19 @@ async function generateReport() {
       <td><span class="badge badge-info">${e.role}</span></td>
       <td class="fw-700">${e.total_hours}</td>
       <td>$${(e.hourly_rate||0).toFixed(2)}/hr</td>
-      <td class="fw-700" style="color:var(--success)">$${(e.total_pay||0).toFixed(2)}</td>
+      <td>$${(e.gross_pay||0).toFixed(2)}</td>
+      <td style="color:var(--danger)">-$${(e.total_tax||0).toFixed(2)}</td>
+      <td style="color:var(--danger)">-$${(e.total_benefit||0).toFixed(2)}</td>
+      <td class="fw-700" style="color:var(--success)">$${(e.net_pay||0).toFixed(2)}</td>
     </tr>
-  `).join('') || '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">No records</td></tr>';
+  `).join('') || '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">No records</td></tr>';
   document.getElementById('tsTotalsRow').innerHTML = `
     <td colspan="2" style="text-align:right">TOTAL</td>
     <td>${totals.total_hours} hrs</td><td>—</td>
-    <td style="color:var(--success)">$${totals.total_pay.toFixed(2)}</td>
+    <td>$${totals.total_pay.toFixed(2)}</td>
+    <td style="color:var(--danger)">-$${totals.total_tax.toFixed(2)}</td>
+    <td style="color:var(--danger)">-$${totals.total_benefit.toFixed(2)}</td>
+    <td style="color:var(--success)">$${totals.total_net_pay.toFixed(2)}</td>
   `;
   document.getElementById('tsDetailBody').innerHTML = records.map(r => `
     <tr>
