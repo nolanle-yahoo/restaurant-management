@@ -523,7 +523,7 @@ if (user) {
   document.getElementById('invLocName').textContent = user.location_name || '';
 }
 liveClock('topbarTime');
-['orderModal','transferModal','trUpdateModal','addEmpModal','mgrTableModal','mgrAssignModal'].forEach(id => onModalOverlayClick(id));
+['orderModal','transferModal','trUpdateModal','addEmpModal','mgrTableModal','mgrAssignModal','toReviewModal'].forEach(id => onModalOverlayClick(id));
 
 const TABS = ['staff','schedule','timesheets','inventory','warehouse','supply','transfers','floorplan','timeoff','messages'];
 const TAB_LABELS = { staff:'Staff', schedule:'Schedule', timesheets:'Timesheets', inventory:'Inventory', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan', timeoff:'Time Off Requests', messages:'Employee Messages' };
