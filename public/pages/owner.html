@@ -496,7 +496,7 @@ if (user) populateSidebar(user);
 liveClock('topbarTime');
 ['supplyModal','transferModal','reassignModal','empModal','deleteModal','areaModal','fpTableModal','fpAssignModal'].forEach(onModalOverlayClick);
 
-const NAV_LABELS = { overview:'Overview', staff:'Staff & Locations', timesheets:'Timesheets', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan', admin:'Admin Panel', timeoff:'Time Off Requests', messages:'Employee Messages' };
+const NAV_LABELS = { overview:'Overview', staff:'Staff & Locations', timesheets:'Timesheets', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan', admin:'Admin Panel', reservations:'Reservations', menu:'Menu Management', auditlog:'Audit Log', timeoff:'Time Off Requests', messages:'Employee Messages' };
 const NAV_KEYS   = Object.keys(NAV_LABELS);
 let currentSection = 'overview', locations = [], allEmpsRaw = [], whData = null, editingEmpId = null, deletingEmpId = null, reassignEmpId = null, allInvItems = [];
 let editingAreaId = null, editingFpTableId = null, fpAssignAreaId = null, fpAssignLocId = null;
