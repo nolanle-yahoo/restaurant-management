@@ -265,6 +265,116 @@ async function loadWeek(week) {
 loadStatus();
 loadWeek(0);
 setInterval(loadStatus, 15000);
+
+// ── Section navigation ────────────────────────────────
+const EMP_SECTIONS = { mytime: 'My Time & Attendance', timeoff: 'Time Off Requests', messages: 'My Messages' };
+function showEmpSection(name) {
+  Object.keys(EMP_SECTIONS).forEach(s => {
+    document.getElementById('sec-' + s).classList.toggle('hidden', s !== name);
+  });
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item')[Object.keys(EMP_SECTIONS).indexOf(name)].classList.add('active');
+  document.querySelector('.topbar-title').textContent = EMP_SECTIONS[name];
+  if (name === 'timeoff')  loadTimeOff();
+  if (name === 'messages') loadMessages();
+}
+
+// ── Time Off ──────────────────────────────────────────
+const TYPE_LABEL = { vacation: '🌴 Vacation', sick: '🤒 Sick Day', personal: '👤 Personal', other: '📋 Other' };
+
+async function loadTimeOff() {
+  const list = await API.timeOffList();
+  if (!list.length) {
+    document.getElementById('toList').innerHTML = '<p style="text-align:center;padding:32px;color:var(--muted)">No requests yet. Click + New Request to submit one.</p>';
+    return;
+  }
+  document.getElementById('toList').innerHTML = `<table class="data-table">
+    <thead><tr><th>Type</th><th>Dates</th><th>Reason</th><th>Status</th><th>Note</th><th>Submitted</th><th></th></tr></thead>
+    <tbody>${list.map(r => `
+      <tr>
+        <td>${TYPE_LABEL[r.type] || r.type}</td>
+        <td class="fw-700">${r.start_date} → ${r.end_date}</td>
+        <td style="max-width:180px;color:var(--muted)">${r.reason || '—'}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td style="max-width:160px;color:var(--muted)">${r.review_note || '—'}</td>
+        <td class="text-sm text-muted">${fmtDate(r.created_at)}</td>
+        <td>${r.status === 'pending' ? `<button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="cancelTimeOff(${r.id})">Cancel</button>` : ''}</td>
+      </tr>`).join('')}
+    </tbody></table>`;
+}
+
+function openTimeOffModal() {
+  document.getElementById('toStart').valueAsDate = new Date();
+  document.getElementById('toEnd').valueAsDate = new Date();
+  document.getElementById('toReason').value = '';
+  document.getElementById('toModalAlert').classList.add('hidden');
+  showModal('toModal');
+}
+
+async function submitTimeOff() {
+  const type = document.getElementById('toType').value;
+  const start_date = document.getElementById('toStart').value;
+  const end_date = document.getElementById('toEnd').value;
+  const reason = document.getElementById('toReason').value.trim();
+  if (!start_date || !end_date) return showAlert('toModalAlert', 'Please select dates');
+  if (end_date < start_date) return showAlert('toModalAlert', 'End date must be on or after start date');
+  try {
+    await API.timeOffCreate({ type, start_date, end_date, reason });
+    hideModal('toModal');
+    showAlert('toAlert', 'Time off request submitted!', 'success');
+    loadTimeOff();
+  } catch(e) { showAlert('toModalAlert', e.message); }
+}
+
+async function cancelTimeOff(id) {
+  if (!confirm('Cancel this request?')) return;
+  await API.timeOffUpdate(id, { status: 'cancelled' });
+  loadTimeOff();
+}
+
+// ── Messages ──────────────────────────────────────────
+async function loadMessages() {
+  const list = await API.messagesMine();
+  if (!list.length) {
+    document.getElementById('msgList').innerHTML = '<p style="text-align:center;padding:32px;color:var(--muted)">No messages sent yet. Click + New Message to send feedback.</p>';
+    return;
+  }
+  const RECIP = { manager: 'Manager', owner: 'Owner', both: 'Manager & Owner' };
+  document.getElementById('msgList').innerHTML = `<table class="data-table">
+    <thead><tr><th>Subject</th><th>To</th><th>Sent</th><th>Read</th></tr></thead>
+    <tbody>${list.map(m => `
+      <tr>
+        <td class="fw-700">${m.subject}</td>
+        <td><span class="badge badge-info">${RECIP[m.recipient_type] || m.recipient_type}</span></td>
+        <td class="text-sm text-muted">${fmtDateTime(m.created_at)}</td>
+        <td>${m.is_read ? '<span class="badge badge-success">Read</span>' : '<span class="badge badge-muted">Unread</span>'}</td>
+      </tr>`).join('')}
+    </tbody></table>`;
+}
+
+function openMsgModal() {
+  document.getElementById('msgSubject').value = '';
+  document.getElementById('msgBody').value = '';
+  document.getElementById('msgModalAlert').classList.add('hidden');
+  showModal('msgModal');
+}
+
+async function submitMessage() {
+  const recipient_type = document.getElementById('msgRecipient').value;
+  const subject = document.getElementById('msgSubject').value.trim();
+  const message = document.getElementById('msgBody').value.trim();
+  if (!subject) return showAlert('msgModalAlert', 'Please enter a subject');
+  if (!message) return showAlert('msgModalAlert', 'Please enter a message');
+  try {
+    await API.messagesSend({ recipient_type, subject, message });
+    hideModal('msgModal');
+    showAlert('msgAlert', 'Message sent!', 'success');
+    loadMessages();
+  } catch(e) { showAlert('msgModalAlert', e.message); }
+}
+
+onModalOverlayClick('toModal');
+onModalOverlayClick('msgModal');
 </script>
 </body>
 </html>
