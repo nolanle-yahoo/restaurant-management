@@ -160,3 +160,18 @@ function liveClock(elId) {
 function isMobile() {
   return window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 }
+
+function initMobileSidebar() {
+  const shell   = document.querySelector('.app-shell');
+  const btn     = document.getElementById('hamburgerBtn');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (!shell || !btn) return;
+  btn.addEventListener('click', () => shell.classList.toggle('sidebar-open'));
+  if (overlay) overlay.addEventListener('click', () => shell.classList.remove('sidebar-open'));
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (window.innerWidth <= 768) shell.classList.remove('sidebar-open');
+    });
+  });
+}
+document.addEventListener('DOMContentLoaded', initMobileSidebar);
