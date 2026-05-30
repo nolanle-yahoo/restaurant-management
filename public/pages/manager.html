@@ -1142,9 +1142,29 @@ async function removeMgrAssignment(assignmentId) {
   loadMgrFloorPlan();
 }
 
+async function refreshBell() {
+  try {
+    const msgs = await API.messagesList();
+    const unread = msgs.filter(m => !m.is_read).length;
+    const badge = document.getElementById('notifCount');
+    const bell  = document.getElementById('notifBell');
+    if (unread > 0) {
+      badge.textContent = unread > 99 ? '99+' : unread;
+      badge.classList.remove('hidden');
+      bell.style.animation = 'none';
+      void bell.offsetWidth;
+      bell.style.animation = '';
+    } else {
+      badge.classList.add('hidden');
+    }
+  } catch {}
+}
+
 loadStats();
 loadStaff();
+refreshBell();
 setInterval(loadStats, 30000);
+setInterval(refreshBell, 30000);
 
 // ── Time Off ──────────────────────────────────────────
 const TO_TYPE = { vacation:'🌴 Vacation', sick:'🤒 Sick Day', personal:'👤 Personal', other:'📋 Other' };
