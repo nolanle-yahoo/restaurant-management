@@ -638,9 +638,12 @@ async function generateReport() {
       <td>${r.clock_out_time ? r.clock_out_time.slice(0,5) : '—'}</td>
       <td>${r.hours_worked ?? '—'}</td>
       <td>$${(r.hourly_rate||0).toFixed(2)}</td>
-      <td class="fw-700">$${(r.pay||0).toFixed(2)}</td>
+      <td>$${(r.gross_pay||0).toFixed(2)}</td>
+      <td style="color:var(--danger)">-$${(r.tax_amount||0).toFixed(2)}</td>
+      <td style="color:var(--danger)">-$${(r.benefit_amount||0).toFixed(2)}</td>
+      <td class="fw-700" style="color:var(--success)">$${(r.net_pay||0).toFixed(2)}</td>
     </tr>
-  `).join('') || '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">No detail records</td></tr>';
+  `).join('') || '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--muted)">No detail records</td></tr>';
   window._tsData = { summary, records, totals, start, end };
 }
 
