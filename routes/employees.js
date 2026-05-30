@@ -67,7 +67,8 @@ router.post('/', requireRole('owner','manager'), (req, res) => {
     res.json({ success: true, id: r.lastInsertRowid });
   } catch (e) {
     if (e.message.includes('UNIQUE')) return res.status(409).json({ error: 'Email already in use' });
-    throw e;
+    console.error('POST /employees:', e);
+    res.status(500).json({ error: 'An unexpected error occurred' });
   }
 });
 
@@ -88,7 +89,8 @@ router.put('/:id', requireRole('owner','manager'), (req, res) => {
     res.json({ success: true });
   } catch (e) {
     if (e.message.includes('UNIQUE')) return res.status(409).json({ error: 'Email already in use' });
-    throw e;
+    console.error('PUT /employees:', e);
+    res.status(500).json({ error: 'An unexpected error occurred' });
   }
 });
 

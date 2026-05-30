@@ -54,7 +54,9 @@ router.post('/', requireRole('owner','manager'), (req, res) => {
     const r = db.prepare(`INSERT INTO tables (location_id, table_number, capacity, area_id, status) VALUES (?,?,?,?,?)`).run(locId, table_number, capacity || 4, area_id || null, 'empty');
     res.json({ id: r.lastInsertRowid, success: true });
   } catch(e) {
-    res.status(400).json({ error: e.message });
+    if (e.message.includes('UNIQUE')) return res.status(409).json({ error: 'Table number already exists at this location' });
+    console.error('POST /tables:', e);
+    res.status(500).json({ error: 'An unexpected error occurred' });
   }
 });
 

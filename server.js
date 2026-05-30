@@ -34,5 +34,11 @@ app.use('/api/timesheets',  require('./routes/timesheets'));
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
+// Global error handler — keeps internal details server-side
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ error: 'An unexpected error occurred' });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Restaurant server running on http://localhost:${PORT}`));
