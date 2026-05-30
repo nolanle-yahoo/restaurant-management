@@ -189,4 +189,4 @@ function initMobileSidebar() {
     });
   });
 }
-document.addEventListener('DOMContentLoaded', initMobileSidebar);
+document.addEventListener('DOMContentLoaded', () => { initDarkMode(); initMobileSidebar(); });
