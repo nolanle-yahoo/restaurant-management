@@ -79,7 +79,7 @@ router.post('/order', requireRole('owner','manager','chef','stockroom','employee
     // Look for or create inventory entry at target location
     let existing = db.prepare(`SELECT id FROM inventory WHERE item_name=? AND location_id=?`).get(reqItemName, forLocId);
     if (!existing) {
-      const r = db.prepare(`INSERT INTO inventory (location_id, item_name, category, unit, quantity, min_quantity) VALUES (?,'${reqItemName}','Other','units',0,0)`).run(forLocId);
+      const r = db.prepare(`INSERT INTO inventory (location_id, item_name, category, unit, quantity, min_quantity) VALUES (?,?,?,?,?,?)`).run(forLocId, reqItemName, 'Other', 'units', 0, 0);
       itemId = r.lastInsertRowid;
     } else {
       itemId = existing.id;
