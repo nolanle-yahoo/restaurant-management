@@ -1141,6 +1141,88 @@ async function removeMgrAssignment(assignmentId) {
 loadStats();
 loadStaff();
 setInterval(loadStats, 30000);
+
+// ── Time Off ──────────────────────────────────────────
+const TO_TYPE = { vacation:'🌴 Vacation', sick:'🤒 Sick Day', personal:'👤 Personal', other:'📋 Other' };
+let toData = [], reviewingToId = null;
+
+async function loadMgrTimeOff() {
+  toData = await API.timeOffList();
+  renderTimeOff();
+  const pending = toData.filter(r => r.status === 'pending').length;
+  document.getElementById('navTimeOff').innerHTML = `<span class="nav-icon">🏖️</span>Time Off${pending ? ` <span style="background:var(--danger);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">${pending}</span>` : ''}`;
+}
+
+function renderTimeOff() {
+  const f = document.getElementById('toStatusFilter').value;
+  const rows = f ? toData.filter(r => r.status === f) : toData;
+  if (!rows.length) { document.getElementById('toList').innerHTML = '<p style="text-align:center;padding:32px;color:var(--muted)">No requests found.</p>'; return; }
+  document.getElementById('toList').innerHTML = `<table class="data-table">
+    <thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td class="fw-700">${r.employee_name}<br><span class="text-sm text-muted">${r.employee_role}</span></td>
+      <td>${TO_TYPE[r.type] || r.type}</td>
+      <td>${r.start_date}<br><span class="text-muted text-sm">→ ${r.end_date}</span></td>
+      <td style="max-width:160px;color:var(--muted)">${r.reason || '—'}</td>
+      <td>${statusBadge(r.status)}${r.review_note ? `<br><span class="text-sm text-muted">${r.review_note}</span>` : ''}</td>
+      <td>${r.status === 'pending' ? `<button class="btn btn-sm btn-primary" onclick="openToReview(${r.id})">Review</button>` : ''}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function openToReview(id) {
+  reviewingToId = id;
+  const r = toData.find(x => x.id === id);
+  document.getElementById('toReviewTitle').textContent = `Review: ${r.employee_name}`;
+  document.getElementById('toReviewInfo').innerHTML = `<strong>${TO_TYPE[r.type]}</strong> &nbsp;|&nbsp; ${r.start_date} → ${r.end_date}${r.reason ? `<br><span style="color:var(--muted)">${r.reason}</span>` : ''}`;
+  document.getElementById('toReviewNote').value = '';
+  document.getElementById('toReviewAlert').classList.add('hidden');
+  showModal('toReviewModal');
+}
+
+async function submitToReview(status) {
+  const review_note = document.getElementById('toReviewNote').value.trim();
+  try {
+    await API.timeOffUpdate(reviewingToId, { status, review_note });
+    hideModal('toReviewModal');
+    showAlert('toAlert', `Request ${status}.`, status === 'approved' ? 'success' : 'warning');
+    loadMgrTimeOff();
+  } catch(e) { showAlert('toReviewAlert', e.message); }
+}
+
+// ── Messages ──────────────────────────────────────────
+let msgData = [];
+
+async function loadMgrMessages() {
+  msgData = await API.messagesList();
+  renderMessages();
+  const unread = msgData.filter(m => !m.is_read).length;
+  document.getElementById('navMessages').innerHTML = `<span class="nav-icon">💬</span>Messages${unread ? ` <span style="background:var(--burgundy);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">${unread}</span>` : ''}`;
+}
+
+function renderMessages() {
+  const unreadOnly = document.getElementById('unreadOnly').checked;
+  const rows = unreadOnly ? msgData.filter(m => !m.is_read) : msgData;
+  const RECIP = { manager:'Manager', owner:'Owner', both:'Mgr & Owner' };
+  if (!rows.length) { document.getElementById('mgrMsgList').innerHTML = '<p style="text-align:center;padding:32px;color:var(--muted)">No messages.</p>'; return; }
+  document.getElementById('mgrMsgList').innerHTML = rows.map(m => `
+    <div style="padding:16px;border-bottom:1px solid var(--border);${!m.is_read ? 'background:rgba(107,26,26,.03)' : ''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px">
+        <div>
+          <span class="fw-700">${m.subject}</span>
+          ${!m.is_read ? '<span style="background:var(--burgundy);color:#fff;border-radius:10px;padding:1px 8px;font-size:10px;margin-left:8px">NEW</span>' : ''}
+        </div>
+        <span class="text-sm text-muted" style="white-space:nowrap">${fmtDateTime(m.created_at)}</span>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">From: <strong style="color:var(--charcoal)">${m.sender_name}</strong> · ${m.sender_role}</div>
+      <div style="font-size:14px;line-height:1.6;margin-bottom:10px">${m.message}</div>
+      ${!m.is_read ? `<button class="btn btn-sm btn-ghost" onclick="markMsgRead(${m.id})">Mark as Read</button>` : '<span class="text-sm text-muted">✓ Read</span>'}
+    </div>`).join('');
+}
+
+async function markMsgRead(id) {
+  await API.messagesRead(id);
+  loadMgrMessages();
+}
 </script>
 </body>
 </html>
