@@ -198,8 +198,8 @@ function seed() {
   insertTR.run('Parmesan',        4,  1, 5, 9,  'pending',    null,                    null,                        null,        'For new pasta menu items',   '-1 days', '-1 days');
 
   // ── Menu ────────────────────────────────────────────────────────
-  const insertCat  = db.prepare(`INSERT INTO menu_categories (location_id, name, sort_order) VALUES (?,?,?)`);
-  const insertItem = db.prepare(`INSERT INTO menu_items (category_id, location_id, name, description, price, sort_order) VALUES (?,?,?,?,?,?)`);
+  const insertCat      = db.prepare(`INSERT INTO menu_categories (location_id, name, sort_order) VALUES (?,?,?)`);
+  const insertMenuItem = db.prepare(`INSERT INTO menu_items (category_id, location_id, name, description, price, sort_order) VALUES (?,?,?,?,?,?)`);
 
   const menuTemplate = [
     { name: 'Starters', sort: 0, items: [
