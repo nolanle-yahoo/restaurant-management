@@ -162,6 +162,20 @@ function isMobile() {
   return window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 }
 
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  localStorage.setItem('darkMode', isDark ? 'on' : 'off');
+  const btn = document.getElementById('darkToggle');
+  if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+}
+
+function initDarkMode() {
+  if (localStorage.getItem('darkMode') === 'on') document.body.classList.add('dark');
+  const btn = document.getElementById('darkToggle');
+  if (btn) btn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+}
+
 function initMobileSidebar() {
   const shell   = document.querySelector('.app-shell');
   const btn     = document.getElementById('hamburgerBtn');
