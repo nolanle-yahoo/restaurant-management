@@ -6,9 +6,11 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET === WEAK_SECRET) {
   process.exit(1);
 }
 
+const http    = require('http');
 const express = require('express');
-const cors = require('cors');
-const path = require('path');
+const cors    = require('cors');
+const path    = require('path');
+const ws      = require('./lib/ws');
 
 const app = express();
 app.use(cors({
@@ -22,25 +24,29 @@ app.use(express.static(path.join(__dirname, 'public')));
 const { createSchema } = require('./db/schema');
 createSchema();
 
-app.use('/api/auth',        require('./routes/auth'));
-app.use('/api/employees',   require('./routes/employees'));
-app.use('/api/clock',       require('./routes/clock'));
-app.use('/api/areas',       require('./routes/areas'));
-app.use('/api/tables',      require('./routes/tables'));
-app.use('/api/orders',      require('./routes/orders'));
-app.use('/api/inventory',   require('./routes/inventory'));
-app.use('/api/locations',   require('./routes/locations'));
-app.use('/api/timesheets',  require('./routes/timesheets'));
-app.use('/api/time-off',   require('./routes/timeoff'));
-app.use('/api/messages',   require('./routes/messages'));
+app.use('/api/auth',         require('./routes/auth'));
+app.use('/api/employees',    require('./routes/employees'));
+app.use('/api/clock',        require('./routes/clock'));
+app.use('/api/areas',        require('./routes/areas'));
+app.use('/api/tables',       require('./routes/tables'));
+app.use('/api/orders',       require('./routes/orders'));
+app.use('/api/inventory',    require('./routes/inventory'));
+app.use('/api/locations',    require('./routes/locations'));
+app.use('/api/timesheets',   require('./routes/timesheets'));
+app.use('/api/time-off',     require('./routes/timeoff'));
+app.use('/api/messages',     require('./routes/messages'));
+app.use('/api/reservations', require('./routes/reservations'));
+app.use('/api/menu',         require('./routes/menu'));
+app.use('/api/audit',        require('./routes/audit'));
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-// Global error handler — keeps internal details server-side
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: 'An unexpected error occurred' });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Restaurant server running on http://localhost:${PORT}`));
+const server = http.createServer(app);
+ws.init(server);
+server.listen(PORT, () => console.log(`Restaurant server running on http://localhost:${PORT}`));
