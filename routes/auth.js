@@ -49,4 +49,34 @@ router.get('/me', verifyToken, (req, res) => {
   res.json(user);
 });
 
+router.put('/profile', verifyToken, (req, res) => {
+  const { name, email } = req.body;
+  if (!name && !email) return res.status(400).json({ error: 'name or email required' });
+  const fields = [], vals = [];
+  if (name)  { fields.push('name=?');  vals.push(name.trim()); }
+  if (email) { fields.push('email=?'); vals.push(email.trim()); }
+  vals.push(req.user.id);
+  try {
+    db.prepare(`UPDATE users SET ${fields.join(',')} WHERE id=?`).run(...vals);
+    // Return updated user for localStorage refresh
+    const updated = db.prepare(`SELECT u.id,u.name,u.email,u.role,u.location_id,l.name as location_name FROM users u LEFT JOIN locations l ON u.location_id=l.id WHERE u.id=?`).get(req.user.id);
+    res.json({ success: true, user: updated });
+  } catch (e) {
+    if (e.message.includes('UNIQUE')) return res.status(409).json({ error: 'Email already in use' });
+    res.status(500).json({ error: 'An unexpected error occurred' });
+  }
+});
+
+router.put('/password', verifyToken, (req, res) => {
+  const { current_password, new_password } = req.body;
+  if (!current_password || !new_password) return res.status(400).json({ error: 'current_password and new_password required' });
+  if (new_password.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
+  const user = db.prepare(`SELECT * FROM users WHERE id=?`).get(req.user.id);
+  if (!bcrypt.compareSync(current_password, user.password_hash)) {
+    return res.status(401).json({ error: 'Current password is incorrect' });
+  }
+  db.prepare(`UPDATE users SET password_hash=? WHERE id=?`).run(bcrypt.hashSync(new_password, 10), req.user.id);
+  res.json({ success: true });
+});
+
 module.exports = router;
