@@ -56,8 +56,11 @@ router.get('/', (req, res) => {
   `).all(start, end, ...locArgs);
 
   const totals = {
-    total_hours: Math.round(summary.reduce((s, r) => s + (r.total_hours || 0), 0) * 100) / 100,
-    total_pay:   Math.round(summary.reduce((s, r) => s + (r.total_pay   || 0), 0) * 100) / 100,
+    total_hours:   Math.round(summary.reduce((s, r) => s + (r.total_hours || 0), 0) * 100) / 100,
+    total_pay:     Math.round(summary.reduce((s, r) => s + (r.gross_pay   || 0), 0) * 100) / 100,
+    total_tax:     Math.round(summary.reduce((s, r) => s + (r.total_tax   || 0), 0) * 100) / 100,
+    total_benefit: Math.round(summary.reduce((s, r) => s + (r.total_benefit || 0), 0) * 100) / 100,
+    total_net_pay: Math.round(summary.reduce((s, r) => s + (r.net_pay     || 0), 0) * 100) / 100,
   };
 
   res.json({ records, summary, totals, start, end });
