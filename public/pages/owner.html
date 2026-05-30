@@ -512,7 +512,7 @@ async function loadSummary() {
   const [{ locations: locs, totals }, recent] = await Promise.all([API.locationsSummary(), API.clockRecent()]);
   locations = locs;
   const locOpts = locs.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
-  ['tsLocFilter','supplyLocFilter','soLocation','trFrom','trTo','empLocation','reassignLoc','adminLocFilter','fpLocSelect'].forEach(id => {
+  ['tsLocFilter','supplyLocFilter','soLocation','trFrom','trTo','empLocation','reassignLoc','adminLocFilter','fpLocSelect','toLocFilter','msgLocFilter'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const pre = el.id === 'tsLocFilter' || el.id === 'supplyLocFilter' || el.id === 'adminLocFilter'
