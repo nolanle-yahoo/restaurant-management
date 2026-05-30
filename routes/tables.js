@@ -83,6 +83,7 @@ router.put('/:id', requireRole('owner','manager','frontdesk','waiter','chef','em
     SELECT t.*, a.name as area_name, a.color as area_color
     FROM tables t LEFT JOIN areas a ON t.area_id = a.id WHERE t.id=?
   `).get(req.params.id);
+  broadcast('table_update', { table_id: updated.id, status: updated.status, location_id: updated.location_id }, updated.location_id);
   res.json(updated);
 });
 
