@@ -253,6 +253,61 @@ async function removeAssignment(id) {
 
 loadAll();
 setInterval(loadAll, 5000);
+
+// WebSocket for live table updates
+connectWebSocket(user?.location_id, {
+  table_update: () => loadAll(),
+  reservation_update: () => { if (document.getElementById('sec-reservations')?.classList.contains('hidden') === false) loadFdReservations(); },
+});
+
+// Reservations
+let fdResData = [];
+async function loadFdReservations() {
+  const dateEl = document.getElementById('fdResDate');
+  if (!dateEl.value) dateEl.valueAsDate = new Date();
+  fdResData = await API.reservations({ location_id: user.location_id, date: dateEl.value });
+  renderFdRes();
+}
+function renderFdRes() {
+  if (!fdResData.length) { document.getElementById('fdResList').innerHTML = '<p style="text-align:center;padding:32px;color:var(--muted)">No reservations for this date.</p>'; return; }
+  document.getElementById('fdResList').innerHTML = `<table class="data-table">
+    <thead><tr><th>Time</th><th>Guest</th><th>Party</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
+    <tbody>${fdResData.sort((a,b)=>a.reservation_time.localeCompare(b.reservation_time)).map(r=>`<tr>
+      <td class="fw-700">${r.reservation_time}</td>
+      <td class="fw-700">${r.guest_name}<br><span class="text-sm text-muted">${r.guest_phone||''}</span></td>
+      <td style="text-align:center">${r.party_size} 👤</td>
+      <td>${statusBadge(r.status)}</td>
+      <td style="max-width:150px;color:var(--muted)">${r.notes||'—'}</td>
+      <td style="white-space:nowrap">
+        ${r.status==='confirmed'?`<button class="btn btn-sm btn-gold" onclick="updateFdRes(${r.id},'seated')">Seat</button> `:''}
+        ${r.status==='seated'?`<button class="btn btn-sm btn-success" onclick="updateFdRes(${r.id},'completed')">Done</button> `:''}
+        ${r.status==='pending'?`<button class="btn btn-sm btn-primary" onclick="updateFdRes(${r.id},'confirmed')">Confirm</button> `:''}
+        ${!['completed','cancelled'].includes(r.status)?`<button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="updateFdRes(${r.id},'no_show')">No Show</button>`:''}
+      </td>
+    </tr>`).join('')}</tbody></table>`;
+}
+function openFdResModal() {
+  document.getElementById('fdResModalAlert').classList.add('hidden');
+  ['fdResName','fdResPhone','fdResNotes'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('fdResParty').value=2;
+  document.getElementById('fdResTime').value='19:00';
+  showModal('fdResModal');
+}
+async function submitFdRes() {
+  const data = {
+    guest_name: document.getElementById('fdResName').value.trim(),
+    guest_phone: document.getElementById('fdResPhone').value.trim(),
+    party_size: parseInt(document.getElementById('fdResParty').value),
+    reservation_date: document.getElementById('fdResDate').value,
+    reservation_time: document.getElementById('fdResTime').value,
+    notes: document.getElementById('fdResNotes').value.trim(),
+    location_id: user.location_id,
+  };
+  if (!data.guest_name||!data.reservation_time) return showAlert('fdResModalAlert','Name and time required');
+  try { await API.reservationCreate(data); hideModal('fdResModal'); showAlert('fdResAlert','Reservation added!','success'); loadFdReservations(); } catch(e) { showAlert('fdResModalAlert',e.message); }
+}
+async function updateFdRes(id, status) { await API.reservationUpdate(id,{status}); loadFdReservations(); }
+onModalOverlayClick('fdResModal');
 </script>
 </body>
 </html>
