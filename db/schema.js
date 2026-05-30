@@ -140,6 +140,33 @@ function createSchema() {
     );
   `);
 
+    CREATE TABLE IF NOT EXISTS time_off_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      location_id INTEGER REFERENCES locations(id),
+      type TEXT NOT NULL CHECK(type IN ('vacation','sick','personal','other')),
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      reason TEXT,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','denied','cancelled')),
+      reviewed_by INTEGER REFERENCES users(id),
+      review_note TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS employee_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      location_id INTEGER REFERENCES locations(id),
+      recipient_type TEXT NOT NULL DEFAULT 'manager' CHECK(recipient_type IN ('manager','owner','both')),
+      subject TEXT NOT NULL,
+      message TEXT NOT NULL,
+      is_read INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
   // Column migrations
   try { db.exec(`ALTER TABLE users ADD COLUMN hourly_rate REAL DEFAULT 0`); } catch {}
   try { db.exec(`ALTER TABLE supply_orders ADD COLUMN item_name TEXT`); } catch {}
