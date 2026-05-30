@@ -42,6 +42,102 @@ function populateSidebar(user) {
   if (el('sb-location')) el('sb-location').textContent = user.location_name || 'All Locations';
   const logoutBtn = document.querySelector('.logout-btn');
   if (logoutBtn) logoutBtn.onclick = logout;
+
+  // Inject ⚙️ settings button above logout (once per page)
+  const footer = document.querySelector('.sidebar-footer');
+  if (footer && !footer.querySelector('.settings-link')) {
+    const btn = document.createElement('button');
+    btn.className = 'settings-link';
+    btn.textContent = '⚙️ Account Settings';
+    btn.onclick = openAccountSettings;
+    Object.assign(btn.style, {
+      width:'100%', padding:'8px', background:'none', border:'none',
+      borderRadius:'8px', color:'rgba(255,255,255,.7)', fontSize:'12.5px',
+      cursor:'pointer', textAlign:'left', marginBottom:'6px', transition:'background .15s',
+    });
+    btn.onmouseenter = () => btn.style.background = 'rgba(255,255,255,.08)';
+    btn.onmouseleave = () => btn.style.background = 'none';
+    footer.insertBefore(btn, logoutBtn);
+  }
+
+  if (!document.getElementById('accountSettingsModal')) _injectAccountSettingsModal();
+}
+
+function _injectAccountSettingsModal() {
+  const div = document.createElement('div');
+  div.innerHTML = `
+  <div class="modal-overlay" id="accountSettingsModal">
+    <div class="modal" style="width:420px">
+      <div class="modal-title">⚙️ Account Settings</div>
+      <div class="tabs" id="settingsTabs" style="margin-bottom:18px">
+        <button class="tab-btn active" data-tab="tabProfile">Profile</button>
+        <button class="tab-btn" data-tab="tabPassword">Change Password</button>
+      </div>
+      <div id="tabProfile" class="tab-pane active">
+        <div id="profileAlert" class="alert hidden"></div>
+        <div class="form-group"><label>Name</label><input id="settingsName" placeholder="Your name"></div>
+        <div class="form-group"><label>Email</label><input id="settingsEmail" type="email" placeholder="your@email.com"></div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+          <button class="btn btn-ghost" onclick="hideModal('accountSettingsModal')">Cancel</button>
+        </div>
+      </div>
+      <div id="tabPassword" class="tab-pane">
+        <div id="pwAlert" class="alert hidden"></div>
+        <div class="form-group"><label>Current Password</label><input id="currentPw" type="password" placeholder="••••••••"></div>
+        <div class="form-group"><label>New Password</label><input id="newPw" type="password" placeholder="Min 6 characters"></div>
+        <div class="form-group"><label>Confirm New Password</label><input id="confirmPw" type="password" placeholder="Repeat new password"></div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn btn-primary" onclick="savePassword()">Update Password</button>
+          <button class="btn btn-ghost" onclick="hideModal('accountSettingsModal')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(div.firstElementChild);
+  initTabs('#settingsTabs');
+  onModalOverlayClick('accountSettingsModal');
+}
+
+function openAccountSettings() {
+  const user = getUser();
+  document.getElementById('settingsName').value  = user?.name  || '';
+  document.getElementById('settingsEmail').value = user?.email || '';
+  document.getElementById('profileAlert').classList.add('hidden');
+  document.getElementById('pwAlert').classList.add('hidden');
+  document.getElementById('currentPw').value = '';
+  document.getElementById('newPw').value = '';
+  document.getElementById('confirmPw').value = '';
+  showModal('accountSettingsModal');
+}
+
+async function saveProfile() {
+  const name  = document.getElementById('settingsName').value.trim();
+  const email = document.getElementById('settingsEmail').value.trim();
+  if (!name || !email) return showAlert('profileAlert', 'Name and email are required');
+  try {
+    const { user } = await API.updateProfile({ name, email });
+    localStorage.setItem('user', JSON.stringify(user));
+    const el = document.getElementById('sb-name');
+    if (el) el.textContent = user.name;
+    showAlert('profileAlert', 'Profile updated!', 'success');
+  } catch(e) { showAlert('profileAlert', e.message); }
+}
+
+async function savePassword() {
+  const current  = document.getElementById('currentPw').value;
+  const newPw    = document.getElementById('newPw').value;
+  const confirm  = document.getElementById('confirmPw').value;
+  if (!current || !newPw) return showAlert('pwAlert', 'All fields required');
+  if (newPw !== confirm)  return showAlert('pwAlert', 'New passwords do not match');
+  if (newPw.length < 6)   return showAlert('pwAlert', 'Password must be at least 6 characters');
+  try {
+    await API.changePassword({ current_password: current, new_password: newPw });
+    showAlert('pwAlert', 'Password changed!', 'success');
+    document.getElementById('currentPw').value = '';
+    document.getElementById('newPw').value = '';
+    document.getElementById('confirmPw').value = '';
+  } catch(e) { showAlert('pwAlert', e.message); }
 }
 
 function fmtTime(dt) {
