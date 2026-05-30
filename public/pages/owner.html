@@ -300,6 +300,56 @@
         </div>
       </section>
 
+      <!-- ── Reservations ─────────────────────────────── -->
+      <section id="sec-reservations" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Reservations</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <select id="resLocFilter" onchange="loadOwnerReservations()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px"><option value="">All Locations</option></select>
+              <input type="date" id="resDateFilter" onchange="loadOwnerReservations()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+              <select id="resStatusFilter" onchange="loadOwnerReservations()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+                <option value="">All Statuses</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option>
+                <option value="seated">Seated</option><option value="completed">Completed</option><option value="no_show">No Show</option><option value="cancelled">Cancelled</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="openOwnerResModal()">+ New Reservation</button>
+            </div>
+          </div>
+          <div id="resAlert" class="alert hidden" style="margin-bottom:12px"></div>
+          <div id="resList"></div>
+        </div>
+      </section>
+
+      <!-- ── Menu ─────────────────────────────────────── -->
+      <section id="sec-menu" class="hidden">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <div class="card-title">Menu Management</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="menuLocFilter" onchange="loadOwnerMenu()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px"><option value="">All Locations</option></select>
+              <button class="btn btn-primary btn-sm" onclick="openAddCategoryModal()">+ Category</button>
+              <button class="btn btn-ghost btn-sm" onclick="openAddMenuItemModal()">+ Item</button>
+            </div>
+          </div>
+          <div id="menuAlert" class="alert hidden" style="margin-bottom:12px"></div>
+          <div id="menuContent"></div>
+        </div>
+      </section>
+
+      <!-- ── Audit Log ─────────────────────────────────── -->
+      <section id="sec-auditlog" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Audit Log</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="auditLocFilter" onchange="loadAuditLog()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px"><option value="">All Locations</option></select>
+              <input id="auditSearch" placeholder="Filter by action…" oninput="renderAudit()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;width:180px">
+            </div>
+          </div>
+          <div id="auditList"></div>
+        </div>
+      </section>
+
     </div>
   </div>
 </div>
