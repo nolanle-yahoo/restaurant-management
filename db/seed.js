@@ -197,6 +197,70 @@ function seed() {
   insertTR.run('Coffee Beans',    3,  5, 2, 6,  'received',   'Artisan Roasters Inc.', 'Standard ground shipping',  'AR-44120',  null,                         '-5 days', '-2 days');
   insertTR.run('Parmesan',        4,  1, 5, 9,  'pending',    null,                    null,                        null,        'For new pasta menu items',   '-1 days', '-1 days');
 
+  // ── Menu ────────────────────────────────────────────────────────
+  const insertCat  = db.prepare(`INSERT INTO menu_categories (location_id, name, sort_order) VALUES (?,?,?)`);
+  const insertItem = db.prepare(`INSERT INTO menu_items (category_id, location_id, name, description, price, sort_order) VALUES (?,?,?,?,?,?)`);
+
+  const menuTemplate = [
+    { name: 'Starters', sort: 0, items: [
+      ['Caesar Salad', 'Crisp romaine, house dressing, croutons', 14, 0],
+      ['Bruschetta',   'Tomato, basil, garlic on grilled bread',  12, 1],
+      ['Calamari',     'Lightly fried, served with aioli',        16, 2],
+      ['Soup du Jour', 'Chef\'s daily selection',                 10, 3],
+    ]},
+    { name: 'Mains', sort: 1, items: [
+      ['Grilled Salmon',    'Atlantic salmon, lemon butter sauce', 32, 0],
+      ['Beef Tenderloin',   '8oz filet, truffle jus',             45, 1],
+      ['Chicken Marsala',   'Pan-seared, mushroom marsala sauce',  28, 2],
+      ['Shrimp Scampi',     'Garlic butter, white wine, linguine', 30, 3],
+      ['Mushroom Risotto',  'Arborio, wild mushrooms, parmesan',   22, 4],
+      ['Pasta Carbonara',   'Guanciale, egg, pecorino',            24, 5],
+    ]},
+    { name: 'Desserts', sort: 2, items: [
+      ['Chocolate Lava Cake', 'Warm, with vanilla ice cream',      12, 0],
+      ['Tiramisu',            'Classic Italian, espresso soaked',  10, 1],
+      ['Crème Brûlée',        'Vanilla custard, caramelized top',  11, 2],
+      ['Cheesecake',          'New York style, berry compote',     10, 3],
+    ]},
+    { name: 'Beverages', sort: 3, items: [
+      ['House Red Wine',   'Glass, chef\'s selection',   12, 0],
+      ['House White Wine', 'Glass, chef\'s selection',   12, 1],
+      ['Sparkling Water',  'San Pellegrino 500ml',        5, 2],
+      ['Lemonade',         'Fresh squeezed, mint',        4, 3],
+      ['Espresso',         'Double shot',                  6, 4],
+      ['Cappuccino',       'Steamed milk, espresso',       7, 5],
+    ]},
+  ];
+
+  [1,2,3,4,5].forEach(locId => {
+    menuTemplate.forEach(cat => {
+      const catRow = insertCat.run(locId, cat.name, cat.sort);
+      cat.items.forEach(([name, desc, price, sort]) => {
+        insertItem.run(catRow.lastInsertRowid, locId, name, desc, price, sort);
+      });
+    });
+  });
+
+  // ── Reservations ────────────────────────────────────────────────
+  const insertRes = db.prepare(`
+    INSERT INTO reservations (location_id, guest_name, guest_phone, party_size, reservation_date, reservation_time, status, notes, created_by)
+    VALUES (?,?,?,?,date('now',?),?,?,?,?)
+  `);
+  // loc1=Downtown, loc2=Uptown, loc3=Airport — managed by managers 2,3,4
+  const resData = [
+    [1, 'James Wilson',    '(555) 201-1001', 4, '+0 days', '18:30', 'confirmed', 'Anniversary dinner',   2],
+    [1, 'Maria Santos',    '(555) 201-1002', 2, '+0 days', '19:00', 'confirmed', null,                   2],
+    [1, 'Robert Chen',     '(555) 201-1003', 6, '+0 days', '20:00', 'confirmed', 'Window table preferred',2],
+    [1, 'Emily Larson',    '(555) 201-1004', 2, '+1 days', '19:30', 'confirmed', 'Vegetarian guests',    2],
+    [2, 'Daniel Park',     '(555) 202-2001', 8, '+0 days', '18:00', 'confirmed', 'Birthday party',       3],
+    [2, 'Sarah Mitchell',  '(555) 202-2002', 2, '+0 days', '20:30', 'pending',   null,                   3],
+    [2, 'Tom Nguyen',      '(555) 202-2003', 4, '+1 days', '19:00', 'confirmed', null,                   3],
+    [3, 'Linda Kowalski',  '(555) 203-3001', 3, '+0 days', '17:00', 'confirmed', 'Pre-flight dinner',    4],
+    [1, 'Mark Davidson',   '(555) 201-1005', 2, '-1 days', '19:00', 'completed', null,                   2],
+    [1, 'Alice Thompson',  '(555) 201-1006', 4, '-1 days', '20:00', 'no_show',   'Did not call',         2],
+  ];
+  resData.forEach(r => insertRes.run(...r));
+
   console.log('✅  Database seeded successfully!');
   console.log('');
   console.log('Demo login accounts:');
