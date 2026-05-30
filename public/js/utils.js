@@ -258,6 +258,31 @@ function isMobile() {
   return window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 }
 
+// ── WebSocket client ─────────────────────────────────────────
+function connectWebSocket(locationId, handlers) {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  let ws, dead = false;
+
+  function connect() {
+    if (dead) return;
+    try {
+      ws = new WebSocket(`${proto}://${location.host}`);
+      ws.onopen  = () => { if (locationId) ws.send(JSON.stringify({ type: 'auth', location_id: locationId })); };
+      ws.onmessage = e => {
+        try {
+          const { event, data } = JSON.parse(e.data);
+          if (handlers[event]) handlers[event](data);
+        } catch {}
+      };
+      ws.onclose = () => { if (!dead) setTimeout(connect, 3000); };
+      ws.onerror = () => {};
+    } catch {}
+  }
+
+  connect();
+  return { close() { dead = true; ws?.close(); } };
+}
+
 function toggleDark() {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
