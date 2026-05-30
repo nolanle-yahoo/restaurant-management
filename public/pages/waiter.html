@@ -101,6 +101,11 @@ liveClock('topbarTime');
 onModalOverlayClick('orderModal');
 onModalOverlayClick('statusModal');
 
+connectWebSocket(user?.location_id, {
+  order_update: () => { if (currentView === 'orders') loadOrders(); },
+  table_update: d => { if (currentView === 'mine' || currentView === 'floor') loadAll(); },
+});
+
 let allTables = [], areaData = [], selectedTableId = null, orderItemCount = 0, statusTableId = null;
 
 function switchView(v) {
