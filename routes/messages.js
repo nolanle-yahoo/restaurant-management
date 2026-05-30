@@ -13,8 +13,9 @@ router.get('/', requireRole('owner','manager'), (req, res) => {
     cond = `AND (m.recipient_type='manager' OR m.recipient_type='both') AND m.location_id=?`;
     args = [locId];
   } else {
+    // Owner sees ALL messages from all locations (full visibility)
     const locFilter = req.query.location_id ? 'AND m.location_id=?' : '';
-    cond = `AND (m.recipient_type='owner' OR m.recipient_type='both') ${locFilter}`;
+    cond = locFilter;
     args = req.query.location_id ? [req.query.location_id] : [];
   }
   const rows = db.prepare(`
