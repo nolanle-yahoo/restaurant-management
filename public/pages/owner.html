@@ -251,6 +251,65 @@
         </div>
       </section>
 
+      <!-- ── Time Off ──────────────────────────────────── -->
+      <section id="sec-timeoff" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Time Off Requests — All Locations</div>
+            <div style="display:flex;gap:8px">
+              <select id="toLocFilter" onchange="loadOwnerTimeOff()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+                <option value="">All Locations</option>
+              </select>
+              <select id="toStatusFilter" onchange="renderOwnerTimeOff()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="denied">Denied</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+          <div id="ownerToAlert" class="alert hidden" style="margin-bottom:12px"></div>
+          <div id="ownerToList"></div>
+        </div>
+      </section>
+
+      <!-- ── Messages ───────────────────────────────────── -->
+      <section id="sec-messages" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Employee Messages & Feedback — All Locations</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="msgLocFilter" onchange="loadOwnerMessages()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+                <option value="">All Locations</option>
+              </select>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                <input type="checkbox" id="ownerUnreadOnly" onchange="renderOwnerMessages()"> Unread only
+              </label>
+            </div>
+          </div>
+          <div id="ownerMsgList"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Time Off Review Modal ──────────────────────── -->
+<div class="modal-overlay" id="ownerToReviewModal">
+  <div class="modal">
+    <div class="modal-title" id="ownerToReviewTitle">Review Request</div>
+    <div id="ownerToReviewAlert" class="alert hidden"></div>
+    <div id="ownerToReviewInfo" style="background:var(--cream);border-radius:8px;padding:14px;margin-bottom:16px;font-size:13.5px"></div>
+    <div class="form-group">
+      <label>Note to Employee (optional)</label>
+      <textarea id="ownerToReviewNote" rows="3" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical" placeholder="Reason for decision..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-success" onclick="submitOwnerToReview('approved')">✓ Approve</button>
+      <button class="btn btn-danger" onclick="submitOwnerToReview('denied')">✕ Deny</button>
+      <button class="btn btn-ghost" onclick="hideModal('ownerToReviewModal')">Cancel</button>
     </div>
   </div>
 </div>
