@@ -525,8 +525,8 @@ if (user) {
 liveClock('topbarTime');
 ['orderModal','transferModal','trUpdateModal','addEmpModal','mgrTableModal','mgrAssignModal'].forEach(id => onModalOverlayClick(id));
 
-const TABS = ['staff','schedule','timesheets','inventory','warehouse','supply','transfers','floorplan'];
-const TAB_LABELS = { staff:'Staff', schedule:'Schedule', timesheets:'Timesheets', inventory:'Inventory', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan' };
+const TABS = ['staff','schedule','timesheets','inventory','warehouse','supply','transfers','floorplan','timeoff','messages'];
+const TAB_LABELS = { staff:'Staff', schedule:'Schedule', timesheets:'Timesheets', inventory:'Inventory', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan', timeoff:'Time Off Requests', messages:'Employee Messages' };
 let invData = [], whData = null, supplyData = [], trData = [], currentTab = 'staff', selectedItemId = null, editTrId = null;
 let editingMgrTableId = null, mgrAssignAreaId = null;
 
