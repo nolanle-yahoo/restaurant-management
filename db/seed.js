@@ -236,7 +236,7 @@ function seed() {
     menuTemplate.forEach(cat => {
       const catRow = insertCat.run(locId, cat.name, cat.sort);
       cat.items.forEach(([name, desc, price, sort]) => {
-        insertItem.run(catRow.lastInsertRowid, locId, name, desc, price, sort);
+        insertMenuItem.run(catRow.lastInsertRowid, locId, name, desc, price, sort);
       });
     });
   });
