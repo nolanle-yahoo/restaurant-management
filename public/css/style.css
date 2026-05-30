@@ -543,6 +543,81 @@ body {
 .mob-legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: var(--muted); }
 .mob-legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid; }
 
+/* ── Dark mode ─────────────────────────────────────────────── */
+body.dark {
+  --cream:     #0f172a;
+  --card:      #1e293b;
+  --charcoal:  #e2e8f0;
+  --muted:     #94a3b8;
+  --border:    #334155;
+  --shadow:    0 2px 12px rgba(0,0,0,.5);
+  --shadow-md: 0 4px 24px rgba(0,0,0,.6);
+}
+
+body.dark .topbar         { background: #1e293b; border-color: #334155; }
+body.dark .card           { background: #1e293b; border-color: #334155; }
+body.dark .stat-card      { background: #1e293b; border-color: #334155; }
+body.dark .modal          { background: #1e293b; }
+body.dark .loc-card       { background: #1e293b; }
+body.dark .assign-card    { background: #1e293b; border-color: #334155; }
+body.dark .order-card     { background: #1e293b; }
+body.dark .tr-card        { background: #1e293b; }
+body.dark .staff-loc-card { background: #1e293b; }
+body.dark .mob-profile-card,
+body.dark .mob-stat-box,
+body.dark .mob-order-card { background: #1e293b; }
+
+body.dark .data-table th              { background: #162032; color: var(--muted); border-color: #334155; }
+body.dark .data-table td              { border-color: #334155; }
+body.dark .data-table tr:hover td     { background: rgba(255,255,255,.03); }
+body.dark .wh-table th                { background: #162032; border-color: #334155; }
+body.dark .wh-table td                { border-color: #334155; }
+body.dark .sched-head                 { background: #162032; border-color: #334155; }
+body.dark .sched-name,
+body.dark .sched-cell                 { background: #1e293b; border-color: #334155; }
+
+body.dark .form-group input,
+body.dark .form-group select,
+body.dark .form-group textarea        { background: #0f172a; color: var(--charcoal); border-color: #334155; }
+body.dark select                      { background: #1e293b; color: var(--charcoal); }
+body.dark input[type="date"]          { color-scheme: dark; }
+
+body.dark .btn-ghost                  { color: var(--gold); border-color: var(--gold); }
+body.dark .btn-ghost:hover            { background: rgba(201,168,76,.12); }
+body.dark .tabs                       { border-color: #334155; }
+body.dark .tab-btn                    { color: var(--muted); }
+body.dark .tab-btn.active             { color: var(--gold); border-color: var(--gold); }
+
+body.dark .notif-bell:hover           { background: rgba(255,255,255,.08); }
+body.dark .hamburger-btn              { color: var(--gold); }
+body.dark .topbar-title               { color: var(--gold); }
+
+body.dark .badge-muted                { background: #334155; color: var(--muted); }
+body.dark .badge-info                 { background: rgba(107,26,26,.3); }
+
+body.dark .loc-stat                   { background: #0f172a; }
+body.dark .staff-chip                 { background: #0f172a; }
+body.dark .assign-chip                { background: #0f172a; }
+body.dark .filter-btn                 { background: #1e293b; border-color: #334155; color: var(--muted); }
+body.dark .filter-btn.active          { background: var(--burgundy); color: #fff; }
+body.dark .quick-btn                  { background: #0f172a; border-color: #334155; color: var(--muted); }
+body.dark .quick-btn:hover            { background: #334155; }
+body.dark .report-controls            { background: transparent; }
+body.dark .wh-filter                  { background: transparent; }
+
+body.dark ::-webkit-scrollbar-thumb  { background: #334155; }
+body.dark ::placeholder               { color: #64748b; }
+
+/* Dark mode toggle button */
+.dark-toggle {
+  background: none; border: none;
+  font-size: 18px; cursor: pointer;
+  padding: 4px 6px; border-radius: 8px;
+  transition: background .15s; line-height: 1;
+}
+.dark-toggle:hover { background: rgba(107,26,26,.08); }
+body.dark .dark-toggle:hover { background: rgba(255,255,255,.08); }
+
 /* ── Notification bell ─────────────────────────────────────── */
 .notif-bell {
   position: relative;
