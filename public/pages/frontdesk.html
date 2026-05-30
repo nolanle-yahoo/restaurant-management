@@ -104,10 +104,12 @@ document.getElementById('statusLegend').innerHTML = TABLE_STATUSES.map(s =>
 function switchView(v) {
   document.getElementById('view-map').classList.toggle('hidden', v !== 'map');
   document.getElementById('view-areas').classList.toggle('hidden', v !== 'areas');
-  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', ['map','areas'][i] === v));
-  document.getElementById('pageTitle').textContent = v === 'map' ? 'Floor Map' : 'Areas & Staff';
+  document.getElementById('sec-reservations').classList.toggle('hidden', v !== 'reservations');
+  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', ['map','areas','reservations'][i] === v));
+  document.getElementById('pageTitle').textContent = v === 'map' ? 'Floor Map' : v === 'areas' ? 'Areas & Staff' : 'Reservations';
   currentView = v;
   if (v === 'areas') loadAreas();
+  if (v === 'reservations') loadFdReservations();
 }
 
 function setFilter(status, btn) {
