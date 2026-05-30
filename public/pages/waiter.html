@@ -245,7 +245,9 @@ function openOrderModal(tableId, tableNum) {
   document.getElementById('orderModalTitle').textContent = `Take Order — Table ${tableNum}`;
   document.getElementById('orderItems').innerHTML = '';
   document.getElementById('orderAlert').classList.add('hidden');
+  document.getElementById('menuPicker').innerHTML = '<p style="color:var(--muted);font-size:12px;padding:8px;text-align:center">Loading menu…</p>';
   addItem();
+  loadMenuPicker();
   showModal('orderModal');
 }
 
