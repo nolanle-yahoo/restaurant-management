@@ -904,8 +904,8 @@ async function generateReport() {
 function exportCSV() {
   if (!window._tsData) return;
   const { summary, start, end } = window._tsData;
-  let csv = 'Employee,Role,Location,Total Hours,Hourly Rate,Total Pay\n';
-  summary.forEach(e => { csv += `"${e.name}","${e.role}","${e.location_name||''}",${e.total_hours},${(e.hourly_rate||0).toFixed(2)},${(e.total_pay||0).toFixed(2)}\n`; });
+  let csv = 'Employee,Role,Location,Total Hours,Hourly Rate,Gross Pay,Tax (10%),Benefit (5%),Net Pay\n';
+  summary.forEach(e => { csv += `"${e.name}","${e.role}","${e.location_name||''}",${e.total_hours},${(e.hourly_rate||0).toFixed(2)},${(e.gross_pay||0).toFixed(2)},${(e.total_tax||0).toFixed(2)},${(e.total_benefit||0).toFixed(2)},${(e.net_pay||0).toFixed(2)}\n`; });
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download = `timesheet_${start}_${end}.csv`; a.click();
 }
