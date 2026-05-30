@@ -103,6 +103,7 @@ function statusBadge(status) {
     inactive:        ['badge-muted',   'Inactive'],
     in_transit:      ['badge-warning', 'In Transit'],
     cancelled:       ['badge-danger',  'Cancelled'],
+    denied:          ['badge-danger',  'Denied'],
     empty:           ['badge-muted',   'Empty'],
     occupied:        ['badge-info',    'Occupied'],
     waiting_order:   ['badge-gold',    'Ready to Order'],
