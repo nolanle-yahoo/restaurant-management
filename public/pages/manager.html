@@ -1343,6 +1343,120 @@ async function markMsgRead(id) {
   loadMgrMessages();
   refreshBell();
 }
+
+// ── Reservations ──────────────────────────────────────────────
+let mgrResData = [];
+async function loadMgrReservations() {
+  const date   = document.getElementById('mgrResDate')?.value || '';
+  const status = document.getElementById('mgrResStatus')?.value || '';
+  mgrResData = await API.reservations({ location_id: user.location_id, date, status });
+  renderMgrRes();
+}
+function renderMgrRes() {
+  if (!mgrResData.length) { document.getElementById('mgrResList').innerHTML = '<p style="text-align:center;padding:32px;color:var(--muted)">No reservations found.</p>'; return; }
+  document.getElementById('mgrResList').innerHTML = `<table class="data-table">
+    <thead><tr><th>Guest</th><th>Party</th><th>Date & Time</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
+    <tbody>${mgrResData.map(r => `<tr>
+      <td class="fw-700">${r.guest_name}<br><span class="text-sm text-muted">${r.guest_phone||''}</span></td>
+      <td style="text-align:center">${r.party_size} 👤</td>
+      <td>${r.reservation_date}<br><span class="fw-700">${r.reservation_time}</span></td>
+      <td>${statusBadge(r.status)}</td>
+      <td style="max-width:150px;color:var(--muted)">${r.notes||'—'}</td>
+      <td style="white-space:nowrap">
+        ${r.status==='confirmed'?`<button class="btn btn-sm btn-gold" onclick="updateMgrRes(${r.id},'seated')">Seat</button> `:''}
+        ${r.status==='seated'?`<button class="btn btn-sm btn-success" onclick="updateMgrRes(${r.id},'completed')">Done</button> `:''}
+        ${!['completed','cancelled'].includes(r.status)?`<button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="updateMgrRes(${r.id},'cancelled')">Cancel</button>`:''}
+      </td>
+    </tr>`).join('')}</tbody></table>`;
+}
+function openMgrResModal() {
+  document.getElementById('mgrResModalAlert').classList.add('hidden');
+  document.getElementById('mgrResName').value = '';
+  document.getElementById('mgrResPhone').value = '';
+  document.getElementById('mgrResParty').value = 2;
+  document.getElementById('mgrResDate2').valueAsDate = new Date();
+  document.getElementById('mgrResTime').value = '19:00';
+  document.getElementById('mgrResNotes').value = '';
+  showModal('mgrResModal');
+}
+async function submitMgrRes() {
+  const data = {
+    guest_name: document.getElementById('mgrResName').value.trim(),
+    guest_phone: document.getElementById('mgrResPhone').value.trim(),
+    party_size: parseInt(document.getElementById('mgrResParty').value),
+    reservation_date: document.getElementById('mgrResDate2').value,
+    reservation_time: document.getElementById('mgrResTime').value,
+    duration_minutes: parseInt(document.getElementById('mgrResDur').value)||90,
+    notes: document.getElementById('mgrResNotes').value.trim(),
+    location_id: user.location_id,
+  };
+  if (!data.guest_name||!data.reservation_date||!data.reservation_time) return showAlert('mgrResModalAlert','Name, date and time required');
+  try {
+    await API.reservationCreate(data);
+    hideModal('mgrResModal');
+    showAlert('mgrResAlert','Reservation created!','success');
+    loadMgrReservations();
+  } catch(e) { showAlert('mgrResModalAlert', e.message); }
+}
+async function updateMgrRes(id, status) {
+  await API.reservationUpdate(id, { status });
+  loadMgrReservations();
+}
+
+// ── Menu ──────────────────────────────────────────────────────
+let mgrMenuCats = [], mgrMenuItems = [];
+async function loadMgrMenu() {
+  [mgrMenuCats, mgrMenuItems] = await Promise.all([API.menuCategories(user.location_id), API.menuItems(user.location_id)]);
+  renderMgrMenu();
+}
+function renderMgrMenu() {
+  if (!mgrMenuCats.length) { document.getElementById('mgrMenuContent').innerHTML = '<p style="padding:20px;color:var(--muted)">No categories yet. Add one to get started.</p>'; return; }
+  document.getElementById('mgrMenuContent').innerHTML = mgrMenuCats.map(cat => {
+    const items = mgrMenuItems.filter(i => i.category_id === cat.id);
+    return `<div style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:2px solid var(--border);margin-bottom:8px">
+        <span class="fw-700" style="color:var(--burgundy)">${cat.name}</span>
+        <span class="badge badge-muted">${items.length} items</span>
+      </div>
+      ${items.length ? `<table class="data-table"><thead><tr><th>Item</th><th>Description</th><th>Price</th><th>Available</th><th></th></tr></thead>
+      <tbody>${items.map(i => `<tr>
+        <td class="fw-700">${i.name}</td>
+        <td style="color:var(--muted)">${i.description||'—'}</td>
+        <td class="fw-700" style="color:var(--success)">$${i.price.toFixed(2)}</td>
+        <td><button class="btn btn-sm ${i.is_available?'btn-success':'btn-ghost'}" onclick="toggleMgrItemAvail(${i.id},${i.is_available})">${i.is_available?'✓ Yes':'✗ No'}</button></td>
+        <td><button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteMgrMenuItem(${i.id})">Delete</button></td>
+      </tr>`).join('')}</tbody></table>` : '<p style="padding:8px;color:var(--muted);font-size:13px">No items yet.</p>'}
+    </div>`;
+  }).join('');
+}
+function openMgrAddCategory() {
+  document.getElementById('mgrCatName').value=''; document.getElementById('mgrCatAlert').classList.add('hidden'); showModal('mgrCatModal');
+}
+async function submitMgrCategory() {
+  const name = document.getElementById('mgrCatName').value.trim();
+  if (!name) return showAlert('mgrCatAlert','Name required');
+  try { await API.menuCategoryCreate({ name, location_id: user.location_id }); hideModal('mgrCatModal'); loadMgrMenu(); } catch(e) { showAlert('mgrCatAlert', e.message); }
+}
+function openMgrAddItem() {
+  document.getElementById('mgrMenuItemAlert').classList.add('hidden');
+  document.getElementById('mgrMenuItemName').value=''; document.getElementById('mgrMenuItemPrice').value=''; document.getElementById('mgrMenuItemDesc').value='';
+  document.getElementById('mgrMenuItemCat').innerHTML = mgrMenuCats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  showModal('mgrMenuItemModal');
+}
+async function submitMgrMenuItem() {
+  const data = {
+    category_id: document.getElementById('mgrMenuItemCat').value,
+    name: document.getElementById('mgrMenuItemName').value.trim(),
+    price: parseFloat(document.getElementById('mgrMenuItemPrice').value),
+    description: document.getElementById('mgrMenuItemDesc').value.trim(),
+    location_id: user.location_id,
+  };
+  if (!data.name||isNaN(data.price)) return showAlert('mgrMenuItemAlert','Name and price required');
+  try { await API.menuItemCreate(data); hideModal('mgrMenuItemModal'); loadMgrMenu(); } catch(e) { showAlert('mgrMenuItemAlert', e.message); }
+}
+async function toggleMgrItemAvail(id, cur) { await API.menuItemUpdate(id, { is_available: cur?0:1 }); loadMgrMenu(); }
+async function deleteMgrMenuItem(id) { if(!confirm('Delete?')) return; await API.menuItemDelete(id); loadMgrMenu(); }
+onModalOverlayClick('mgrResModal'); onModalOverlayClick('mgrMenuItemModal'); onModalOverlayClick('mgrCatModal');
 </script>
 </body>
 </html>
