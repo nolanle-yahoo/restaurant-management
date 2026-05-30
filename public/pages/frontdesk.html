@@ -71,6 +71,21 @@
       <div id="view-areas" class="hidden">
         <div class="assign-grid" id="areaAssignGrid"></div>
       </div>
+
+      <!-- Reservations view -->
+      <div id="sec-reservations" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Today's Reservations</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="date" id="fdResDate" onchange="loadFdReservations()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+              <button class="btn btn-primary btn-sm" onclick="openFdResModal()">+ New Reservation</button>
+            </div>
+          </div>
+          <div id="fdResAlert" class="alert hidden" style="margin-bottom:12px"></div>
+          <div id="fdResList"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
