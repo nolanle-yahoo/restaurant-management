@@ -1,6 +1,5 @@
 const db = require('./database');
 
-// Employees: [user_id, location_id, hourly_rate, shift_hours]
 const employees = [
   [2,  1, 8.0],  // Marco Rivera - manager
   [8,  1, 8.0],  // Nina Patel - stockroom
@@ -35,32 +34,35 @@ const employees = [
 
 const insert = db.prepare(`
   INSERT INTO clock_records (user_id, location_id, check_in, check_out, hours_worked)
-  VALUES (?, ?, datetime('now', ?), datetime('now', ?), ?)
+  VALUES (?, ?, ?, ?, ?)
 `);
 
-// Delete old completed records so we get fresh data for reporting
 db.exec(`DELETE FROM clock_records WHERE check_out IS NOT NULL`);
+
+function toSQLite(date) {
+  return date.toISOString().replace('T', ' ').slice(0, 19);
+}
 
 let count = 0;
 const today = new Date();
 
-// 3 weeks back, Mon–Sat (skip Sunday)
 for (let d = 21; d >= 1; d--) {
-  const date = new Date(today);
-  date.setDate(today.getDate() - d);
-  if (date.getDay() === 0) continue; // skip Sunday
+  const workDate = new Date(today);
+  workDate.setDate(today.getDate() - d);
+  if (workDate.getDay() === 0) continue; // skip Sunday
 
   employees.forEach(([uid, lid, baseHrs]) => {
-    // small random variation ±0.5 hrs, quantised to 0.5
     const variation = (Math.round((Math.random() - 0.5)) * 0.5);
     const hrs = Math.max(4, baseHrs + variation);
-
-    // Shift starts at 8am or noon depending on employee parity
     const startHour = (uid % 2 === 0) ? 8 : 9;
-    const checkIn  = `-${d} days -${24 - startHour} hours`;
-    const checkOut = `-${d} days -${24 - startHour - hrs} hours`;
 
-    insert.run(uid, lid, checkIn, checkOut, hrs);
+    const checkIn = new Date(workDate);
+    checkIn.setHours(startHour, 0, 0, 0);
+
+    const checkOut = new Date(checkIn);
+    checkOut.setMinutes(checkOut.getMinutes() + hrs * 60);
+
+    insert.run(uid, lid, toSQLite(checkIn), toSQLite(checkOut), hrs);
     count++;
   });
 }
