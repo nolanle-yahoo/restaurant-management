@@ -605,7 +605,10 @@ async function generateReport() {
   document.getElementById('tsSummaryStats').innerHTML = `
     <div class="stat-card"><div class="stat-icon burgundy">👥</div><div class="stat-info"><div class="stat-value">${summary.length}</div><div class="stat-label">Employees</div></div></div>
     <div class="stat-card"><div class="stat-icon gold">⏱️</div><div class="stat-info"><div class="stat-value">${totals.total_hours}</div><div class="stat-label">Total Hours</div></div></div>
-    <div class="stat-card"><div class="stat-icon success">💵</div><div class="stat-info"><div class="stat-value">$${totals.total_pay.toFixed(2)}</div><div class="stat-label">Total Payroll</div></div></div>
+    <div class="stat-card"><div class="stat-icon success">💵</div><div class="stat-info"><div class="stat-value">$${totals.total_pay.toFixed(2)}</div><div class="stat-label">Gross Payroll</div></div></div>
+    <div class="stat-card"><div class="stat-icon danger">🏦</div><div class="stat-info"><div class="stat-value">$${totals.total_tax.toFixed(2)}</div><div class="stat-label">Tax (10%)</div></div></div>
+    <div class="stat-card"><div class="stat-icon warning">🏥</div><div class="stat-info"><div class="stat-value">$${totals.total_benefit.toFixed(2)}</div><div class="stat-label">Benefits (5%)</div></div></div>
+    <div class="stat-card"><div class="stat-icon gold">💰</div><div class="stat-info"><div class="stat-value">$${totals.total_net_pay.toFixed(2)}</div><div class="stat-label">Net Payroll</div></div></div>
   `;
   document.getElementById('tsSummaryBody').innerHTML = summary.map(e => `
     <tr>
