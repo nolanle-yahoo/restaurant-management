@@ -319,6 +319,40 @@
         </div>
       </div>
 
+      <!-- ── Reservations tab ───────────────────────── -->
+      <div id="tab-reservations" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Reservations</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <input type="date" id="mgrResDate" onchange="loadMgrReservations()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+              <select id="mgrResStatus" onchange="loadMgrReservations()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+                <option value="">All Statuses</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option>
+                <option value="seated">Seated</option><option value="completed">Completed</option><option value="no_show">No Show</option><option value="cancelled">Cancelled</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="openMgrResModal()">+ New Reservation</button>
+            </div>
+          </div>
+          <div id="mgrResAlert" class="alert hidden" style="margin-bottom:12px"></div>
+          <div id="mgrResList"></div>
+        </div>
+      </div>
+
+      <!-- ── Menu tab ───────────────────────────────── -->
+      <div id="tab-menu" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Menu Management</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary btn-sm" onclick="openMgrAddCategory()">+ Category</button>
+              <button class="btn btn-ghost btn-sm" onclick="openMgrAddItem()">+ Item</button>
+            </div>
+          </div>
+          <div id="mgrMenuAlert" class="alert hidden" style="margin-bottom:12px"></div>
+          <div id="mgrMenuContent"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
