@@ -100,4 +100,33 @@ const API = {
   messagesSend(data)       { return this.post('/messages', data); },
   messagesRead(id)         { return this.put(`/messages/${id}/read`, {}); },
   messagesDelete(id)       { return this.delete(`/messages/${id}`); },
+
+  reservations(params = {}) {
+    const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
+    return this.get('/reservations' + (qs ? '?' + qs : ''));
+  },
+  reservationCreate(data)     { return this.post('/reservations', data); },
+  reservationUpdate(id, data) { return this.put(`/reservations/${id}`, data); },
+  reservationDelete(id)       { return this.delete(`/reservations/${id}`); },
+
+  menuCategories(locId)        { return this.get('/menu/categories' + (locId ? `?location_id=${locId}` : '')); },
+  menuCategoryCreate(data)     { return this.post('/menu/categories', data); },
+  menuCategoryUpdate(id, data) { return this.put(`/menu/categories/${id}`, data); },
+  menuCategoryDelete(id)       { return this.delete(`/menu/categories/${id}`); },
+  menuItems(locId, catId)      {
+    let qs = locId ? `?location_id=${locId}` : '';
+    if (catId) qs += (qs ? '&' : '?') + `category_id=${catId}`;
+    return this.get('/menu/items' + qs);
+  },
+  menuItemCreate(data)         { return this.post('/menu/items', data); },
+  menuItemUpdate(id, data)     { return this.put(`/menu/items/${id}`, data); },
+  menuItemDelete(id)           { return this.delete(`/menu/items/${id}`); },
+
+  auditLog(params = {}) {
+    const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
+    return this.get('/audit' + (qs ? '?' + qs : ''));
+  },
+
+  updateProfile(data)   { return this.put('/auth/profile', data); },
+  changePassword(data)  { return this.put('/auth/password', data); },
 };
