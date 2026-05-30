@@ -138,7 +138,6 @@ function createSchema() {
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
-  `);
 
     CREATE TABLE IF NOT EXISTS time_off_requests (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
