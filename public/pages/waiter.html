@@ -110,6 +110,7 @@ let allTables = [], areaData = [], selectedTableId = null, orderItemCount = 0, s
 function loadOrders() { loadMyOrders(); }
 
 function switchView(v) {
+  currentView = v;
   ['mine','floor','orders'].forEach(x => document.getElementById('view-'+x).classList.toggle('hidden', x !== v));
   document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', ['mine','floor','orders'][i] === v));
   document.getElementById('pageTitle').textContent = { mine:'My Area', floor:'Full Floor', orders:'My Orders' }[v];
