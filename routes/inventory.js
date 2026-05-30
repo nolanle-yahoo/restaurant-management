@@ -158,6 +158,15 @@ router.put('/transfer-request/:id', requireRole('owner','manager','stockroom'), 
   const tr = db.prepare(`SELECT * FROM transfer_requests WHERE id=?`).get(req.params.id);
   if (!tr) return res.status(404).json({ error: 'Transfer request not found' });
 
+  // Pre-validate stock before touching status so they never get out of sync
+  let fromItem = null;
+  if (status === 'received') {
+    fromItem = db.prepare(`SELECT * FROM inventory WHERE item_name=? AND location_id=?`).get(tr.item_name, tr.from_location_id);
+    if (fromItem && fromItem.quantity < tr.quantity) {
+      return res.status(409).json({ error: `Insufficient stock: ${fromItem.quantity} ${fromItem.unit} available, ${tr.quantity} requested` });
+    }
+  }
+
   const fields = [`status=?`, `updated_at=datetime('now')`], vals = [status];
   if (tracking_number) { fields.push('tracking_number=?'); vals.push(tracking_number); }
   if (notes)           { fields.push('notes=?');           vals.push(notes); }
@@ -166,9 +175,8 @@ router.put('/transfer-request/:id', requireRole('owner','manager','stockroom'), 
   db.prepare(`UPDATE transfer_requests SET ${fields.join(',')} WHERE id=?`).run(...vals);
 
   if (status === 'received') {
-    const fromItem = db.prepare(`SELECT * FROM inventory WHERE item_name=? AND location_id=?`).get(tr.item_name, tr.from_location_id);
     if (fromItem) {
-      db.prepare(`UPDATE inventory SET quantity=MAX(0,quantity-?) WHERE id=?`).run(tr.quantity, fromItem.id);
+      db.prepare(`UPDATE inventory SET quantity=quantity-? WHERE id=?`).run(tr.quantity, fromItem.id);
       db.prepare(`INSERT INTO inventory_transactions (item_id, from_location_id, to_location_id, quantity, type, user_id) VALUES (?,?,?,?,'transfer_sent',?)`).run(fromItem.id, tr.from_location_id, tr.to_location_id, tr.quantity, req.user.id);
     }
     const toItem = db.prepare(`SELECT * FROM inventory WHERE item_name=? AND location_id=?`).get(tr.item_name, tr.to_location_id);
