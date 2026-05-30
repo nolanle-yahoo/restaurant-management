@@ -90,4 +90,14 @@ const API = {
 
   locations()        { return this.get('/locations'); },
   locationsSummary() { return this.get('/locations/summary'); },
+
+  timeOffList(locId)       { return this.get('/time-off' + (locId ? `?location_id=${locId}` : '')); },
+  timeOffCreate(data)      { return this.post('/time-off', data); },
+  timeOffUpdate(id, data)  { return this.put(`/time-off/${id}`, data); },
+
+  messagesList(locId)      { return this.get('/messages' + (locId ? `?location_id=${locId}` : '')); },
+  messagesMine()           { return this.get('/messages/mine'); },
+  messagesSend(data)       { return this.post('/messages', data); },
+  messagesRead(id)         { return this.put(`/messages/${id}/read`, {}); },
+  messagesDelete(id)       { return this.delete(`/messages/${id}`); },
 };
