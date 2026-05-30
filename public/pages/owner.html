@@ -630,7 +630,7 @@ async function loadSummary() {
   ['tsLocFilter','supplyLocFilter','soLocation','trFrom','trTo','empLocation','reassignLoc','adminLocFilter','fpLocSelect','toLocFilter','msgLocFilter','resLocFilter','menuLocFilter','auditLocFilter','resModalLoc'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    const pre = el.id === 'tsLocFilter' || el.id === 'supplyLocFilter' || el.id === 'adminLocFilter'
+    const pre = ['tsLocFilter','supplyLocFilter','adminLocFilter','toLocFilter','msgLocFilter','resLocFilter','menuLocFilter','auditLocFilter'].includes(el.id)
       ? '<option value="">All Locations</option>'
       : el.id === 'empLocation' || el.id === 'reassignLoc' ? '<option value="">— none —</option>' : '<option value="">— select —</option>';
     el.innerHTML = pre + locOpts;
