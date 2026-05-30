@@ -106,7 +106,8 @@ connectWebSocket(user?.location_id, {
   table_update: d => { if (currentView === 'mine' || currentView === 'floor') loadAll(); },
 });
 
-let allTables = [], areaData = [], selectedTableId = null, orderItemCount = 0, statusTableId = null;
+let allTables = [], areaData = [], selectedTableId = null, orderItemCount = 0, statusTableId = null, currentView = 'mine';
+function loadOrders() { loadMyOrders(); }
 
 function switchView(v) {
   ['mine','floor','orders'].forEach(x => document.getElementById('view-'+x).classList.toggle('hidden', x !== v));
