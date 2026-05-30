@@ -1233,6 +1233,7 @@ function renderOwnerMessages() {
 async function markOwnerMsgRead(id) {
   await API.messagesRead(id);
   loadOwnerMessages();
+  refreshBell();
 }
 </script>
 </body>
