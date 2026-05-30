@@ -87,6 +87,90 @@
         </div>
 
       </div>
+      </div><!-- /sec-mytime -->
+
+      <!-- ── Time Off ───────────────────────────────────── -->
+      <div id="sec-timeoff" class="hidden">
+        <div style="max-width:700px;margin:0 auto;">
+          <div class="card" style="margin-bottom:20px">
+            <div class="card-header">
+              <div class="card-title">My Time Off Requests</div>
+              <button class="btn btn-primary btn-sm" onclick="openTimeOffModal()">+ New Request</button>
+            </div>
+            <div id="toAlert" class="alert hidden" style="margin-bottom:12px"></div>
+            <div id="toList"><p style="text-align:center;padding:32px;color:var(--muted)">Loading...</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Messages ───────────────────────────────────── -->
+      <div id="sec-messages" class="hidden">
+        <div style="max-width:700px;margin:0 auto;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">My Messages & Feedback</div>
+              <button class="btn btn-primary btn-sm" onclick="openMsgModal()">+ New Message</button>
+            </div>
+            <div id="msgAlert" class="alert hidden" style="margin-bottom:12px"></div>
+            <div id="msgList"><p style="text-align:center;padding:32px;color:var(--muted)">Loading...</p></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Time Off Modal -->
+<div class="modal-overlay" id="toModal">
+  <div class="modal">
+    <div class="modal-title">Request Time Off</div>
+    <div id="toModalAlert" class="alert hidden"></div>
+    <div class="form-group">
+      <label>Type *</label>
+      <select id="toType">
+        <option value="vacation">🌴 Vacation</option>
+        <option value="sick">🤒 Sick Day</option>
+        <option value="personal">👤 Personal Day</option>
+        <option value="other">📋 Other</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Start Date *</label><input type="date" id="toStart"></div>
+      <div class="form-group"><label>End Date *</label><input type="date" id="toEnd"></div>
+    </div>
+    <div class="form-group">
+      <label>Reason (optional)</label>
+      <textarea id="toReason" rows="3" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical" placeholder="Briefly describe the reason..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="submitTimeOff()">Submit Request</button>
+      <button class="btn btn-ghost" onclick="hideModal('toModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Message Modal -->
+<div class="modal-overlay" id="msgModal">
+  <div class="modal">
+    <div class="modal-title">Send Message</div>
+    <div id="msgModalAlert" class="alert hidden"></div>
+    <div class="form-group">
+      <label>Send To *</label>
+      <select id="msgRecipient">
+        <option value="manager">My Manager</option>
+        <option value="owner">Owner</option>
+        <option value="both">Both Manager & Owner</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Subject *</label><input id="msgSubject" placeholder="Brief subject line"></div>
+    <div class="form-group">
+      <label>Message *</label>
+      <textarea id="msgBody" rows="5" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical" placeholder="Write your message or feedback here..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="submitMessage()">Send</button>
+      <button class="btn btn-ghost" onclick="hideModal('msgModal')">Cancel</button>
     </div>
   </div>
 </div>
