@@ -1346,6 +1346,185 @@ async function markOwnerMsgRead(id) {
   loadOwnerMessages();
   refreshBell();
 }
+
+// ── Reservations ──────────────────────────────────────────────
+let ownerResData = [], editingResId = null;
+async function loadOwnerReservations() {
+  const locId = document.getElementById('resLocFilter')?.value || '';
+  const date   = document.getElementById('resDateFilter')?.value || '';
+  const status = document.getElementById('resStatusFilter')?.value || '';
+  ownerResData = await API.reservations({ location_id: locId, date, status });
+  renderOwnerRes();
+}
+function renderOwnerRes() {
+  if (!ownerResData.length) { document.getElementById('resList').innerHTML = '<p style="text-align:center;padding:32px;color:var(--muted)">No reservations found.</p>'; return; }
+  const statusColors = { pending:'badge-gold', confirmed:'badge-success', seated:'badge-info', completed:'badge-muted', no_show:'badge-danger', cancelled:'badge-danger' };
+  document.getElementById('resList').innerHTML = `<table class="data-table">
+    <thead><tr><th>Guest</th><th>Location</th><th>Party</th><th>Date & Time</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
+    <tbody>${ownerResData.map(r => `<tr>
+      <td class="fw-700">${r.guest_name}<br><span class="text-sm text-muted">${r.guest_phone||''}</span></td>
+      <td>${r.location_name}</td>
+      <td style="text-align:center">${r.party_size} 👤</td>
+      <td>${r.reservation_date}<br><span class="fw-700">${r.reservation_time}</span></td>
+      <td>${statusBadge(r.status)}</td>
+      <td style="max-width:150px;color:var(--muted)">${r.notes||'—'}</td>
+      <td style="white-space:nowrap">
+        ${r.status==='confirmed'?`<button class="btn btn-sm btn-gold" onclick="updateOwnerRes(${r.id},'seated')">Seat</button> `:''}
+        ${r.status==='seated'?`<button class="btn btn-sm btn-success" onclick="updateOwnerRes(${r.id},'completed')">Done</button> `:''}
+        ${!['completed','cancelled'].includes(r.status)?`<button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="updateOwnerRes(${r.id},'cancelled')">Cancel</button>`:''}
+      </td>
+    </tr>`).join('')}</tbody></table>`;
+}
+function openOwnerResModal() {
+  editingResId = null;
+  document.getElementById('ownerResModalTitle').textContent = 'New Reservation';
+  document.getElementById('ownerResAlert').classList.add('hidden');
+  document.getElementById('resGuestName').value = '';
+  document.getElementById('resGuestPhone').value = '';
+  document.getElementById('resPartySize').value = 2;
+  document.getElementById('resModalDate').valueAsDate = new Date();
+  document.getElementById('resModalTime').value = '19:00';
+  document.getElementById('resNotes').value = '';
+  showModal('ownerResModal');
+}
+async function submitOwnerRes() {
+  const data = {
+    guest_name: document.getElementById('resGuestName').value.trim(),
+    guest_phone: document.getElementById('resGuestPhone').value.trim(),
+    party_size: parseInt(document.getElementById('resPartySize').value),
+    location_id: document.getElementById('resModalLoc').value,
+    reservation_date: document.getElementById('resModalDate').value,
+    reservation_time: document.getElementById('resModalTime').value,
+    notes: document.getElementById('resNotes').value.trim(),
+  };
+  if (!data.guest_name || !data.reservation_date || !data.reservation_time) return showAlert('ownerResAlert','Guest name, date and time required');
+  try {
+    await API.reservationCreate(data);
+    hideModal('ownerResModal');
+    showAlert('resAlert','Reservation created!','success');
+    loadOwnerReservations();
+  } catch(e) { showAlert('ownerResAlert', e.message); }
+}
+async function updateOwnerRes(id, status) {
+  await API.reservationUpdate(id, { status });
+  loadOwnerReservations();
+}
+
+// ── Menu Management ───────────────────────────────────────────
+let menuCats = [], menuItems = [], editingMenuItemId = null;
+async function loadOwnerMenu() {
+  const locId = document.getElementById('menuLocFilter')?.value || (locations[0]?.id || '');
+  if (!locId) { document.getElementById('menuContent').innerHTML = '<p style="padding:20px;color:var(--muted)">Select a location above.</p>'; return; }
+  [menuCats, menuItems] = await Promise.all([API.menuCategories(locId), API.menuItems(locId)]);
+  renderMenu();
+}
+function renderMenu() {
+  if (!menuCats.length) { document.getElementById('menuContent').innerHTML = '<p style="padding:20px;color:var(--muted)">No categories yet.</p>'; return; }
+  document.getElementById('menuContent').innerHTML = menuCats.map(cat => {
+    const items = menuItems.filter(i => i.category_id === cat.id);
+    return `<div style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid var(--border);margin-bottom:8px">
+        <span class="fw-700" style="font-size:15px;color:var(--burgundy)">${cat.name}</span>
+        <span class="badge badge-muted">${items.length} items</span>
+        <button class="btn btn-sm btn-ghost" style="margin-left:auto;color:var(--danger)" onclick="deleteCategory(${cat.id})">Delete Category</button>
+      </div>
+      ${items.length ? `<table class="data-table"><thead><tr><th>Item</th><th>Description</th><th>Price</th><th>Available</th><th>Actions</th></tr></thead>
+      <tbody>${items.map(i => `<tr>
+        <td class="fw-700">${i.name}</td>
+        <td style="color:var(--muted)">${i.description||'—'}</td>
+        <td class="fw-700" style="color:var(--success)">$${i.price.toFixed(2)}</td>
+        <td><button class="btn btn-sm ${i.is_available?'btn-success':'btn-ghost'}" onclick="toggleItemAvail(${i.id},${i.is_available})">${i.is_available?'✓ Yes':'✗ No'}</button></td>
+        <td><button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteMenuItem(${i.id})">Delete</button></td>
+      </tr>`).join('')}</tbody></table>` : '<p style="padding:8px;color:var(--muted);font-size:13px">No items in this category.</p>'}
+    </div>`;
+  }).join('');
+}
+function openAddCategoryModal() {
+  document.getElementById('menuCatName').value = '';
+  document.getElementById('menuCatSort').value = menuCats.length;
+  document.getElementById('menuCatAlert').classList.add('hidden');
+  showModal('menuCatModal');
+}
+async function submitCategory() {
+  const name = document.getElementById('menuCatName').value.trim();
+  const sort_order = parseInt(document.getElementById('menuCatSort').value)||0;
+  const locId = document.getElementById('menuLocFilter')?.value || locations[0]?.id;
+  if (!name) return showAlert('menuCatAlert','Category name required');
+  try {
+    await API.menuCategoryCreate({ name, sort_order, location_id: locId });
+    hideModal('menuCatModal');
+    loadOwnerMenu();
+  } catch(e) { showAlert('menuCatAlert', e.message); }
+}
+async function deleteCategory(id) {
+  if (!confirm('Delete this category and all its items?')) return;
+  await API.menuCategoryDelete(id);
+  loadOwnerMenu();
+}
+function openAddMenuItemModal() {
+  editingMenuItemId = null;
+  document.getElementById('menuItemModalTitle').textContent = 'Add Menu Item';
+  document.getElementById('menuItemAlert').classList.add('hidden');
+  document.getElementById('menuItemName').value = '';
+  document.getElementById('menuItemPrice').value = '';
+  document.getElementById('menuItemDesc').value = '';
+  document.getElementById('menuItemCat').innerHTML = menuCats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  showModal('menuItemModal');
+}
+async function submitMenuItem() {
+  const locId = document.getElementById('menuLocFilter')?.value || locations[0]?.id;
+  const data = {
+    category_id: document.getElementById('menuItemCat').value,
+    name: document.getElementById('menuItemName').value.trim(),
+    price: parseFloat(document.getElementById('menuItemPrice').value),
+    description: document.getElementById('menuItemDesc').value.trim(),
+    location_id: locId,
+  };
+  if (!data.name || isNaN(data.price)) return showAlert('menuItemAlert','Name and price required');
+  try {
+    await API.menuItemCreate(data);
+    hideModal('menuItemModal');
+    loadOwnerMenu();
+  } catch(e) { showAlert('menuItemAlert', e.message); }
+}
+async function toggleItemAvail(id, current) {
+  await API.menuItemUpdate(id, { is_available: current ? 0 : 1 });
+  loadOwnerMenu();
+}
+async function deleteMenuItem(id) {
+  if (!confirm('Delete this item?')) return;
+  await API.menuItemDelete(id);
+  loadOwnerMenu();
+}
+
+// ── Audit Log ─────────────────────────────────────────────────
+let auditData = [];
+async function loadAuditLog() {
+  const locId = document.getElementById('auditLocFilter')?.value || '';
+  auditData = await API.auditLog({ location_id: locId });
+  renderAudit();
+}
+function renderAudit() {
+  const q = document.getElementById('auditSearch')?.value.toLowerCase() || '';
+  const rows = q ? auditData.filter(r => (r.action||'').toLowerCase().includes(q) || (r.user_name||'').toLowerCase().includes(q)) : auditData;
+  if (!rows.length) { document.getElementById('auditList').innerHTML = '<p style="text-align:center;padding:32px;color:var(--muted)">No audit records found.</p>'; return; }
+  document.getElementById('auditList').innerHTML = `<table class="data-table">
+    <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Entity</th><th>Details</th></tr></thead>
+    <tbody>${rows.map(r => {
+      let details = '';
+      try { const d = JSON.parse(r.details||'{}'); details = Object.entries(d).map(([k,v])=>`${k}: ${v}`).join(', '); } catch {}
+      return `<tr>
+        <td class="text-sm text-muted">${fmtDateTime(r.created_at)}</td>
+        <td class="fw-700">${r.user_name||'—'}<br><span class="text-sm text-muted">${r.user_role||''}</span></td>
+        <td><span class="badge badge-info">${r.action}</span></td>
+        <td class="text-sm">${r.entity_type||'—'}${r.entity_id?' #'+r.entity_id:''}</td>
+        <td style="max-width:200px;color:var(--muted);font-size:12px">${details||'—'}</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+onModalOverlayClick('ownerResModal');
+onModalOverlayClick('menuItemModal');
+onModalOverlayClick('menuCatModal');
 </script>
 </body>
 </html>
