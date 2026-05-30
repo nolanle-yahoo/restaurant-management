@@ -312,6 +312,33 @@ async function markServed(id) {
 
 loadAll();
 setInterval(loadAll, 5000);
+
+async function loadMenuPicker() {
+  try {
+    const [cats, items] = await Promise.all([API.menuCategories(user.location_id), API.menuItems(user.location_id)]);
+    const avail = items.filter(i => i.is_available);
+    document.getElementById('menuPicker').innerHTML = cats.map(cat => {
+      const catItems = avail.filter(i => i.category_id === cat.id);
+      if (!catItems.length) return '';
+      return `<div style="margin-bottom:8px">
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--muted);padding:2px 4px;letter-spacing:.5px">${cat.name}</div>
+        ${catItems.map(i => `<button type="button" onclick="addMenuItemToOrder(${i.id},'${i.name.replace(/'/g,"\\'")}',${i.price})"
+          style="display:block;width:100%;text-align:left;padding:5px 8px;border:none;background:none;cursor:pointer;border-radius:4px;font-size:13px;transition:background .1s"
+          onmouseover="this.style.background='rgba(107,26,26,.06)'" onmouseout="this.style.background='none'">
+          <span style="font-weight:600">${i.name}</span>
+          <span style="color:var(--success);float:right">$${i.price.toFixed(2)}</span>
+        </button>`).join('')}
+      </div>`;
+    }).join('') || '<p style="color:var(--muted);text-align:center;padding:12px;font-size:13px">No menu items available.</p>';
+  } catch { document.getElementById('menuPicker').innerHTML = '<p style="color:var(--muted);font-size:12px;padding:8px">Could not load menu.</p>'; }
+}
+function addMenuItemToOrder(id, name, price) {
+  addItem();
+  const id2 = orderItemCount;
+  document.getElementById('iname-' + id2).value = name;
+  document.getElementById('iqty-' + id2).value = 1;
+  document.getElementById('iprice-' + id2).value = price.toFixed(2);
+}
 </script>
 </body>
 </html>
