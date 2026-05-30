@@ -543,6 +543,45 @@ body {
 .mob-legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: var(--muted); }
 .mob-legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid; }
 
+/* ── Notification bell ─────────────────────────────────────── */
+.notif-bell {
+  position: relative;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+  transition: background .15s;
+  line-height: 1;
+}
+.notif-bell:hover { background: rgba(107,26,26,.08); }
+
+.notif-badge {
+  position: absolute;
+  top: -2px; right: -4px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+  pointer-events: none;
+  animation: badge-pop .2s ease;
+}
+
+@keyframes badge-pop {
+  0%   { transform: scale(0); }
+  70%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
 /* ── Mobile responsive ─────────────────────────────────────── */
 .hamburger-btn {
   display: none;
