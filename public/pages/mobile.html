@@ -337,7 +337,7 @@ async function loadWeekStats() {
     document.getElementById('mobWeekStats').innerHTML = `
       <div class="mob-stat-box"><div class="mob-stat-val">${(data.total_hours||0).toFixed(1)}</div><div class="mob-stat-lab">Week Hrs</div></div>
       <div class="mob-stat-box"><div class="mob-stat-val">${todayHrs}</div><div class="mob-stat-lab">Today Hrs</div></div>
-      <div class="mob-stat-box"><div class="mob-stat-val">$${((data.total_hours||0)*(user.hourly_rate||0)).toFixed(0)}</div><div class="mob-stat-lab">Est. Pay</div></div>
+      <div class="mob-stat-box"><div class="mob-stat-val">$${((data.total_hours||0)*(user.hourly_rate||0)*0.85).toFixed(0)}</div><div class="mob-stat-lab">Est. Net Pay</div></div>
     `;
   } catch {}
 }
