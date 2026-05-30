@@ -1246,6 +1246,7 @@ function renderMessages() {
 async function markMsgRead(id) {
   await API.messagesRead(id);
   loadMgrMessages();
+  refreshBell();
 }
 </script>
 </body>
