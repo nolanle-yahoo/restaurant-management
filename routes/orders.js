@@ -1,6 +1,8 @@
 const express = require('express');
 const db = require('../db/database');
 const { verifyToken, requireRole } = require('../middleware/auth');
+const { broadcast } = require('../lib/ws');
+const { auditLog } = require('../lib/audit');
 
 const router = express.Router();
 router.use(verifyToken);
@@ -28,16 +30,18 @@ router.get('/', requireRole('owner','manager','waiter','chef'), (req, res) => {
 });
 
 router.post('/', requireRole('waiter','manager'), (req, res) => {
-  const { table_id, items } = req.body;
+  const { table_id, items, notes } = req.body;
   if (!table_id || !items?.length) return res.status(400).json({ error: 'table_id and items required' });
   const table = db.prepare(`SELECT * FROM tables WHERE id=?`).get(table_id);
   if (!table) return res.status(404).json({ error: 'Table not found' });
 
-  const r = db.prepare(`INSERT INTO orders (table_id, location_id, waiter_id, status) VALUES (?,?,?,'pending')`).run(table_id, table.location_id, req.user.id);
+  const r = db.prepare(`INSERT INTO orders (table_id, location_id, waiter_id, status, notes) VALUES (?,?,?,'pending',?)`).run(table_id, table.location_id, req.user.id, notes||null);
   const orderId = r.lastInsertRowid;
-  const insertItem = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price) VALUES (?,?,?,?)`);
-  items.forEach(i => insertItem.run(orderId, i.name, i.quantity || 1, i.price || 0));
+  const insertItem = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, notes) VALUES (?,?,?,?,?)`);
+  items.forEach(i => insertItem.run(orderId, i.name, i.quantity || 1, i.price || 0, i.notes||null));
   db.prepare(`UPDATE tables SET status='ordered' WHERE id=?`).run(table_id);
+  auditLog(req, 'order_create', 'order', orderId, { table_id, item_count: items.length });
+  broadcast('order_update', { type: 'new', order_id: orderId, location_id: table.location_id }, table.location_id);
   res.json({ success: true, order_id: orderId });
 });
 
@@ -45,10 +49,16 @@ router.put('/:id', requireRole('owner','manager','waiter','chef'), (req, res) =>
   const { status } = req.body;
   const valid = ['pending','preparing','ready','served'];
   if (!valid.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+  const order = db.prepare(`SELECT * FROM orders WHERE id=?`).get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
   db.prepare(`UPDATE orders SET status=?, updated_at=datetime('now') WHERE id=?`).run(status, req.params.id);
   if (status === 'served') {
-    const order = db.prepare(`SELECT table_id FROM orders WHERE id=?`).get(req.params.id);
-    if (order) db.prepare(`UPDATE tables SET status='ready_clean' WHERE id=?`).run(order.table_id);
+    db.prepare(`UPDATE tables SET status='ready_clean' WHERE id=?`).run(order.table_id);
+  }
+  auditLog(req, 'order_status_change', 'order', req.params.id, { from: order.status, to: status });
+  broadcast('order_update', { type: 'status', order_id: Number(req.params.id), status, location_id: order.location_id }, order.location_id);
+  if (status === 'served') {
+    broadcast('table_update', { table_id: order.table_id, status: 'ready_clean', location_id: order.location_id }, order.location_id);
   }
   res.json({ success: true });
 });
