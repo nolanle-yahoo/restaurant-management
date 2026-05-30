@@ -164,6 +164,56 @@ function createSchema() {
       is_read INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS reservations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      location_id INTEGER NOT NULL REFERENCES locations(id),
+      guest_name TEXT NOT NULL,
+      guest_phone TEXT,
+      guest_email TEXT,
+      party_size INTEGER NOT NULL DEFAULT 2,
+      reservation_date TEXT NOT NULL,
+      reservation_time TEXT NOT NULL,
+      duration_minutes INTEGER DEFAULT 90,
+      table_id INTEGER REFERENCES tables(id),
+      status TEXT NOT NULL DEFAULT 'confirmed' CHECK(status IN ('pending','confirmed','seated','completed','no_show','cancelled')),
+      notes TEXT,
+      created_by INTEGER REFERENCES users(id),
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS menu_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      location_id INTEGER REFERENCES locations(id),
+      name TEXT NOT NULL,
+      sort_order INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1
+    );
+
+    CREATE TABLE IF NOT EXISTS menu_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category_id INTEGER NOT NULL REFERENCES menu_categories(id),
+      location_id INTEGER REFERENCES locations(id),
+      name TEXT NOT NULL,
+      description TEXT,
+      price REAL NOT NULL DEFAULT 0,
+      is_available INTEGER DEFAULT 1,
+      sort_order INTEGER DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER REFERENCES users(id),
+      user_name TEXT,
+      user_role TEXT,
+      location_id INTEGER REFERENCES locations(id),
+      action TEXT NOT NULL,
+      entity_type TEXT,
+      entity_id INTEGER,
+      details TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
   `);
 
   // Column migrations
