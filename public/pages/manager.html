@@ -543,6 +543,8 @@ function switchTab(tab) {
   if (tab === 'transfers')  loadTransfers();
   if (tab === 'timesheets') initTimesheets();
   if (tab === 'floorplan')  loadMgrFloorPlan();
+  if (tab === 'timeoff')    loadMgrTimeOff();
+  if (tab === 'messages')   loadMgrMessages();
 }
 
 function refreshCurrent() { switchTab(currentTab); }
