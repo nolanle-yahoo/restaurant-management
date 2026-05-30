@@ -41,7 +41,10 @@ router.get('/', (req, res) => {
     SELECT u.id as user_id, u.name, u.role, u.hourly_rate,
            l.name as location_name,
            round(SUM(c.hours_worked), 2) as total_hours,
-           round(SUM(c.hours_worked * u.hourly_rate), 2) as total_pay
+           round(SUM(c.hours_worked * u.hourly_rate), 2) as gross_pay,
+           round(SUM(c.hours_worked * u.hourly_rate * 0.10), 2) as total_tax,
+           round(SUM(c.hours_worked * u.hourly_rate * 0.05), 2) as total_benefit,
+           round(SUM(c.hours_worked * u.hourly_rate * 0.85), 2) as net_pay
     FROM clock_records c
     JOIN users u ON c.user_id=u.id
     LEFT JOIN locations l ON u.location_id=l.id
