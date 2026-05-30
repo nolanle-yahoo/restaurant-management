@@ -1,4 +1,11 @@
 require('dotenv').config();
+
+const WEAK_SECRET = 'restaurant_super_secret_key_2024';
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === WEAK_SECRET) {
+  console.error('ERROR: JWT_SECRET is missing or uses the insecure default. Set a strong random value in .env before starting the server.');
+  process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
