@@ -31,6 +31,8 @@ app.use('/api/orders',      require('./routes/orders'));
 app.use('/api/inventory',   require('./routes/inventory'));
 app.use('/api/locations',   require('./routes/locations'));
 app.use('/api/timesheets',  require('./routes/timesheets'));
+app.use('/api/time-off',   require('./routes/timeoff'));
+app.use('/api/messages',   require('./routes/messages'));
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
