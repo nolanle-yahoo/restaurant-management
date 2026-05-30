@@ -63,6 +63,10 @@
       <div class="topbar-title" id="pageTitle">Overview</div>
       <div class="topbar-right">
         <span class="text-muted text-sm" id="topbarTime"></span>
+        <button class="notif-bell" id="notifBell" onclick="showSection('messages')" title="Messages">
+          🔔
+          <span class="notif-badge hidden" id="notifCount"></span>
+        </button>
         <button class="btn btn-ghost btn-sm no-print" onclick="loadAll()">↻ Refresh</button>
       </div>
     </div>
