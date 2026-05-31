@@ -470,14 +470,20 @@ to scope their subscription. The server broadcasts:
 
 | Page | Audience | Key areas |
 |---|---|---|
-| `index.html` | All | Login, theme toggle, mobile entry. |
-| `owner.html` | Owner | Overview, Staff & Locations, Timesheets, Warehouse, Supply, Transfers, Floor Plan, Admin Panel, Reservations, Menu, Audit Log, Time Off, Messages. |
-| `manager.html` | Manager / Stockroom | Staff, Schedule, Timesheets, Inventory, Warehouse, Supply, Transfers, Floor Plan, Reservations, Menu, Time Off, Messages; low-stock banner. |
-| `waiter.html` | Waiter | My Area, Full Floor, My Orders; take/serve with menu picker + special request. |
+| `index.html` | All | Login, theme toggle, links to public menu / reservation, mobile entry. |
+| `menu.html` | Public (customers) | Browse any location's priced menu; no login. |
+| `reserve.html` | Public (customers) | Submit an online reservation request; no login. |
+| `owner.html` | Owner | Overview, Staff & Locations, Timesheets, Warehouse, Supply, Transfers, Floor Plan, Admin Panel, Reservations, Menu, Sales Analytics, Audit Log, Time Off, Messages. |
+| `manager.html` | Manager / Stockroom | Staff, Schedule, Timesheets, Inventory, Warehouse, Supply, Transfers, Floor Plan, Reservations, Menu, Sales Analytics, Time Off, Messages; low-stock banner. |
+| `waiter.html` | Waiter | My Area, Full Floor, My Orders; take/serve with menu picker + special request; Settle Bill. |
 | `chef.html` | Chef | Kitchen queue (pending/preparing/ready), inventory quick view. |
 | `frontdesk.html` | Front Desk | Floor Map, Areas & Staff, Reservations. |
-| `employee.html` | Employee | My Time (clock), Tables & Orders, Time Off, Messages. |
+| `employee.html` | Employee | My Time (clock), Tables & Orders (take orders, Settle Bill), Time Off, Messages. |
 | `mobile.html` | Field roles | Floor, My Area, Orders, Profile (clock) — touch-optimized. |
+
+A **shared payment modal** (in `utils.js`) handles bill settlement across the waiter and
+employee pages: itemized totals, tip selection, payment method, and the Stripe card field when
+configured.
 
 Shared client modules:
 
