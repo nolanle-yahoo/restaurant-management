@@ -9,7 +9,7 @@ router.use(verifyToken);
 const VALID_STATUSES = ['empty','occupied','waiting_order','ordered','waiting_food','need_help','waiting_payment','special_request','ready_clean','cleaning'];
 
 // GET /tables?location_id=
-router.get('/', requireRole('owner','manager','frontdesk','waiter','chef','employee'), (req, res) => {
+router.get('/', requireRole('owner','manager','frontdesk','waiter','chef','employee','stockroom'), (req, res) => {
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
   if (!locId) return res.status(400).json({ error: 'location_id required' });
   const rows = db.prepare(`
