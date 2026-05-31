@@ -129,4 +129,12 @@ const API = {
 
   updateProfile(data)   { return this.put('/auth/profile', data); },
   changePassword(data)  { return this.put('/auth/password', data); },
+
+  paymentConfig()           { return this.get('/payments/config'); },
+  bill(orderId)             { return this.get(`/payments/order/${orderId}`); },
+  payments(locId)           { return this.get('/payments' + (locId ? `?location_id=${locId}` : '')); },
+  recordPayment(data)       { return this.post('/payments', data); },
+  paymentIntent(data)       { return this.post('/payments/intent', data); },
+  confirmPayment(id)        { return this.post(`/payments/${id}/confirm`, {}); },
+  refundPayment(id)         { return this.post(`/payments/${id}/refund`, {}); },
 };
