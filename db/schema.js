@@ -214,6 +214,23 @@ function createSchema() {
       details TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id INTEGER NOT NULL REFERENCES orders(id),
+      location_id INTEGER REFERENCES locations(id),
+      waiter_id INTEGER REFERENCES users(id),
+      subtotal REAL NOT NULL DEFAULT 0,
+      tax REAL NOT NULL DEFAULT 0,
+      tip REAL NOT NULL DEFAULT 0,
+      total REAL NOT NULL DEFAULT 0,
+      method TEXT NOT NULL DEFAULT 'card' CHECK(method IN ('card','cash','mobile')),
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','paid','refunded','failed')),
+      stripe_payment_intent_id TEXT,
+      processed_by INTEGER REFERENCES users(id),
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
   `);
 
   // Column migrations
