@@ -388,7 +388,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 ### Timesheets — `/api/timesheets`
 | Method | Path | Access | Description |
 |---|---|---|---|
-| GET | `/` | Owner, Manager | Payroll report (gross, tax 10%, benefit 5%, net). |
+| GET | `/` | Owner, Manager | Payroll report (gross, tax 10%, benefit 5%, net, plus tips and take-home). |
 
 ### Time Off — `/api/time-off`
 | Method | Path | Access | Description |
