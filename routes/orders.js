@@ -45,7 +45,7 @@ router.post('/', requireRole('waiter','manager','employee','chef','frontdesk','s
   res.json({ success: true, order_id: orderId });
 });
 
-router.put('/:id', requireRole('owner','manager','waiter','chef'), (req, res) => {
+router.put('/:id', requireRole('owner','manager','waiter','chef','employee','frontdesk','stockroom'), (req, res) => {
   const { status } = req.body;
   const valid = ['pending','preparing','ready','served'];
   if (!valid.includes(status)) return res.status(400).json({ error: 'Invalid status' });
