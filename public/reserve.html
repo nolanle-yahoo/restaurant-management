@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Book a Table — Restaurant</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--cream); }
+    .pub-header { background: var(--burgundy); color: #fff; padding: 22px 20px; text-align: center; }
+    .pub-header .logo { font-size: 34px; }
+    .pub-header h1 { font-size: 24px; font-weight: 800; margin-top: 6px; }
+    .pub-nav { display: flex; gap: 10px; justify-content: center; padding: 14px; flex-wrap: wrap; background: #fff; border-bottom: 1px solid var(--border); }
+    .res-card { max-width: 480px; margin: 28px auto; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 28px; box-shadow: var(--shadow); }
+    .res-card h2 { font-size: 18px; font-weight: 800; color: var(--burgundy); margin-bottom: 6px; }
+    .res-card .sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+    .pub-foot { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
+  </style>
+</head>
+<body>
+  <div class="pub-header">
+    <div class="logo">🍷</div>
+    <h1>Book a Table</h1>
+  </div>
+  <div class="pub-nav">
+    <a class="btn btn-ghost" href="/menu.html">🍽️ View Menu</a>
+    <a class="btn btn-ghost" href="/">Staff Login</a>
+  </div>
+
+  <div class="res-card">
+    <h2>Reservation Request</h2>
+    <div class="sub">Submit a request and the restaurant will confirm shortly.</div>
+    <div id="resAlert" class="alert hidden"></div>
+    <div id="resForm">
+      <div class="form-group"><label>Location *</label><select id="rLoc"></select></div>
+      <div class="form-row">
+        <div class="form-group"><label>Your Name *</label><input id="rName" placeholder="Full name"></div>
+        <div class="form-group"><label>Phone</label><input id="rPhone" placeholder="(555) 000-0000"></div>
+      </div>
+      <div class="form-group"><label>Email</label><input id="rEmail" type="email" placeholder="you@example.com"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Party Size *</label><input id="rParty" type="number" min="1" max="50" value="2"></div>
+        <div class="form-group"><label>Date *</label><input id="rDate" type="date"></div>
+      </div>
+      <div class="form-group"><label>Time *</label><input id="rTime" type="time" value="19:00"></div>
+      <div class="form-group"><label>Special Requests</label>
+        <textarea id="rNotes" rows="2" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical" placeholder="High chair, window seat, allergies…"></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:12px;margin-top:6px" onclick="submitReservation()">Request Reservation</button>
+    </div>
+    <div id="resDone" class="hidden" style="text-align:center;padding:20px">
+      <div style="font-size:46px">✅</div>
+      <div style="font-weight:800;color:var(--burgundy);font-size:17px;margin:8px 0">Request received!</div>
+      <div style="color:var(--muted);font-size:14px" id="resDoneMsg"></div>
+      <a class="btn btn-ghost" style="margin-top:16px" href="/menu.html">Browse the Menu</a>
+    </div>
+  </div>
+  <div class="pub-foot">© 2026 Restaurant Management System</div>
+
+<script>
+async function init() {
+  document.getElementById('rDate').valueAsDate = new Date();
+  try {
+    const r = await fetch('/api/public/locations');
+    const locs = await r.json();
+    document.getElementById('rLoc').innerHTML = locs.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+    const qp = new URLSearchParams(location.search).get('location_id');
+    if (qp && locs.some(l => String(l.id) === qp)) document.getElementById('rLoc').value = qp;
+  } catch {}
+}
+
+function showResAlert(msg) {
+  const el = document.getElementById('resAlert');
+  el.className = 'alert alert-danger'; el.textContent = msg; el.classList.remove('hidden');
+}
+
+async function submitReservation() {
+  const body = {
+    location_id: document.getElementById('rLoc').value,
+    guest_name: document.getElementById('rName').value.trim(),
+    guest_phone: document.getElementById('rPhone').value.trim(),
+    guest_email: document.getElementById('rEmail').value.trim(),
+    party_size: parseInt(document.getElementById('rParty').value),
+    reservation_date: document.getElementById('rDate').value,
+    reservation_time: document.getElementById('rTime').value,
+    notes: document.getElementById('rNotes').value.trim(),
+  };
+  if (!body.guest_name || !body.reservation_date || !body.reservation_time || !body.party_size) {
+    return showResAlert('Please fill in your name, party size, date and time.');
+  }
+  try {
+    const r = await fetch('/api/public/reservations', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const data = await r.json();
+    if (!r.ok) return showResAlert(data.error || 'Could not submit reservation.');
+    document.getElementById('resForm').classList.add('hidden');
+    document.getElementById('resAlert').classList.add('hidden');
+    document.getElementById('resDoneMsg').textContent = data.message || 'The restaurant will confirm shortly.';
+    document.getElementById('resDone').classList.remove('hidden');
+  } catch (e) { showResAlert('Network error. Please try again.'); }
+}
+init();
+</script>
+</body>
+</html>
