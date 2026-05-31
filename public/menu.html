@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Our Menu — Restaurant</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--cream); }
+    .pub-header { background: var(--burgundy); color: #fff; padding: 22px 20px; text-align: center; }
+    .pub-header .logo { font-size: 34px; }
+    .pub-header h1 { font-size: 24px; font-weight: 800; margin-top: 6px; letter-spacing: .3px; }
+    .pub-header p { opacity: .8; font-size: 13.5px; margin-top: 4px; }
+    .pub-nav { display: flex; gap: 10px; justify-content: center; padding: 14px; flex-wrap: wrap; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    .pub-wrap { max-width: 760px; margin: 0 auto; padding: 24px 18px 60px; }
+    .loc-select { padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; }
+    .menu-cat { margin-bottom: 30px; }
+    .menu-cat h2 { font-size: 19px; font-weight: 800; color: var(--burgundy); border-bottom: 2px solid var(--gold); padding-bottom: 8px; margin-bottom: 14px; }
+    .menu-row { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .menu-row .mi-name { font-weight: 700; font-size: 15px; }
+    .menu-row .mi-desc { font-size: 13px; color: var(--muted); margin-top: 3px; }
+    .menu-row .mi-price { font-weight: 800; color: var(--success); white-space: nowrap; font-size: 15px; }
+    .pub-foot { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
+  </style>
+</head>
+<body>
+  <div class="pub-header">
+    <div class="logo">🍷</div>
+    <h1>Our Menu</h1>
+    <p id="locLabel">Select a location to view the menu</p>
+  </div>
+  <div class="pub-nav">
+    <select id="locSelect" class="loc-select" onchange="loadMenu()"></select>
+    <a class="btn btn-primary" href="/reserve.html">📅 Book a Table</a>
+    <a class="btn btn-ghost" href="/">Staff Login</a>
+  </div>
+  <div class="pub-wrap">
+    <div id="menuContent"><p style="text-align:center;color:var(--muted);padding:40px">Loading…</p></div>
+  </div>
+  <div class="pub-foot">© 2026 Restaurant Management System</div>
+
+<script>
+async function api(path) {
+  const r = await fetch('/api/public' + path);
+  if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || 'Request failed');
+  return r.json();
+}
+
+async function init() {
+  try {
+    const locs = await api('/locations');
+    const sel = document.getElementById('locSelect');
+    sel.innerHTML = locs.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+    // honor ?location_id= deep link
+    const qp = new URLSearchParams(location.search).get('location_id');
+    if (qp && locs.some(l => String(l.id) === qp)) sel.value = qp;
+    loadMenu();
+  } catch (e) {
+    document.getElementById('menuContent').innerHTML = `<p style="text-align:center;color:var(--danger);padding:40px">${e.message}</p>`;
+  }
+}
+
+async function loadMenu() {
+  const locId = document.getElementById('locSelect').value;
+  const el = document.getElementById('menuContent');
+  el.innerHTML = '<p style="text-align:center;color:var(--muted);padding:40px">Loading…</p>';
+  try {
+    const { location, menu } = await api('/menu?location_id=' + locId);
+    document.getElementById('locLabel').textContent = location.name;
+    if (!menu.length) { el.innerHTML = '<p style="text-align:center;color:var(--muted);padding:40px">No menu items available right now.</p>'; return; }
+    el.innerHTML = menu.map(cat => `
+      <div class="menu-cat">
+        <h2>${cat.name}</h2>
+        ${cat.items.map(i => `
+          <div class="menu-row">
+            <div>
+              <div class="mi-name">${i.name}</div>
+              ${i.description ? `<div class="mi-desc">${i.description}</div>` : ''}
+            </div>
+            <div class="mi-price">$${i.price.toFixed(2)}</div>
+          </div>`).join('')}
+      </div>`).join('');
+  } catch (e) {
+    el.innerHTML = `<p style="text-align:center;color:var(--danger);padding:40px">${e.message}</p>`;
+  }
+}
+init();
+</script>
+</body>
+</html>
