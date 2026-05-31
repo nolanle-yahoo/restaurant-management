@@ -275,7 +275,7 @@ loadWeek(0);
 setInterval(loadStatus, 15000);
 
 // ── Section navigation ────────────────────────────────
-const EMP_SECTIONS = { mytime: 'My Time & Attendance', timeoff: 'Time Off Requests', messages: 'My Messages' };
+const EMP_SECTIONS = { mytime: 'My Time & Attendance', tables: 'Tables & Orders', timeoff: 'Time Off Requests', messages: 'My Messages' };
 function showEmpSection(name) {
   Object.keys(EMP_SECTIONS).forEach(s => {
     document.getElementById('sec-' + s).classList.toggle('hidden', s !== name);
@@ -283,6 +283,7 @@ function showEmpSection(name) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.nav-item')[Object.keys(EMP_SECTIONS).indexOf(name)].classList.add('active');
   document.querySelector('.topbar-title').textContent = EMP_SECTIONS[name];
+  if (name === 'tables')   loadEmpTables();
   if (name === 'timeoff')  loadTimeOff();
   if (name === 'messages') loadMessages();
 }
