@@ -294,6 +294,140 @@ function isMobile() {
   return window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 }
 
+// ── Bill settlement / payment modal (shared) ─────────────────
+let _payState = { orderId: null, onPaid: null, bill: null, tipPct: 0, stripe: null, card: null, cfg: null };
+
+function _injectPaymentModal() {
+  if (document.getElementById('paymentModal')) return;
+  const div = document.createElement('div');
+  div.innerHTML = `
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal" style="width:440px">
+      <div class="modal-title" id="payTitle">Settle Bill</div>
+      <div id="payAlert" class="alert hidden"></div>
+      <div id="payBill" style="font-size:13.5px;margin-bottom:12px"></div>
+      <div style="margin-bottom:10px">
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Tip</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px" id="tipBtns">
+          <button class="btn btn-sm btn-ghost" onclick="setTip(0)">No tip</button>
+          <button class="btn btn-sm btn-ghost" onclick="setTip(15)">15%</button>
+          <button class="btn btn-sm btn-ghost" onclick="setTip(18)">18%</button>
+          <button class="btn btn-sm btn-ghost" onclick="setTip(20)">20%</button>
+        </div>
+        <input type="number" id="payTip" min="0" step="0.01" value="0.00" oninput="_payState.tipPct=null;renderPayTotal()"
+          style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Payment Method</label>
+        <div style="display:flex;gap:6px" id="payMethods">
+          <button class="btn btn-sm btn-primary" data-m="card" onclick="setPayMethod('card')">💳 Card</button>
+          <button class="btn btn-sm btn-ghost" data-m="cash" onclick="setPayMethod('cash')">💵 Cash</button>
+          <button class="btn btn-sm btn-ghost" data-m="mobile" onclick="setPayMethod('mobile')">📱 Mobile</button>
+        </div>
+      </div>
+      <div id="payCardWrap" style="display:none;margin-bottom:12px">
+        <div id="payCardElement" style="padding:11px;border:1.5px solid var(--border);border-radius:8px"></div>
+      </div>
+      <div style="font-size:20px;font-weight:800;color:var(--burgundy);text-align:right;margin:8px 0 14px">
+        Total: $<span id="payTotal">0.00</span>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-success" style="flex:1" id="payChargeBtn" onclick="submitPayment()">Charge</button>
+        <button class="btn btn-ghost" onclick="hideModal('paymentModal')">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(div.firstElementChild);
+  onModalOverlayClick('paymentModal');
+}
+
+async function openPaymentModal(orderId, onPaid) {
+  _injectPaymentModal();
+  _payState = { orderId, onPaid, bill: null, tipPct: 0, method: 'card', stripe: null, card: null, cfg: null };
+  document.getElementById('payAlert').classList.add('hidden');
+  document.getElementById('payTip').value = '0.00';
+  setPayMethod('card');
+  try {
+    const [bill, cfg] = await Promise.all([API.bill(orderId), API.paymentConfig()]);
+    _payState.bill = bill; _payState.cfg = cfg;
+    if (bill.payment && bill.payment.status === 'paid') {
+      document.getElementById('payBill').innerHTML = '<div class="alert alert-success">This order has already been paid.</div>';
+    } else {
+      document.getElementById('payTitle').textContent = `Settle Bill — Table ${bill.order.table_number}`;
+      const lines = bill.items.map(i => `<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${i.item_name} ×${i.quantity}</span><span>$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('');
+      document.getElementById('payBill').innerHTML = lines +
+        `<div style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px;display:flex;justify-content:space-between"><span>Subtotal</span><span>$${bill.subtotal.toFixed(2)}</span></div>` +
+        `<div style="display:flex;justify-content:space-between;color:var(--muted)"><span>Tax (${Math.round(bill.tax_rate*100)}%)</span><span>$${bill.tax.toFixed(2)}</span></div>`;
+    }
+    renderPayTotal();
+    showModal('paymentModal');
+  } catch (e) { showAlert('payAlert', e.message); showModal('paymentModal'); }
+}
+
+function setTip(pct) {
+  _payState.tipPct = pct;
+  if (_payState.bill) document.getElementById('payTip').value = (_payState.bill.subtotal * pct / 100).toFixed(2);
+  renderPayTotal();
+}
+
+function setPayMethod(m) {
+  _payState.method = m;
+  document.querySelectorAll('#payMethods [data-m]').forEach(b => b.className = 'btn btn-sm ' + (b.dataset.m === m ? 'btn-primary' : 'btn-ghost'));
+  const stripeCard = m === 'card' && _payState.cfg && _payState.cfg.stripe_enabled && _payState.cfg.publishable_key;
+  document.getElementById('payCardWrap').style.display = stripeCard ? 'block' : 'none';
+  if (stripeCard) _mountStripeCard();
+}
+
+function renderPayTotal() {
+  const b = _payState.bill; if (!b) return;
+  const tip = parseFloat(document.getElementById('payTip').value) || 0;
+  document.getElementById('payTotal').textContent = (b.subtotal + b.tax + Math.max(0, tip)).toFixed(2);
+}
+
+function _loadStripeJs() {
+  return new Promise((resolve) => {
+    if (window.Stripe) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://js.stripe.com/v3/'; s.onload = resolve; s.onerror = resolve;
+    document.head.appendChild(s);
+  });
+}
+
+async function _mountStripeCard() {
+  await _loadStripeJs();
+  if (!window.Stripe || _payState.card) return;
+  _payState.stripe = Stripe(_payState.cfg.publishable_key);
+  const elements = _payState.stripe.elements();
+  _payState.card = elements.create('card');
+  _payState.card.mount('#payCardElement');
+}
+
+async function submitPayment() {
+  const b = _payState.bill;
+  if (!b || (b.payment && b.payment.status === 'paid')) return hideModal('paymentModal');
+  const tip = Math.max(0, parseFloat(document.getElementById('payTip').value) || 0);
+  const btn = document.getElementById('payChargeBtn');
+  btn.disabled = true; btn.textContent = 'Processing…';
+  try {
+    const useStripe = _payState.method === 'card' && _payState.cfg && _payState.cfg.stripe_enabled && _payState.cfg.publishable_key;
+    if (useStripe) {
+      const intent = await API.paymentIntent({ order_id: _payState.orderId, tip });
+      const result = await _payState.stripe.confirmCardPayment(intent.client_secret, { payment_method: { card: _payState.card } });
+      if (result.error) throw new Error(result.error.message);
+      await API.confirmPayment(intent.payment_id);
+    } else {
+      await API.recordPayment({ order_id: _payState.orderId, tip, method: _payState.method });
+    }
+    hideModal('paymentModal');
+    showAlert('alertBox', 'Payment received — bill settled.', 'success');
+    if (typeof _payState.onPaid === 'function') _payState.onPaid();
+  } catch (e) {
+    showAlert('payAlert', e.message || 'Payment failed');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Charge';
+  }
+}
+
 // ── WebSocket client ─────────────────────────────────────────
 function connectWebSocket(locationId, handlers) {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
