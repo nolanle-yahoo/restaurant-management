@@ -593,8 +593,8 @@ Prioritized by value-to-effort:
 3. **Customer accounts & loyalty** — order history, points, saved details.
 4. **Operational notifications** — order-ready, table-needs-help, reservation reminders via email/SMS/push.
 5. **Forgot/reset password & 2FA** — self-service recovery and optional MFA for owner/manager.
-7. **Shift swapping & availability** — staff-initiated schedule changes.
-8. **Waitlist** — walk-in queue alongside reservations.
+6. **Shift swapping & availability** — staff-initiated schedule changes.
+7. **Waitlist** — walk-in queue alongside reservations.
 
 ## 16. Glossary
 
