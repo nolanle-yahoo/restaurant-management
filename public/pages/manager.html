@@ -652,12 +652,38 @@ function refreshCurrent() { switchTab(currentTab); }
 async function loadStats() {
   const [emps, inv] = await Promise.all([API.employees(user.location_id), API.inventory(user.location_id)]);
   const onDuty = emps.filter(e => e.clocked_in).length;
-  const lowStock = inv.filter(i => i.quantity < i.min_quantity).length;
+  const lowItems = inv.filter(i => i.quantity < i.min_quantity);
+  const lowStock = lowItems.length;
   document.getElementById('statsBar').innerHTML = `
     <div class="stat-card"><div class="stat-icon burgundy">👥</div><div class="stat-info"><div class="stat-value">${emps.length}</div><div class="stat-label">Total Staff</div></div></div>
     <div class="stat-card"><div class="stat-icon success">✅</div><div class="stat-info"><div class="stat-value">${onDuty}</div><div class="stat-label">On Duty Now</div></div></div>
-    <div class="stat-card"><div class="stat-icon warning">⚠️</div><div class="stat-info"><div class="stat-value">${lowStock}</div><div class="stat-label">Low Stock Items</div></div></div>
+    <div class="stat-card" style="cursor:pointer" onclick="switchTab('inventory')"><div class="stat-icon warning">⚠️</div><div class="stat-info"><div class="stat-value">${lowStock}</div><div class="stat-label">Low Stock Items</div></div></div>
   `;
+  renderLowStockBanner(lowItems);
+}
+
+function renderLowStockBanner(lowItems) {
+  const el = document.getElementById('lowStockBanner');
+  if (!el) return;
+  if (sessionStorage.getItem('lowStockDismissed') === '1' || !lowItems.length) { el.innerHTML = ''; return; }
+  const critical = lowItems.filter(i => i.quantity <= i.min_quantity * 0.5);
+  el.innerHTML = `
+    <div style="background:rgba(196,118,42,.10);border:1px solid var(--warning);border-left:4px solid var(--warning);border-radius:10px;padding:14px 18px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+        <div style="font-weight:800;color:var(--warning);font-size:14px">⚠️ Stockroom Alert — ${lowItems.length} item${lowItems.length>1?'s':''} low on stock${critical.length?` (${critical.length} critical)`:''}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm btn-ghost" onclick="switchTab('inventory')">View Inventory</button>
+          <button class="btn btn-sm btn-ghost" onclick="document.getElementById('lowStockBanner').innerHTML='';sessionStorage.setItem('lowStockDismissed','1')">Dismiss</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${lowItems.slice(0,12).map(i => {
+          const isCrit = i.quantity <= i.min_quantity * 0.5;
+          return `<span class="badge ${isCrit?'badge-danger':'badge-warning'}" style="font-size:11.5px">${i.item_name}: ${i.quantity}${i.unit?' '+i.unit:''} / min ${i.min_quantity}</span>`;
+        }).join('')}
+        ${lowItems.length>12?`<span class="badge badge-muted" style="font-size:11.5px">+${lowItems.length-12} more</span>`:''}
+      </div>
+    </div>`;
 }
 
 // ── Staff ─────────────────────────────────────────────────
