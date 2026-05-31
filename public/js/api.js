@@ -137,4 +137,9 @@ const API = {
   paymentIntent(data)       { return this.post('/payments/intent', data); },
   confirmPayment(id)        { return this.post(`/payments/${id}/confirm`, {}); },
   refundPayment(id)         { return this.post(`/payments/${id}/refund`, {}); },
+
+  analytics(params = {}) {
+    const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
+    return this.get('/analytics' + (qs ? '?' + qs : ''));
+  },
 };
