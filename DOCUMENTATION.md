@@ -395,6 +395,24 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 |---|---|---|---|
 | GET | `/` | Owner, Manager | Audit entries (scoped by role; action filter). |
 
+### Payments — `/api/payments`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/config` | Any staff | Returns whether Stripe is enabled, the publishable key, and the sales-tax rate. |
+| GET | `/order/:orderId` | Order-handling staff | Itemized bill (items, subtotal, tax) + any existing payment. |
+| GET | `/` | Owner, Manager | Payment history for a location. |
+| POST | `/` | Order-handling staff | Record a cash/mobile (or simulated card) payment; settles the order. |
+| POST | `/intent` | Order-handling staff | Create a Stripe PaymentIntent for card payment. |
+| POST | `/:id/confirm` | Order-handling staff | Confirm a card payment after the client completes the Stripe flow. |
+| POST | `/:id/refund` | Owner, Manager | Refund a paid payment. |
+
+### Public (customer-facing, no authentication) — `/api/public`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/locations` | Public | Active locations (name, address, phone). |
+| GET | `/menu` | Public | Available menu (categories + items with prices) for a location. |
+| POST | `/reservations` | Public (rate-limited) | Submit an online reservation request; created as **pending** for staff approval. |
+
 ### Real-Time Events (WebSocket)
 Clients connect to the server's WebSocket endpoint and send `{ type: "auth", location_id }`
 to scope their subscription. The server broadcasts:
