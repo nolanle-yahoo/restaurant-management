@@ -220,6 +220,35 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   dedicated mobile interface for field roles.
 - **FR-15.2** Light/dark theme toggle persisted per browser.
 
+### 5.16 Payments & Bill Settlement
+- **FR-16.1** Order-handling staff settle a table's bill, producing an itemized total of
+  subtotal + sales tax (configurable, default 8%) + optional tip.
+- **FR-16.2** Tips can be selected by quick percentage (15/18/20%) or entered manually, and
+  are recorded against the serving employee for payroll.
+- **FR-16.3** Payment method may be card, cash, or mobile. Card payments use Stripe when
+  configured (real test/live card flow via Stripe.js); without Stripe keys the system runs in
+  a simulated record-only mode so all totals, tips, and reporting still function.
+- **FR-16.4** Settling a bill marks the order served and the table ready-to-clean; a paid
+  order cannot be paid twice.
+- **FR-16.5** Owners and managers can refund a paid payment and view payment history.
+
+### 5.17 Customer-Facing Site (Public)
+- **FR-17.1** Anyone can browse a location's menu (categories and available, priced items)
+  without logging in.
+- **FR-17.2** Anyone can submit an online reservation request (name, contact, party size,
+  date, time, notes); requests are created as **pending** for staff confirmation and are
+  rate-limited to deter abuse.
+- **FR-17.3** The public pages are linked from the staff login screen and require no account.
+
+### 5.18 Sales & Revenue Analytics
+- **FR-18.1** Owners and managers view a sales analytics dashboard over a selectable date
+  range (with 7/30/90-day quick ranges).
+- **FR-18.2** Headline KPIs: total revenue, paid orders, average ticket, and tips collected.
+- **FR-18.3** Visual breakdowns: revenue trend by day, top-selling items, and a
+  payment-method split.
+- **FR-18.4** Owners additionally see revenue broken down by location; managers are scoped to
+  their own location.
+
 ---
 
 ## 6. Role × Capability Matrix
