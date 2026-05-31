@@ -532,10 +532,22 @@ async function empSubmitOrder() {
 function openEmpStatusModal(t) {
   empStatusTableId = t.id;
   document.getElementById('empStatusTitle').textContent = `Table ${t.table_number} — Update Status`;
-  document.getElementById('empStatusBtns').innerHTML = TABLE_STATUSES.map(s =>
-    `<button class="btn" style="background:${s.bg};color:${s.text};border:1.5px solid ${s.border}" onclick="empSetStatus('${s.value}')">${s.emoji} ${s.label}</button>`
-  ).join('');
+  document.getElementById('empStatusBtns').innerHTML =
+    `<button class="btn btn-gold" style="grid-column:1/-1;justify-content:center" onclick="empSettleBill(${t.id})">💳 Settle Bill</button>` +
+    TABLE_STATUSES.map(s =>
+      `<button class="btn" style="background:${s.bg};color:${s.text};border:1.5px solid ${s.border}" onclick="empSetStatus('${s.value}')">${s.emoji} ${s.label}</button>`
+    ).join('');
   showModal('empStatusModal');
+}
+
+async function empSettleBill(tableId) {
+  try {
+    const orders = await API.orders(user.location_id);
+    const open = orders.filter(o => o.table_id === tableId).sort((a,b) => b.id - a.id)[0];
+    if (!open) return alert('No order found for this table to settle.');
+    hideModal('empStatusModal');
+    openPaymentModal(open.id, loadEmpTables);
+  } catch(e) { alert(e.message); }
 }
 
 async function empSetStatus(status) {
