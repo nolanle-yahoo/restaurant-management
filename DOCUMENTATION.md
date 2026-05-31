@@ -263,6 +263,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 | Menu management | ✓ | ✓ | — | — | view/avail | — | — |
 | Staff management | ✓ | ✓ (own loc) | — | — | — | — | — |
 | Timesheets / payroll | ✓ | ✓ (own loc) | — | — | — | — | — |
+| Settle bill / take payment | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Refund payment / payment history | ✓ | ✓ (own loc) | — | — | — | — | — |
+| Sales analytics | ✓ (all) | ✓ (own loc) | — | — | — | — | — |
 | Inventory & supply | ✓ | ✓ | ✓ | view | — | — | — |
 | Transfers | ✓ | ✓ | ✓ | — | — | — | — |
 | Approve time off | ✓ (all) | ✓ (own loc) | — | — | — | — | — |
@@ -270,6 +273,8 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 | Read staff messages | ✓ (all) | ✓ (own loc) | — | — | — | — | — |
 | Audit log | ✓ (all) | ✓ (own loc) | — | — | — | — | — |
 | Multi-location visibility | ✓ | — | — | — | — | — | — |
+
+*Note: the public menu and reservation-request pages require no role at all (unauthenticated guests).*
 
 ---
 
