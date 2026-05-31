@@ -588,8 +588,7 @@ Harbor View.
 
 Prioritized by value-to-effort:
 
-1. **Sales & revenue analytics** — daily sales, best-sellers, revenue by location (order pricing data already captured).
-2. **Inventory auto-depletion** — link menu items to ingredients so sales reduce stock.
+1. **Inventory auto-depletion** — link menu items to ingredients so sales reduce stock.
 3. **QR-code table ordering** — guests scan at the table to view the menu and order to that table.
 4. **Customer accounts & loyalty** — order history, points, saved details.
 5. **Operational notifications** — order-ready, table-needs-help, reservation reminders via email/SMS/push.
