@@ -449,6 +449,11 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/menu` | Public | Available menu (categories + items with prices) for a location. |
 | POST | `/reservations` | Public (rate-limited) | Submit an online reservation request; created as **pending** for staff approval. |
 
+### Analytics — `/api/analytics`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/` | Owner, Manager | Sales analytics for a date range: KPIs (revenue, paid orders, avg ticket, tips), revenue by day, payment-method split, top-selling items, and revenue by location (owner, all-locations view). Managers are scoped to their own location. |
+
 ### Real-Time Events (WebSocket)
 Clients connect to the server's WebSocket endpoint and send `{ type: "auth", location_id }`
 to scope their subscription. The server broadcasts:
