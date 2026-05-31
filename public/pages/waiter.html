@@ -303,7 +303,10 @@ async function loadMyOrders() {
             ${(o.items||[]).map(i => `<div class="order-item-row">${i.item_name} ×${i.quantity} — $${(i.price*i.quantity).toFixed(2)}</div>`).join('')}
           </div>
           <div class="order-time">Placed ${timeAgo(o.created_at)}</div>
-          ${o.status === 'ready' ? `<div class="order-actions"><button class="btn btn-success btn-sm" onclick="markServed(${o.id})">Mark Served</button></div>` : ''}
+          <div class="order-actions">
+            ${o.status === 'ready' ? `<button class="btn btn-success btn-sm" onclick="markServed(${o.id})">Mark Served</button>` : ''}
+            <button class="btn btn-gold btn-sm" onclick="openPaymentModal(${o.id}, loadMyOrders)">💳 Settle Bill</button>
+          </div>
         </div>
       `).join('')
     : '<div style="color:var(--muted);padding:24px;text-align:center">No active orders</div>';
