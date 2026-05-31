@@ -589,10 +589,10 @@ Harbor View.
 Prioritized by value-to-effort:
 
 1. **Inventory auto-depletion** — link menu items to ingredients so sales reduce stock.
-3. **QR-code table ordering** — guests scan at the table to view the menu and order to that table.
-4. **Customer accounts & loyalty** — order history, points, saved details.
-5. **Operational notifications** — order-ready, table-needs-help, reservation reminders via email/SMS/push.
-6. **Forgot/reset password & 2FA** — self-service recovery and optional MFA for owner/manager.
+2. **QR-code table ordering** — guests scan at the table to view the menu and order to that table.
+3. **Customer accounts & loyalty** — order history, points, saved details.
+4. **Operational notifications** — order-ready, table-needs-help, reservation reminders via email/SMS/push.
+5. **Forgot/reset password & 2FA** — self-service recovery and optional MFA for owner/manager.
 7. **Shift swapping & availability** — staff-initiated schedule changes.
 8. **Waitlist** — walk-in queue alongside reservations.
 
