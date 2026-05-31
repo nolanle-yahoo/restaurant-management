@@ -183,6 +183,37 @@
   </div>
 </div>
 
+<!-- Take Order Modal -->
+<div class="modal-overlay" id="empOrderModal">
+  <div class="modal" style="width:520px">
+    <div class="modal-title" id="empOrderTitle">Take Order — Table ?</div>
+    <div id="empOrderAlert" class="alert hidden"></div>
+    <div style="margin-bottom:12px">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Quick Add from Menu</label>
+      <div id="empMenuPicker" style="max-height:200px;overflow-y:auto;border:1.5px solid var(--border);border-radius:8px;padding:6px"></div>
+    </div>
+    <div id="empOrderItems"></div>
+    <button class="btn btn-ghost btn-sm" onclick="empAddItem()" style="margin-top:6px">+ Add Item</button>
+    <div style="margin-top:14px">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">⭐ Special Request</label>
+      <textarea id="empSpecialRequest" rows="2" placeholder="Allergies, preferences, no onion, etc. (optional)" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="empSubmitOrder()">Place Order</button>
+      <button class="btn btn-ghost" onclick="hideModal('empOrderModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Table Status Modal -->
+<div class="modal-overlay" id="empStatusModal">
+  <div class="modal">
+    <div class="modal-title" id="empStatusTitle">Update Table Status</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="empStatusBtns"></div>
+    <button class="btn btn-ghost" style="width:100%;margin-top:12px" onclick="hideModal('empStatusModal')">Cancel</button>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script>
