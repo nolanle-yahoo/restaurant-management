@@ -280,7 +280,7 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 
 ## 7. Data Model
 
-SQLite database with 24 tables. Core entities and relationships:
+SQLite database with 25 tables. Core entities and relationships:
 
 - **locations** — restaurant branches.
 - **users** — staff accounts (role enum, location FK, hourly rate, active flag).
