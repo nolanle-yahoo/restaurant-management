@@ -298,6 +298,8 @@ SQLite database with 25 tables. Core entities and relationships:
 - **time_off_requests** — leave requests with review workflow.
 - **employee_messages** — internal messaging/feedback.
 - **audit_log** — immutable record of sensitive actions.
+- **payments** — bill settlement per order: subtotal, tax, tip, total, method (card/cash/mobile),
+  status (pending/paid/refunded/failed), Stripe intent reference, and the processing employee.
 
 Referential integrity is enforced with foreign keys; status fields use CHECK constraints;
 emails are unique. Schema creation and lightweight column migrations run automatically on
