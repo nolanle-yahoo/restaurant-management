@@ -633,7 +633,8 @@ Prioritized by value-to-effort:
 | 1.1.0 | Time-off requests, internal messaging + notification bell, mobile-responsive UI, light/dark theme. |
 | 1.2.0 | Real-time WebSocket updates, reservations, menu management & order pricing, account settings (profile + password), audit log. |
 | 1.3.0 | Universal clock-in for non-owner staff, employees act as waiters, order special requests, manager low-stock alerts. |
-| 1.4.0 | **Bill settlement & payments (Stripe) with tips into payroll; public customer menu and online reservation booking.** |
+| 1.4.0 | Bill settlement & payments (Stripe, with simulated fallback) and tips into payroll; public customer menu and online reservation booking. |
+| 1.5.0 | **Sales & revenue analytics dashboard (owner + manager); Stripe test-key setup guide (`.env.example`, `PAYMENTS_SETUP.md`); configurable sales-tax rate.** |
 
 ---
 
