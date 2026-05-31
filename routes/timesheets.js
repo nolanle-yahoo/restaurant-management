@@ -36,7 +36,7 @@ router.get('/', (req, res) => {
     ORDER BY date(c.check_in) DESC, u.name
   `).all(start, end, ...locArgs);
 
-  // Summary by employee
+  // Summary by employee (wages)
   const summary = db.prepare(`
     SELECT u.id as user_id, u.name, u.role, u.hourly_rate,
            l.name as location_name,
@@ -55,12 +55,33 @@ router.get('/', (req, res) => {
     ORDER BY u.name
   `).all(start, end, ...locArgs);
 
+  // Tips collected per employee (from paid card/cash payments) in range
+  const tipLocCond = locId ? 'AND p.location_id=?' : '';
+  const tipRows = db.prepare(`
+    SELECT p.waiter_id as user_id, round(SUM(p.tip), 2) as tips
+    FROM payments p
+    WHERE p.status='paid' AND p.waiter_id IS NOT NULL
+      AND date(p.created_at) >= ? AND date(p.created_at) <= ?
+      ${tipLocCond}
+    GROUP BY p.waiter_id
+  `).all(start, end, ...locArgs);
+  const tipMap = {};
+  tipRows.forEach(t => { tipMap[t.user_id] = t.tips || 0; });
+
+  // Merge tips + take-home (net wages + tips) into each summary row
+  summary.forEach(r => {
+    r.tips = tipMap[r.user_id] || 0;
+    r.take_home = Math.round(((r.net_pay || 0) + r.tips) * 100) / 100;
+  });
+
   const totals = {
-    total_hours:   Math.round(summary.reduce((s, r) => s + (r.total_hours || 0), 0) * 100) / 100,
-    total_pay:     Math.round(summary.reduce((s, r) => s + (r.gross_pay   || 0), 0) * 100) / 100,
-    total_tax:     Math.round(summary.reduce((s, r) => s + (r.total_tax   || 0), 0) * 100) / 100,
-    total_benefit: Math.round(summary.reduce((s, r) => s + (r.total_benefit || 0), 0) * 100) / 100,
-    total_net_pay: Math.round(summary.reduce((s, r) => s + (r.net_pay     || 0), 0) * 100) / 100,
+    total_hours:     Math.round(summary.reduce((s, r) => s + (r.total_hours   || 0), 0) * 100) / 100,
+    total_pay:       Math.round(summary.reduce((s, r) => s + (r.gross_pay     || 0), 0) * 100) / 100,
+    total_tax:       Math.round(summary.reduce((s, r) => s + (r.total_tax     || 0), 0) * 100) / 100,
+    total_benefit:   Math.round(summary.reduce((s, r) => s + (r.total_benefit || 0), 0) * 100) / 100,
+    total_net_pay:   Math.round(summary.reduce((s, r) => s + (r.net_pay       || 0), 0) * 100) / 100,
+    total_tips:      Math.round(summary.reduce((s, r) => s + (r.tips          || 0), 0) * 100) / 100,
+    total_take_home: Math.round(summary.reduce((s, r) => s + (r.take_home     || 0), 0) * 100) / 100,
   };
 
   res.json({ records, summary, totals, start, end });
