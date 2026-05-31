@@ -61,6 +61,38 @@ function populateSidebar(user) {
   }
 
   if (!document.getElementById('accountSettingsModal')) _injectAccountSettingsModal();
+  initClockWidget(user);
+}
+
+// ── Topbar clock in/out widget (all roles except owner) ──────
+function initClockWidget(user) {
+  if (!user || user.role === 'owner') return;
+  if (document.getElementById('clockBtn')) return;   // employee page has its own full clock hero
+  if (document.getElementById('clockWidget')) return; // already injected
+  const right = document.querySelector('.topbar-right');
+  if (!right) return;
+
+  const wrap = document.createElement('div');
+  wrap.id = 'clockWidget';
+  wrap.style.cssText = 'display:flex;align-items:center;gap:8px';
+  right.insertBefore(wrap, right.firstChild);
+
+  async function render() {
+    let clockedIn = false;
+    try { const s = await API.clockStatus(); clockedIn = s.clocked_in; } catch { return; }
+    wrap.innerHTML = clockedIn
+      ? `<span class="text-sm" style="color:var(--success);font-weight:700;white-space:nowrap">● On duty</span>
+         <button class="btn btn-sm btn-danger" id="clockToggle">Clock Out</button>`
+      : `<span class="text-sm text-muted" style="white-space:nowrap">○ Off duty</span>
+         <button class="btn btn-sm btn-success" id="clockToggle">Clock In</button>`;
+    document.getElementById('clockToggle').onclick = async () => {
+      try {
+        if (clockedIn) await API.clockOut(); else await API.clockIn();
+        render();
+      } catch(e) { alert(e.message); }
+    };
+  }
+  render();
 }
 
 function _injectAccountSettingsModal() {
