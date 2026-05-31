@@ -493,4 +493,79 @@ Harbor View.
 
 ---
 
+## 13. Non-Functional Requirements
+
+| Category | Requirement |
+|---|---|
+| **Performance** | API responses under typical load should return in < 300 ms; the kitchen and floor views refresh via WebSocket push (no polling) so on-screen latency for status changes is < 1 s. |
+| **Concurrency** | Designed for a single restaurant group; the SQLite/WAL backend comfortably supports ~100–200 concurrent staff sessions per server instance. |
+| **Availability** | Single-process Node server; target 99% uptime for internal use. Stateless JWT auth allows the process to restart without forcing re-login (until token expiry). |
+| **Browser support** | Modern evergreen browsers (Chromium/Edge, Firefox, Safari). Responsive from 320 px (mobile) to desktop. |
+| **Security** | All non-public endpoints require JWT; passwords bcrypt-hashed; login rate-limited; payment card data never touches the server (handled by Stripe). |
+| **Maintainability** | Zero front-end build step; routes are modular under `routes/`; schema is idempotent and self-migrating. |
+| **Observability** | Sensitive mutations recorded in the audit log; server errors logged server-side. |
+
+## 14. Known Limitations
+
+- **Database scale** — SQLite is a single file; suitable for a small chain, not for high-volume multi-server deployments. Migrate to PostgreSQL for horizontal scaling.
+- **Real-time fan-out** — the WebSocket bus is in-process; running multiple server instances would require a shared pub/sub (e.g., Redis) for cross-instance broadcasts.
+- **Payments** — card processing requires a configured Stripe key; without it the system runs in a simulated record-only mode (see §11).
+- **Inventory vs. menu** — selling a menu item does not yet auto-decrement ingredient inventory; stock is adjusted via supply orders/transfers only.
+- **Notifications** — limited to the in-app message bell; no email/SMS/push for order-ready, table-help, or reservation reminders yet.
+- **No password self-reset** — a forgotten password currently requires an administrator to reset it.
+
+## 15. Roadmap / Future Enhancements
+
+Prioritized by value-to-effort:
+
+1. **Sales & revenue analytics** — daily sales, best-sellers, revenue by location (order pricing data already captured).
+2. **Inventory auto-depletion** — link menu items to ingredients so sales reduce stock.
+3. **QR-code table ordering** — guests scan at the table to view the menu and order to that table.
+4. **Customer accounts & loyalty** — order history, points, saved details.
+5. **Operational notifications** — order-ready, table-needs-help, reservation reminders via email/SMS/push.
+6. **Forgot/reset password & 2FA** — self-service recovery and optional MFA for owner/manager.
+7. **Shift swapping & availability** — staff-initiated schedule changes.
+8. **Waitlist** — walk-in queue alongside reservations.
+
+## 16. Glossary
+
+| Term | Meaning |
+|---|---|
+| **Location** | A single physical restaurant branch. |
+| **Role** | One of: owner, manager, stockroom, chef, waiter, frontdesk, employee. |
+| **Area** | A named zone within a location (Main Hall, Patio, Bar, Private Dining). |
+| **Table status** | empty · occupied · waiting_order · ordered · waiting_food · need_help · waiting_payment · special_request · ready_clean · cleaning. |
+| **Order lifecycle** | pending → preparing → ready → served. |
+| **Payment status** | pending → paid (→ refunded), or failed. |
+| **Reservation lifecycle** | pending → confirmed → seated → completed; terminal: no_show, cancelled. |
+| **Supply order status** | pending → approved → shipped → received. |
+| **Transfer status** | pending → approved → in_transit → received; terminal: cancelled. |
+| **Time-off status** | pending → approved / denied; or cancelled by requester. |
+| **Special request** | Free-text note attached to an order (allergies, preferences). |
+
+## 17. Testing & Verification Strategy
+
+- **Runtime verification** — features are validated by driving the running application end-to-end in a real browser (Microsoft Edge via Playwright), capturing screenshots and asserting on observed behavior, in addition to direct API smoke tests.
+- **API checks** — endpoints are exercised with representative payloads (auth, role enforcement, success and error paths).
+- **Real-time** — WebSocket broadcasts are verified with a second client observing events triggered by the first.
+
+## 18. Backup & Recovery
+
+- All persistent data lives in the single SQLite database file (`restaurant.db`).
+- **Backup**: copy the database file while the server is stopped, or use SQLite's online backup/`.backup` command for a hot copy.
+- **Restore**: replace the file and restart the server.
+- **Reset to demo**: `npm run seed` rebuilds the schema and repopulates demo data (destructive).
+
+## 19. Changelog
+
+| Version | Highlights |
+|---|---|
+| 1.0.0 | Core platform: auth, staff, time clock, areas/tables, orders, inventory & supply chain, locations, timesheets/payroll. |
+| 1.1.0 | Time-off requests, internal messaging + notification bell, mobile-responsive UI, light/dark theme. |
+| 1.2.0 | Real-time WebSocket updates, reservations, menu management & order pricing, account settings (profile + password), audit log. |
+| 1.3.0 | Universal clock-in for non-owner staff, employees act as waiters, order special requests, manager low-stock alerts. |
+| 1.4.0 | **Bill settlement & payments (Stripe) with tips into payroll; public customer menu and online reservation booking.** |
+
+---
+
 *End of document.*
