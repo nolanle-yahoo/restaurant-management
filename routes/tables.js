@@ -62,7 +62,7 @@ router.post('/', requireRole('owner','manager'), (req, res) => {
 });
 
 // PUT /tables/:id — update status and/or table metadata
-router.put('/:id', requireRole('owner','manager','frontdesk','waiter','chef','employee'), (req, res) => {
+router.put('/:id', requireRole('owner','manager','frontdesk','waiter','chef','employee','stockroom'), (req, res) => {
   const { status, table_number, capacity, area_id } = req.body;
   const metaChange = table_number !== undefined || capacity !== undefined || area_id !== undefined;
   if (metaChange && !['owner','manager'].includes(req.user.role)) {
