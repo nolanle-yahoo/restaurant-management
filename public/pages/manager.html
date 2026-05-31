@@ -85,6 +85,7 @@
       <a class="nav-item" href="#" onclick="switchTab('floorplan')"><span class="nav-icon">🗺️</span>Floor Plan</a>
       <a class="nav-item" href="#" onclick="switchTab('reservations')"><span class="nav-icon">📅</span>Reservations</a>
       <a class="nav-item" href="#" onclick="switchTab('menu')"><span class="nav-icon">🍽️</span>Menu</a>
+      <a class="nav-item" href="#" onclick="switchTab('analytics')"><span class="nav-icon">📈</span>Sales Analytics</a>
       <a class="nav-item" href="#" onclick="switchTab('timeoff')" id="navTimeOff"><span class="nav-icon">🏖️</span>Time Off</a>
       <a class="nav-item" href="#" onclick="switchTab('messages')" id="navMessages"><span class="nav-icon">💬</span>Messages</a>
     </nav>
@@ -623,8 +624,8 @@ if (user) {
 liveClock('topbarTime');
 ['orderModal','transferModal','trUpdateModal','addEmpModal','mgrTableModal','mgrAssignModal','toReviewModal'].forEach(id => onModalOverlayClick(id));
 
-const TABS = ['staff','schedule','timesheets','inventory','warehouse','supply','transfers','floorplan','reservations','menu','timeoff','messages'];
-const TAB_LABELS = { staff:'Staff', schedule:'Schedule', timesheets:'Timesheets', inventory:'Inventory', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan', reservations:'Reservations', menu:'Menu Management', timeoff:'Time Off Requests', messages:'Employee Messages' };
+const TABS = ['staff','schedule','timesheets','inventory','warehouse','supply','transfers','floorplan','reservations','menu','analytics','timeoff','messages'];
+const TAB_LABELS = { staff:'Staff', schedule:'Schedule', timesheets:'Timesheets', inventory:'Inventory', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan', reservations:'Reservations', menu:'Menu Management', analytics:'Sales Analytics', timeoff:'Time Off Requests', messages:'Employee Messages' };
 let invData = [], whData = null, supplyData = [], trData = [], currentTab = 'staff', selectedItemId = null, editTrId = null;
 let editingMgrTableId = null, mgrAssignAreaId = null;
 
@@ -645,6 +646,7 @@ function switchTab(tab) {
   if (tab === 'menu') loadMgrMenu();
   if (tab === 'timeoff')    loadMgrTimeOff();
   if (tab === 'messages')   loadMgrMessages();
+  if (tab === 'analytics')  loadMgrAnalytics();
 }
 
 function refreshCurrent() { switchTab(currentTab); }
@@ -1484,6 +1486,84 @@ async function submitMgrMenuItem() {
 async function toggleMgrItemAvail(id, cur) { await API.menuItemUpdate(id, { is_available: cur?0:1 }); loadMgrMenu(); }
 async function deleteMgrMenuItem(id) { if(!confirm('Delete?')) return; await API.menuItemDelete(id); loadMgrMenu(); }
 onModalOverlayClick('mgrResModal'); onModalOverlayClick('mgrMenuItemModal'); onModalOverlayClick('mgrCatModal');
+
+// ── Sales Analytics (manager) ─────────────────────────────────
+(function ensureAnalyticsTab() {
+  if (document.getElementById('tab-analytics')) return;
+  const body = document.querySelector('.page-body');
+  if (!body) return;
+  const div = document.createElement('div');
+  div.id = 'tab-analytics';
+  div.className = 'hidden';
+  div.innerHTML = `
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header">
+        <div class="card-title">Sales Analytics</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="date" id="manStart" onchange="loadMgrAnalytics()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+          <input type="date" id="manEnd" onchange="loadMgrAnalytics()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+          <button class="quick-btn" onclick="manRange(7)">7d</button>
+          <button class="quick-btn" onclick="manRange(30)">30d</button>
+          <button class="quick-btn" onclick="manRange(90)">90d</button>
+        </div>
+      </div>
+      <div class="stat-grid" id="manKpis"></div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><div class="card-title">Revenue Trend</div></div>
+      <div id="manTrend" style="padding:6px 0"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card"><div class="card-header"><div class="card-title">Top Sellers</div></div><div id="manTopItems"></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Payment Methods</div></div><div id="manMethods"></div></div>
+    </div>`;
+  body.appendChild(div);
+})();
+
+const mMoney = n => '$' + (Number(n)||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+function manRange(days) {
+  document.getElementById('manStart').value = new Date(Date.now()-(days-1)*864e5).toISOString().slice(0,10);
+  document.getElementById('manEnd').value = new Date().toISOString().slice(0,10);
+  loadMgrAnalytics();
+}
+async function loadMgrAnalytics() {
+  if (!document.getElementById('manStart').value) {
+    document.getElementById('manStart').value = new Date(Date.now()-29*864e5).toISOString().slice(0,10);
+    document.getElementById('manEnd').value = new Date().toISOString().slice(0,10);
+  }
+  let d;
+  try { d = await API.analytics({ start: document.getElementById('manStart').value, end: document.getElementById('manEnd').value }); }
+  catch(e) { document.getElementById('manKpis').innerHTML = `<div class="card" style="grid-column:1/-1;color:var(--danger);padding:16px">${e.message}</div>`; return; }
+
+  document.getElementById('manKpis').innerHTML = `
+    <div class="stat-card"><div class="stat-icon success">💰</div><div class="stat-info"><div class="stat-value">${mMoney(d.kpis.revenue)}</div><div class="stat-label">Total Revenue</div></div></div>
+    <div class="stat-card"><div class="stat-icon burgundy">🧾</div><div class="stat-info"><div class="stat-value">${d.kpis.orders_paid}</div><div class="stat-label">Paid Orders</div></div></div>
+    <div class="stat-card"><div class="stat-icon gold">📊</div><div class="stat-info"><div class="stat-value">${mMoney(d.kpis.avg_ticket)}</div><div class="stat-label">Avg Ticket</div></div></div>
+    <div class="stat-card"><div class="stat-icon warning">💵</div><div class="stat-info"><div class="stat-value">${mMoney(d.kpis.tips)}</div><div class="stat-label">Tips Collected</div></div></div>`;
+
+  const days = d.by_day;
+  document.getElementById('manTrend').innerHTML = days.length ? `
+    <div style="display:flex;align-items:flex-end;gap:4px;height:160px;padding:0 4px;overflow-x:auto">
+      ${days.map(x => { const max=Math.max(...days.map(y=>y.revenue),1); const h=Math.max(4,Math.round(x.revenue/max*150));
+        return `<div style="flex:1;min-width:14px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end" title="${x.day}: ${mMoney(x.revenue)} (${x.orders} orders)">
+          <div style="width:100%;background:linear-gradient(var(--gold),var(--burgundy));height:${h}px;border-radius:4px 4px 0 0"></div>
+          <div style="font-size:9px;color:var(--muted);margin-top:4px;white-space:nowrap;transform:rotate(-45deg);transform-origin:top;height:28px">${x.day.slice(5)}</div>
+        </div>`; }).join('')}
+    </div>` : '<p style="text-align:center;color:var(--muted);padding:24px">No paid orders in this period.</p>';
+
+  const ti = d.top_items;
+  document.getElementById('manTopItems').innerHTML = ti.length ? `<table class="data-table">
+    <thead><tr><th>Item</th><th>Qty</th><th>Revenue</th></tr></thead>
+    <tbody>${ti.map(i => `<tr><td class="fw-700">${i.item_name}</td><td>${i.qty}</td><td style="color:var(--success);font-weight:700">${mMoney(i.revenue)}</td></tr>`).join('')}</tbody>
+  </table>` : '<p style="color:var(--muted);padding:16px;text-align:center">No sales yet.</p>';
+
+  const pm = d.by_method, pmTotal = pm.reduce((s,m)=>s+m.revenue,0)||1, mIcon={card:'💳',cash:'💵',mobile:'📱'};
+  document.getElementById('manMethods').innerHTML = pm.length ? pm.map(m => `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span class="fw-700">${mIcon[m.method]||''} ${m.method}</span><span>${mMoney(m.revenue)} · ${m.count}</span></div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${Math.round(m.revenue/pmTotal*100)}%"></div></div>
+    </div>`).join('') : '<p style="color:var(--muted);padding:16px;text-align:center">No payments yet.</p>';
+}
 </script>
 </body>
 </html>

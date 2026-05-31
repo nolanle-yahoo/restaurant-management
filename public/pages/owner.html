@@ -52,6 +52,7 @@
       <a class="nav-item" href="#" onclick="showSection('admin')"><span class="nav-icon">⚙️</span>Admin Panel</a>
       <a class="nav-item" href="#" onclick="showSection('reservations')" id="navReservations"><span class="nav-icon">📅</span>Reservations</a>
       <a class="nav-item" href="#" onclick="showSection('menu')" id="navMenu"><span class="nav-icon">🍽️</span>Menu</a>
+      <a class="nav-item" href="#" onclick="showSection('analytics')" id="navAnalytics"><span class="nav-icon">📈</span>Sales Analytics</a>
       <a class="nav-item" href="#" onclick="showSection('auditlog')" id="navAudit"><span class="nav-icon">📜</span>Audit Log</a>
       <a class="nav-item" href="#" onclick="showSection('timeoff')" id="navTimeOff"><span class="nav-icon">🏖️</span>Time Off</a>
       <a class="nav-item" href="#" onclick="showSection('messages')" id="navMessages"><span class="nav-icon">💬</span>Messages</a>
@@ -336,6 +337,42 @@
         </div>
       </section>
 
+      <!-- ── Sales Analytics ───────────────────────────── -->
+      <section id="sec-analytics" class="hidden">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <div class="card-title">Sales Analytics</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select id="anLocFilter" onchange="loadAnalytics()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px"><option value="">All Locations</option></select>
+              <input type="date" id="anStart" onchange="loadAnalytics()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+              <input type="date" id="anEnd" onchange="loadAnalytics()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+              <button class="quick-btn" onclick="anRange(7)">7d</button>
+              <button class="quick-btn" onclick="anRange(30)">30d</button>
+              <button class="quick-btn" onclick="anRange(90)">90d</button>
+            </div>
+          </div>
+          <div class="stat-grid" id="anKpis"></div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">Revenue Trend</div></div>
+          <div id="anTrend" style="padding:6px 0"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="anGrid">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Top Sellers</div></div>
+            <div id="anTopItems"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Payment Methods</div></div>
+            <div id="anMethods"></div>
+          </div>
+        </div>
+        <div class="card" id="anByLocCard" style="margin-top:16px">
+          <div class="card-header"><div class="card-title">Revenue by Location</div></div>
+          <div id="anByLoc"></div>
+        </div>
+      </section>
+
       <!-- ── Audit Log ─────────────────────────────────── -->
       <section id="sec-auditlog" class="hidden">
         <div class="card">
@@ -603,7 +640,7 @@ if (user) populateSidebar(user);
 liveClock('topbarTime');
 ['supplyModal','transferModal','reassignModal','empModal','deleteModal','areaModal','fpTableModal','fpAssignModal'].forEach(onModalOverlayClick);
 
-const NAV_LABELS = { overview:'Overview', staff:'Staff & Locations', timesheets:'Timesheets', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan', admin:'Admin Panel', reservations:'Reservations', menu:'Menu Management', auditlog:'Audit Log', timeoff:'Time Off Requests', messages:'Employee Messages' };
+const NAV_LABELS = { overview:'Overview', staff:'Staff & Locations', timesheets:'Timesheets', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan', admin:'Admin Panel', reservations:'Reservations', menu:'Menu Management', analytics:'Sales Analytics', auditlog:'Audit Log', timeoff:'Time Off Requests', messages:'Employee Messages' };
 const NAV_KEYS   = Object.keys(NAV_LABELS);
 let currentSection = 'overview', locations = [], allEmpsRaw = [], whData = null, editingEmpId = null, deletingEmpId = null, reassignEmpId = null, allInvItems = [];
 let editingAreaId = null, editingFpTableId = null, fpAssignAreaId = null, fpAssignLocId = null;
@@ -614,7 +651,7 @@ function showSection(name) {
   document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', NAV_KEYS[i] === name));
   document.getElementById('pageTitle').textContent = NAV_LABELS[name];
   currentSection = name;
-  const loaders = { staff: loadStaffLocations, warehouse: loadWarehouse, supply: loadSupply, transfers: loadTransfers, admin: loadAdmin, timesheets: initTimesheets, floorplan: loadFloorPlan, reservations: loadOwnerReservations, menu: loadOwnerMenu, auditlog: loadAuditLog, timeoff: loadOwnerTimeOff, messages: loadOwnerMessages };
+  const loaders = { staff: loadStaffLocations, warehouse: loadWarehouse, supply: loadSupply, transfers: loadTransfers, admin: loadAdmin, timesheets: initTimesheets, floorplan: loadFloorPlan, reservations: loadOwnerReservations, menu: loadOwnerMenu, analytics: loadAnalytics, auditlog: loadAuditLog, timeoff: loadOwnerTimeOff, messages: loadOwnerMessages };
   if (loaders[name]) loaders[name]();
 }
 
@@ -627,7 +664,7 @@ async function loadSummary() {
   const [{ locations: locs, totals }, recent] = await Promise.all([API.locationsSummary(), API.clockRecent()]);
   locations = locs;
   const locOpts = locs.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
-  ['tsLocFilter','supplyLocFilter','soLocation','trFrom','trTo','empLocation','reassignLoc','adminLocFilter','fpLocSelect','toLocFilter','msgLocFilter','resLocFilter','menuLocFilter','auditLocFilter','resModalLoc'].forEach(id => {
+  ['tsLocFilter','supplyLocFilter','soLocation','trFrom','trTo','empLocation','reassignLoc','adminLocFilter','fpLocSelect','toLocFilter','msgLocFilter','resLocFilter','menuLocFilter','auditLocFilter','resModalLoc','anLocFilter'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const pre = ['tsLocFilter','supplyLocFilter','adminLocFilter','toLocFilter','msgLocFilter','resLocFilter','menuLocFilter','auditLocFilter'].includes(el.id)
@@ -1345,6 +1382,89 @@ async function markOwnerMsgRead(id) {
   await API.messagesRead(id);
   loadOwnerMessages();
   refreshBell();
+}
+
+// ── Sales Analytics ───────────────────────────────────────────
+const money = n => '$' + (Number(n)||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+
+function anRange(days) {
+  const end = new Date();
+  const start = new Date(Date.now() - (days-1)*864e5);
+  document.getElementById('anStart').value = start.toISOString().slice(0,10);
+  document.getElementById('anEnd').value = end.toISOString().slice(0,10);
+  loadAnalytics();
+}
+
+async function loadAnalytics() {
+  if (!document.getElementById('anStart').value) {
+    const end = new Date(), start = new Date(Date.now() - 29*864e5);
+    document.getElementById('anStart').value = start.toISOString().slice(0,10);
+    document.getElementById('anEnd').value = end.toISOString().slice(0,10);
+  }
+  const params = {
+    location_id: document.getElementById('anLocFilter').value || '',
+    start: document.getElementById('anStart').value,
+    end: document.getElementById('anEnd').value,
+  };
+  let d;
+  try { d = await API.analytics(params); }
+  catch(e) { document.getElementById('anKpis').innerHTML = `<div class="card" style="grid-column:1/-1;color:var(--danger);padding:16px">${e.message}</div>`; return; }
+
+  document.getElementById('anKpis').innerHTML = `
+    <div class="stat-card"><div class="stat-icon success">💰</div><div class="stat-info"><div class="stat-value">${money(d.kpis.revenue)}</div><div class="stat-label">Total Revenue</div></div></div>
+    <div class="stat-card"><div class="stat-icon burgundy">🧾</div><div class="stat-info"><div class="stat-value">${d.kpis.orders_paid}</div><div class="stat-label">Paid Orders</div></div></div>
+    <div class="stat-card"><div class="stat-icon gold">📊</div><div class="stat-info"><div class="stat-value">${money(d.kpis.avg_ticket)}</div><div class="stat-label">Avg Ticket</div></div></div>
+    <div class="stat-card"><div class="stat-icon warning">💵</div><div class="stat-info"><div class="stat-value">${money(d.kpis.tips)}</div><div class="stat-label">Tips Collected</div></div></div>`;
+
+  // Trend (CSS bar chart)
+  const days = d.by_day;
+  if (!days.length) {
+    document.getElementById('anTrend').innerHTML = '<p style="text-align:center;color:var(--muted);padding:24px">No paid orders in this period.</p>';
+  } else {
+    const max = Math.max(...days.map(x => x.revenue), 1);
+    document.getElementById('anTrend').innerHTML = `
+      <div style="display:flex;align-items:flex-end;gap:4px;height:160px;padding:0 4px;overflow-x:auto">
+        ${days.map(x => {
+          const h = Math.max(4, Math.round(x.revenue / max * 150));
+          return `<div style="flex:1;min-width:14px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end" title="${x.day}: ${money(x.revenue)} (${x.orders} orders)">
+            <div style="width:100%;background:linear-gradient(var(--gold),var(--burgundy));height:${h}px;border-radius:4px 4px 0 0"></div>
+            <div style="font-size:9px;color:var(--muted);margin-top:4px;white-space:nowrap;transform:rotate(-45deg);transform-origin:top;height:28px">${x.day.slice(5)}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  // Top items
+  const ti = d.top_items;
+  document.getElementById('anTopItems').innerHTML = ti.length ? `<table class="data-table">
+    <thead><tr><th>Item</th><th>Qty</th><th>Revenue</th></tr></thead>
+    <tbody>${ti.map(i => `<tr><td class="fw-700">${i.item_name}</td><td>${i.qty}</td><td style="color:var(--success);font-weight:700">${money(i.revenue)}</td></tr>`).join('')}</tbody>
+  </table>` : '<p style="color:var(--muted);padding:16px;text-align:center">No sales yet.</p>';
+
+  // Payment methods
+  const pm = d.by_method;
+  const pmTotal = pm.reduce((s,m)=>s+m.revenue,0) || 1;
+  const mIcon = { card:'💳', cash:'💵', mobile:'📱' };
+  document.getElementById('anMethods').innerHTML = pm.length ? pm.map(m => `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span class="fw-700">${mIcon[m.method]||''} ${m.method}</span>
+        <span>${money(m.revenue)} · ${m.count}</span>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${Math.round(m.revenue/pmTotal*100)}%"></div></div>
+    </div>`).join('') : '<p style="color:var(--muted);padding:16px;text-align:center">No payments yet.</p>';
+
+  // By location (all-locations view only)
+  const card = document.getElementById('anByLocCard');
+  if (d.by_location && d.by_location.length) {
+    card.style.display = '';
+    document.getElementById('anByLoc').innerHTML = `<table class="data-table">
+      <thead><tr><th>Location</th><th>Paid Orders</th><th>Revenue</th></tr></thead>
+      <tbody>${d.by_location.map(l => `<tr><td class="fw-700">${l.name}</td><td>${l.orders}</td><td style="color:var(--success);font-weight:700">${money(l.revenue)}</td></tr>`).join('')}</tbody>
+    </table>`;
+  } else {
+    card.style.display = 'none';
+  }
 }
 
 // ── Reservations ──────────────────────────────────────────────
