@@ -279,8 +279,9 @@ async function submitOrder() {
     items.push({ name, quantity: parseInt(document.getElementById('iqty-'+i).value)||1, price: parseFloat(document.getElementById('iprice-'+i).value)||0 });
   }
   if (!items.length) return showAlert('orderAlert', 'Add at least one item');
+  const notes = document.getElementById('orderSpecialRequest').value.trim();
   try {
-    await API.createOrder({ table_id: selectedTableId, items });
+    await API.createOrder({ table_id: selectedTableId, items, notes: notes || undefined });
     hideModal('orderModal');
     showAlert('alertBox', 'Order placed!', 'success');
     loadAll();
