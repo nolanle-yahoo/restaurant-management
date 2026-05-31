@@ -455,6 +455,9 @@ Shared client modules:
 | `JWT_SECRET` | Token signing secret (required; must not be the weak default) | — |
 | `JWT_EXPIRES_IN` | Token lifetime | 8h |
 | `ALLOWED_ORIGIN` | Permitted CORS origin | http://localhost:3000 |
+| `STRIPE_SECRET_KEY` | Stripe secret key (`sk_...`); enables live card processing. If unset, payments run in simulated record-only mode. | — |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (`pk_...`) used by the in-browser card form. | — |
+| `SALES_TAX_RATE` | Sales tax applied to bills at settlement. | 0.08 |
 
 **Run locally**
 
