@@ -187,7 +187,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   location for owners).
 - **FR-10.2** Reports compute gross pay, a 10% tax deduction, a 5% benefit deduction, and net
   pay (85%) per employee, with totals.
-- **FR-10.3** Reports are printable and exportable to CSV.
+- **FR-10.3** Tips collected at bill settlement are attributed to the serving employee and
+  reported per employee, with a take-home figure (net wages + tips) and grand totals.
+- **FR-10.4** Reports are printable and exportable to CSV.
 
 ### 5.11 Time Off Requests
 - **FR-11.1** Any employee submits time-off requests (vacation, sick, personal, other) with a
