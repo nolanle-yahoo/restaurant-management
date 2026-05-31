@@ -263,7 +263,11 @@ function initTabs(containerSel) {
 function showModal(id) { document.getElementById(id).classList.add('open'); }
 function hideModal(id) { document.getElementById(id).classList.remove('open'); }
 function onModalOverlayClick(id) {
-  document.getElementById(id).addEventListener('click', e => { if (e.target === e.currentTarget) hideModal(id); });
+  // Delegated + null-safe: works even if the modal element is added later,
+  // and never throws if the id is missing at call time.
+  document.addEventListener('click', e => {
+    if (e.target && e.target.id === id && e.target.classList && e.target.classList.contains('modal-overlay')) hideModal(id);
+  });
 }
 
 function showAlert(elId, msg, type='danger') {
