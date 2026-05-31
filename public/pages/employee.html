@@ -384,6 +384,140 @@ async function submitMessage() {
 
 onModalOverlayClick('toModal');
 onModalOverlayClick('msgModal');
+onModalOverlayClick('empOrderModal');
+onModalOverlayClick('empStatusModal');
+
+// ── Tables & Orders (act like waiter) ─────────────────────────
+let empTables = [], empAreaData = [], empSelectedTable = null, empOrderItemCount = 0, empStatusTableId = null;
+
+async function loadEmpTables() {
+  // Surface clock-in reminder
+  try { const s = await API.clockStatus(); document.getElementById('empClockWarn').classList.toggle('hidden', s.clocked_in); } catch {}
+  try {
+    [empTables, empAreaData] = await Promise.all([
+      API.tables(user.location_id),
+      API.tablesByArea(user.location_id),
+    ]);
+    renderEmpTables();
+  } catch(e) {
+    document.getElementById('empTablesContent').innerHTML = `<div class="card" style="text-align:center;padding:30px;color:var(--muted)">Could not load tables: ${e.message}</div>`;
+  }
+}
+
+function renderEmpTables() {
+  document.getElementById('empTablesContent').innerHTML = empAreaData.map(area => `
+    <div class="area-section">
+      <div class="area-header">
+        <div class="area-dot" style="background:${area.color}"></div>
+        <div class="area-name">${area.name}</div>
+        <div class="area-meta">${area.tables.length} tables</div>
+      </div>
+      <div class="floor-grid">
+        ${area.tables.map(t => {
+          const info = tableStatusInfo(t.status);
+          return `<div class="table-card ts-${t.status}" style="background:${info.bg};border-color:${info.border};border-width:2.5px" onclick="empTableClick(${t.id})">
+            <div class="table-num" style="color:${info.border}">T${t.table_number}</div>
+            <div class="table-cap">${t.capacity} seats</div>
+            <div style="font-size:20px;margin:4px 0">${info.emoji}</div>
+            <div class="table-stat" style="color:${info.text};font-size:11px">${info.label}</div>
+            ${t.status === 'waiting_order' ? '<div style="margin-top:4px"><span class="badge badge-gold" style="font-size:10px">Take Order</span></div>' : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('') || '<div class="card" style="text-align:center;padding:30px;color:var(--muted)">No tables at this location.</div>';
+}
+
+function empTableClick(tableId) {
+  const t = empTables.find(x => x.id === tableId);
+  if (!t) return;
+  empSelectedTable = t.id;
+  if (['empty','waiting_order','occupied'].includes(t.status)) openEmpOrderFlow(t);
+  else openEmpStatusModal(t);
+}
+
+function openEmpOrderFlow(t) {
+  document.getElementById('empOrderTitle').textContent = `Take Order — Table ${t.table_number}`;
+  document.getElementById('empOrderAlert').classList.add('hidden');
+  document.getElementById('empOrderItems').innerHTML = '';
+  document.getElementById('empSpecialRequest').value = '';
+  empOrderItemCount = 0;
+  empSelectedTable = t.id;
+  empAddItem();
+  empLoadMenuPicker();
+  showModal('empOrderModal');
+}
+
+function empAddItem(name = '', price = '') {
+  empOrderItemCount++;
+  const row = document.createElement('div');
+  row.className = 'order-item-input';
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 70px 80px 32px;gap:6px;margin-bottom:6px;align-items:center';
+  row.innerHTML = `
+    <input placeholder="Item name" value="${name}" data-field="name" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px">
+    <input type="number" placeholder="Qty" value="1" min="1" data-field="qty" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px">
+    <input type="number" placeholder="Price" value="${price}" step="0.01" data-field="price" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px">
+    <button style="background:none;border:none;color:var(--danger);font-size:18px;cursor:pointer" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('empOrderItems').appendChild(row);
+}
+
+async function empLoadMenuPicker() {
+  try {
+    const [cats, items] = await Promise.all([API.menuCategories(user.location_id), API.menuItems(user.location_id)]);
+    const avail = items.filter(i => i.is_available);
+    document.getElementById('empMenuPicker').innerHTML = cats.map(cat => {
+      const ci = avail.filter(i => i.category_id === cat.id);
+      if (!ci.length) return '';
+      return `<div style="margin-bottom:8px">
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--muted);padding:2px 4px;letter-spacing:.5px">${cat.name}</div>
+        ${ci.map(i => `<button type="button" onclick="empAddItem('${i.name.replace(/'/g,"\\'")}',${i.price})"
+          style="display:block;width:100%;text-align:left;padding:5px 8px;border:none;background:none;cursor:pointer;border-radius:4px;font-size:13px"
+          onmouseover="this.style.background='rgba(107,26,26,.06)'" onmouseout="this.style.background='none'">
+          <span style="font-weight:600">${i.name}</span><span style="color:var(--success);float:right">$${i.price.toFixed(2)}</span>
+        </button>`).join('')}
+      </div>`;
+    }).join('') || '<p style="color:var(--muted);text-align:center;padding:12px;font-size:13px">No menu items available.</p>';
+  } catch { document.getElementById('empMenuPicker').innerHTML = '<p style="color:var(--muted);font-size:12px;padding:8px">Could not load menu.</p>'; }
+}
+
+async function empSubmitOrder() {
+  const rows = document.querySelectorAll('#empOrderItems .order-item-input');
+  const items = [];
+  rows.forEach(r => {
+    const name = r.querySelector('[data-field="name"]').value.trim();
+    const qty = parseInt(r.querySelector('[data-field="qty"]').value) || 1;
+    const price = parseFloat(r.querySelector('[data-field="price"]').value) || 0;
+    if (name) items.push({ name, quantity: qty, price });
+  });
+  if (!items.length) return showAlert('empOrderAlert', 'Add at least one item');
+  const notes = document.getElementById('empSpecialRequest').value.trim();
+  try {
+    await API.createOrder({ table_id: empSelectedTable, items, notes: notes || undefined });
+    hideModal('empOrderModal');
+    loadEmpTables();
+  } catch(e) { showAlert('empOrderAlert', e.message); }
+}
+
+function openEmpStatusModal(t) {
+  empStatusTableId = t.id;
+  document.getElementById('empStatusTitle').textContent = `Table ${t.table_number} — Update Status`;
+  document.getElementById('empStatusBtns').innerHTML = TABLE_STATUSES.map(s =>
+    `<button class="btn" style="background:${s.bg};color:${s.text};border:1.5px solid ${s.border}" onclick="empSetStatus('${s.value}')">${s.emoji} ${s.label}</button>`
+  ).join('');
+  showModal('empStatusModal');
+}
+
+async function empSetStatus(status) {
+  await API.updateTable(empStatusTableId, status);
+  hideModal('empStatusModal');
+  loadEmpTables();
+}
+
+// Live table updates
+connectWebSocket(user?.location_id, {
+  table_update: () => { if (!document.getElementById('sec-tables').classList.contains('hidden')) loadEmpTables(); },
+  order_update: () => { if (!document.getElementById('sec-tables').classList.contains('hidden')) loadEmpTables(); },
+});
 </script>
 </body>
 </html>
