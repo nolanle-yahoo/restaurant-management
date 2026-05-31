@@ -26,7 +26,7 @@ router.get('/', requireRole('owner','manager','frontdesk','waiter','chef','emplo
 });
 
 // GET /tables/by-area?location_id=
-router.get('/by-area', requireRole('owner','manager','frontdesk','waiter','chef','employee'), (req, res) => {
+router.get('/by-area', requireRole('owner','manager','frontdesk','waiter','chef','employee','stockroom'), (req, res) => {
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
   if (!locId) return res.status(400).json({ error: 'location_id required' });
   const areas = db.prepare(`SELECT * FROM areas WHERE location_id = ? ORDER BY sort_order, name`).all(locId);
