@@ -1778,6 +1778,35 @@ async function doRefund(id) {
   catch(e) { showAlert('payAlertOwner', e.message); }
 }
 
+// ── Marketing (email campaigns) ───────────────────────────────
+async function loadMarketing() {
+  try {
+    const a = await API.marketingAudience();
+    document.getElementById('audienceBadge').textContent = `${a.opted_in} opted-in / ${a.total_customers} customers`;
+    const hist = await API.marketingHistory();
+    document.getElementById('mktHistory').innerHTML = hist.length
+      ? `<table class="data-table"><thead><tr><th>When</th><th>Subject</th><th>Status</th></tr></thead><tbody>${
+          hist.map(h => `<tr><td>${new Date((h.created_at||'').replace(' ','T')+'Z').toLocaleString()}</td><td>${h.subject||''}</td><td>${h.status}</td></tr>`).join('')
+        }</tbody></table>`
+      : '<p style="color:var(--muted);padding:12px">No campaigns sent yet.</p>';
+  } catch(e) { showAlert('mktAlert', e.message); }
+}
+async function sendCampaign() {
+  const subject = document.getElementById('mktSubject').value.trim();
+  const body = document.getElementById('mktBody').value.trim();
+  if (!subject || !body) return showAlert('mktAlert', 'Subject and message are required.');
+  const a = await API.marketingAudience().catch(() => ({ opted_in: 0 }));
+  if (!confirm(`Send "${subject}" to ${a.opted_in} opted-in customer(s)?`)) return;
+  const btn = document.getElementById('mktSendBtn'); btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const r = await API.marketingSend({ subject, body });
+    showAlert('mktAlert', `Sent to ${r.sent} of ${r.recipients} customers.`, 'success');
+    document.getElementById('mktSubject').value = ''; document.getElementById('mktBody').value = '';
+    loadMarketing();
+  } catch(e) { showAlert('mktAlert', e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Send Campaign'; }
+}
+
 // ── Audit Log ─────────────────────────────────────────────────
 let auditData = [];
 async function loadAuditLog() {
