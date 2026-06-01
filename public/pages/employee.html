@@ -545,6 +545,7 @@ async function empSettleBill(tableId) {
     const orders = await API.orders(user.location_id);
     const open = orders.filter(o => o.table_id === tableId).sort((a,b) => b.id - a.id)[0];
     if (!open) return alert('No order found for this table to settle.');
+    if (open.paid) return alert('This order has already been paid.');
     hideModal('empStatusModal');
     openPaymentModal(open.id, loadEmpTables);
   } catch(e) { alert(e.message); }
