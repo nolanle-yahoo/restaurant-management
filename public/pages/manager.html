@@ -663,6 +663,42 @@ async function loadStats() {
     <div class="stat-card" style="cursor:pointer" onclick="switchTab('inventory')"><div class="stat-icon warning">⚠️</div><div class="stat-info"><div class="stat-value">${lowStock}</div><div class="stat-label">Low Stock Items</div></div></div>
   `;
   renderLowStockBanner(lowItems);
+  loadOnlineOrders();
+}
+
+// Online (pickup/delivery) orders awaiting fulfillment — always visible to the manager.
+async function loadOnlineOrders() {
+  const el = document.getElementById('onlineOrdersCard');
+  if (!el) return;
+  let orders = [];
+  try { orders = await API.orders(user.location_id); } catch(e) { return; }
+  const online = orders.filter(o => o.order_type && o.order_type !== 'dine_in' && !(o.status === 'served' && o.paid));
+  if (!online.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="card" style="margin-bottom:20px">
+    <div class="card-header"><div class="card-title">🛍️ Online Orders (${online.length})</div></div>
+    <table class="data-table"><thead><tr><th>Code</th><th>Type</th><th>Customer</th><th>Items</th><th>Status</th><th>Actions</th></tr></thead><tbody>${
+      online.map(o => {
+        const items = (o.items||[]).map(i => `${i.item_name}×${i.quantity}`).join(', ');
+        const next = { pending:'preparing', preparing:'ready', ready:'served' }[o.status];
+        const nextLabel = { preparing:'Start', ready:'Mark Ready', served:'Mark Collected' }[next];
+        return `<tr>
+          <td class="fw-700">${o.tracking_code||'—'}</td>
+          <td>${o.order_type==='delivery'?'🚗 Delivery':'🥡 Pickup'}</td>
+          <td>${o.customer_name||'—'}<div style="font-size:11px;color:var(--muted)">${o.customer_phone||''}</div></td>
+          <td style="font-size:12.5px">${items}</td>
+          <td>${statusBadge(o.status)}</td>
+          <td>
+            ${next ? `<button class="btn btn-sm btn-ghost" onclick="advanceOnline(${o.id},'${next}')">${nextLabel}</button>` : ''}
+            ${o.paid ? '<span class="badge badge-success">Paid</span>' : `<button class="btn btn-sm btn-gold" onclick="openPaymentModal(${o.id}, loadOnlineOrders)">💳 Settle</button>`}
+          </td>
+        </tr>`;
+      }).join('')
+    }</tbody></table>
+  </div>`;
+}
+async function advanceOnline(id, status) {
+  try { await API.updateOrder(id, status); loadOnlineOrders(); }
+  catch(e) { alert(e.message); }
 }
 
 function renderLowStockBanner(lowItems) {
