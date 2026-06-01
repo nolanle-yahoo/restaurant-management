@@ -111,15 +111,19 @@ router.put('/items/:id/recipe', requireRole('owner','manager'), (req, res) => {
   const item = db.prepare(`SELECT id FROM menu_items WHERE id=?`).get(req.params.id);
   if (!item) return res.status(404).json({ error: 'Menu item not found' });
   const ingredients = Array.isArray(req.body.ingredients) ? req.body.ingredients : [];
-  const tx = db.transaction(() => {
+  db.exec('BEGIN');
+  try {
     db.prepare(`DELETE FROM recipes WHERE menu_item_id=?`).run(item.id);
     const ins = db.prepare(`INSERT INTO recipes (menu_item_id, inventory_id, quantity) VALUES (?,?,?)`);
     ingredients.forEach(g => {
       const invId = parseInt(g.inventory_id), qty = parseFloat(g.quantity);
       if (invId && Number.isFinite(qty) && qty > 0) ins.run(item.id, invId, qty);
     });
-  });
-  tx();
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
   auditLog(req, 'menu_recipe_update', 'menu_item', item.id, { ingredients: ingredients.length });
   res.json({ success: true });
 });
