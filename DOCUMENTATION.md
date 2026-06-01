@@ -174,6 +174,11 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-6.2** Items carry name, description, price, and availability; availability can be
   toggled without deletion.
 - **FR-6.3** The menu drives order pricing through the order-taking menu picker.
+- **FR-6.4** Chefs can mark an item out of stock ("86") and back on from the Chef Station;
+  waiters and chefs may only toggle availability, not edit prices or structure.
+- **FR-6.5** Each item can carry a **recipe** (bill of materials) mapping it to inventory
+  items and per-serving quantities, maintained by owners/managers. Recipes drive automatic
+  inventory depletion and auto-86 (see FR-8.6).
 
 ### 5.7 Reservations
 - **FR-7.1** Owners, managers, and front desk create and manage reservations (guest name,
