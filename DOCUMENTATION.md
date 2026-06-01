@@ -756,7 +756,8 @@ data-deletion workflows.
 | 1.6.0 | Email layer (SMTP or simulated): reservation confirmations with codes + guest lookup/cancel, emailed digital receipts with public receipt page, and self-service forgot/reset password. ER-diagram overview added. |
 | 1.7.0 | Session revocation: "log out everywhere" plus automatic token invalidation on password change, password reset, and account deactivation, via a per-user `token_version` checked on every request. |
 | 1.8.0 | Enforced clock-in for non-owner floor actions; automatic task hand-off on clock-out (reassign open orders/areas to the least-loaded on-duty colleague, or alert the owner when nobody is available); paid orders disable charging and show a "Paid" state. |
-| 1.9.0 | **Inventory auto-depletion via recipes/BOM with auto-86; chef can "86" items; low-stock alerts for stockroom & chef; owner-configurable sales-tax & service-charge; payments & refunds UI; stronger password policy (min 8) and broader rate limiting.** |
+| 1.9.0 | Inventory auto-depletion via recipes/BOM with auto-86; chef can "86" items; low-stock alerts for stockroom & chef; owner-configurable sales-tax & service-charge; payments & refunds UI; stronger password policy (min 8) and broader rate limiting. |
+| 1.10.0 | **Real-time operational notifications (order-ready, needs-help, low-stock, new online order) as role-targeted toasts + reservation reminders; customer online ordering (pickup/delivery, server-priced, pay-on-collection) with tracking codes, kitchen integration, and a manager fulfillment panel.** |
 
 ---
 
