@@ -19,6 +19,8 @@
 > **post-visit receipt feedback**.
 > ✅ **Delivered in v1.15.0:** **table transfer/merge** · **waste/spoilage tracking** ·
 > **consolidated approvals dashboard**.
+> ✅ **Delivered in v1.16.0:** **vendor master records** · **self-service My Pay & Tips** ·
+> **course tagging + kitchen grouping**.
 
 Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
 from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
