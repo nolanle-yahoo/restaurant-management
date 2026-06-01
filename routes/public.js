@@ -5,8 +5,11 @@ const express = require('express');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const db = require('../db/database');
-const { broadcast } = require('../lib/ws');
+const { broadcast, notify } = require('../lib/ws');
 const { sendEmail } = require('../lib/email');
+const { depleteForOrder } = require('../lib/recipes');
+const { getRates } = require('../lib/settings');
+const round2 = n => Math.round(n * 100) / 100;
 
 const router = express.Router();
 
