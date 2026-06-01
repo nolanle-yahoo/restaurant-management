@@ -3,6 +3,7 @@ const db = require('../db/database');
 const { verifyToken, requireRole, requireOnDuty } = require('../middleware/auth');
 const { broadcast } = require('../lib/ws');
 const { auditLog } = require('../lib/audit');
+const { depleteForOrder } = require('../lib/recipes');
 
 const router = express.Router();
 router.use(verifyToken);
