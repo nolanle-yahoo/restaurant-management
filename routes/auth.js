@@ -92,10 +92,10 @@ router.put('/profile', verifyToken, (req, res) => {
   }
 });
 
-router.put('/password', verifyToken, (req, res) => {
+router.put('/password', verifyToken, passwordChangeLimiter, (req, res) => {
   const { current_password, new_password } = req.body;
   if (!current_password || !new_password) return res.status(400).json({ error: 'current_password and new_password required' });
-  if (new_password.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
+  if (new_password.length < MIN_PASSWORD) return res.status(400).json({ error: `New password must be at least ${MIN_PASSWORD} characters` });
   const user = db.prepare(`SELECT * FROM users WHERE id=?`).get(req.user.id);
   if (!bcrypt.compareSync(current_password, user.password_hash)) {
     return res.status(401).json({ error: 'Current password is incorrect' });
