@@ -76,6 +76,7 @@ const API = {
   },
   createOrder(data)  { return this.post('/orders', data); },
   updateOrder(id, status) { return this.put(`/orders/${id}`, { status }); },
+  voidOrder(id, reason)   { return this.put(`/orders/${id}/void`, { reason }); },
 
   inventory(locId)   { return this.get('/inventory' + (locId ? `?location_id=${locId}` : '')); },
   warehouse()        { return this.get('/inventory/warehouse'); },
