@@ -122,7 +122,7 @@ async function loadQueue() {
           ${statusBadge(o.status)}
         </div>
         <div class="order-items" style="margin:10px 0">
-          ${(o.items||[]).map(i=>`<div class="order-item-row">• ${i.item_name} <span style="color:var(--muted)">×${i.quantity}</span>${allergenMap[i.item_name]?` <span class="badge badge-danger" style="font-size:10px">⚠ ${allergenMap[i.item_name]}</span>`:''}</div>`).join('')}
+          ${renderCourses(o.items||[])}
         </div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Waiter: ${o.waiter_name || '—'}</div>
         <div class="order-actions">
