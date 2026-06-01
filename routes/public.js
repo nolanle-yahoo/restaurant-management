@@ -148,19 +148,23 @@ router.post('/order', orderLimiter, (req, res) => {
   }
 
   const code = makeCode('ORD');
-  const tx = db.transaction(() => {
+  let orderId;
+  db.exec('BEGIN');
+  try {
     const r = db.prepare(`
       INSERT INTO orders (table_id, location_id, waiter_id, status, notes, order_type, customer_name, customer_phone, customer_email, delivery_address, tracking_code)
       VALUES (NULL, ?, NULL, 'pending', ?, ?, ?, ?, ?, ?, ?)
     `).run(location_id, notes ? String(notes).slice(0, 500) : null, type,
            String(customer_name).slice(0, 120), String(customer_phone).slice(0, 40),
            (customer_email || '').trim() || null, type === 'delivery' ? String(delivery_address).slice(0, 300) : null, code);
-    const orderId = r.lastInsertRowid;
+    orderId = r.lastInsertRowid;
     const ins = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price) VALUES (?,?,?,?)`);
     resolved.forEach(i => ins.run(orderId, i.name, i.quantity, i.price));
-    return orderId;
-  });
-  const orderId = tx();
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
 
   // Deplete inventory (no req.user → logged with null actor) and alert staff.
   depleteForOrder({}, orderId, Number(location_id));
