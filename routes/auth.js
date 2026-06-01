@@ -89,4 +89,42 @@ router.put('/password', verifyToken, (req, res) => {
   res.json({ success: true });
 });
 
+// ── Forgot / reset password ──────────────────────────────────
+// Always returns a generic success to avoid leaking which emails exist.
+router.post('/forgot-password', resetLimiter, async (req, res) => {
+  const { email } = req.body;
+  const generic = { success: true, message: 'If that email is registered, a reset link has been sent.' };
+  if (!email) return res.json(generic);
+
+  const user = db.prepare(`SELECT id, name FROM users WHERE email=? AND is_active=1`).get(email.trim());
+  if (user) {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19); // 1 hour
+    db.prepare(`INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?,?,?)`).run(user.id, token, expires);
+    const base = process.env.ALLOWED_ORIGIN || 'http://localhost:3000';
+    const link = `${base}/reset.html?token=${token}`;
+    await sendEmail(email.trim(),
+      'Reset your Restaurant Management password',
+      `Hi ${user.name},\n\nWe received a request to reset your password.\n\n` +
+      `Reset it here (valid for 1 hour):\n${link}\n\n` +
+      `If you didn't request this, you can ignore this email.`,
+      'password_reset');
+  }
+  res.json(generic);
+});
+
+router.post('/reset-password', resetLimiter, (req, res) => {
+  const { token, new_password } = req.body;
+  if (!token || !new_password) return res.status(400).json({ error: 'token and new_password required' });
+  if (new_password.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
+
+  const row = db.prepare(`SELECT * FROM password_reset_tokens WHERE token=?`).get(token);
+  if (!row || row.used) return res.status(400).json({ error: 'This reset link is invalid or has already been used.' });
+  if (new Date(row.expires_at + 'Z') < new Date()) return res.status(400).json({ error: 'This reset link has expired. Please request a new one.' });
+
+  db.prepare(`UPDATE users SET password_hash=? WHERE id=?`).run(bcrypt.hashSync(new_password, 10), row.user_id);
+  db.prepare(`UPDATE password_reset_tokens SET used=1 WHERE id=?`).run(row.id);
+  res.json({ success: true, message: 'Password updated. You can now sign in.' });
+});
+
 module.exports = router;
