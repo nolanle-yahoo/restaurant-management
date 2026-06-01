@@ -496,8 +496,16 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/` | Owner, Manager | Inbox (owner: all; manager: own location). |
 | GET | `/mine` | Any | Own sent messages. |
 | POST | `/` | Any | Send message. |
+| POST | `/:id/reply` | Owner, Manager | Reply to a message (threaded; visible to the sender). |
 | PUT | `/:id/read` | Owner, Manager | Mark read. |
-| DELETE | `/:id` | Owner/Manager or author | Delete. |
+| DELETE | `/:id` | Owner/Manager or author | Delete (and its replies). |
+
+### Announcements — `/api/announcements`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/` | Any staff | Announcements for the caller's location + global (owners see all). |
+| POST | `/` | Owner, Manager | Post an announcement (manager: own location; owner: a location or global) — pushes a live toast. |
+| DELETE | `/:id` | Owner, Manager | Remove an announcement (manager limited to own location). |
 
 ### Reservations — `/api/reservations`
 | Method | Path | Access | Description |
