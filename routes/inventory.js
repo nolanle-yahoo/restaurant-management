@@ -108,9 +108,11 @@ router.get('/supply-orders', requireRole('owner','manager','stockroom','chef'), 
     SELECT so.*,
            COALESCE(so.item_name, i.item_name) as item_name,
            COALESCE(i.unit, 'units') as unit,
+           COALESCE(v.name, so.vendor) as vendor_name,
            l.name as location_name, u.name as ordered_by_name
     FROM supply_orders so
     LEFT JOIN inventory i ON so.item_id=i.id
+    LEFT JOIN vendors v ON so.vendor_id=v.id
     JOIN locations l ON so.location_id=l.id
     JOIN users u ON so.ordered_by=u.id
     ${cond}
