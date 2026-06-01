@@ -6,11 +6,11 @@ const stripeLib = require('../lib/stripe');
 const { broadcast } = require('../lib/ws');
 const { auditLog } = require('../lib/audit');
 const { sendEmail } = require('../lib/email');
+const { getRates } = require('../lib/settings');
 
 const router = express.Router();
 router.use(verifyToken);
 
-const SALES_TAX = parseFloat(process.env.SALES_TAX_RATE || '0.08');
 const STAFF = ['owner','manager','waiter','employee','frontdesk','chef','stockroom'];
 const round2 = n => Math.round(n * 100) / 100;
 const makeReceiptCode = () => 'RCT-' + crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
