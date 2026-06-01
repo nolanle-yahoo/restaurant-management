@@ -422,31 +422,31 @@ async function openPaymentModal(orderId, onPaid) {
       document.getElementById('payCardWrap').style.display = 'none';
       document.getElementById('payLoyalty').style.display = 'none';
       document.getElementById('payDiscount').style.display = 'none';
+      document.getElementById('paySplit').style.display = 'none';
       totalRow.style.display = 'none';
     } else {
       chargeBtn.disabled = false;
       chargeBtn.textContent = 'Charge';
       inputIds.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; });
       totalRow.style.display = '';
-      // Loyalty redemption (direct-payment path only): offer when the order is
-      // linked to a customer with a positive balance.
-      const billAmt = bill.subtotal + (bill.service_charge || 0) + bill.tax;
       _payState.pointValue = bill.point_value || 0.05;
-      _payState.maxRedeem = bill.customer ? Math.min(bill.customer.points, Math.floor(billAmt / _payState.pointValue)) : 0;
-      const loyEl = document.getElementById('payLoyalty');
+      // Split / partial: remaining food subtotal still owed.
+      _payState.fullSub = bill.subtotal;
+      _payState.remainingSub = (bill.balance_subtotal != null) ? bill.balance_subtotal : bill.subtotal;
+      document.getElementById('paySplitSub').value = _payState.remainingSub.toFixed(2);
+      document.getElementById('paySplitBalance').textContent = (bill.covered_subtotal > 0)
+        ? `Partially paid — $${bill.covered_subtotal.toFixed(2)} of $${bill.subtotal.toFixed(2)} subtotal collected. Balance $${_payState.remainingSub.toFixed(2)}.`
+        : `Pay the full subtotal ($${bill.subtotal.toFixed(2)}) or a portion to split the bill.`;
+      document.getElementById('paySplit').style.display = 'block';
+      // Loyalty / discount eligibility (applied only on a single full payment).
+      _payState.maxRedeem = bill.customer ? Math.min(bill.customer.points, Math.floor((bill.subtotal + (bill.service_charge||0) + bill.tax) / _payState.pointValue)) : 0;
+      _payState.hasLoyalty = !!(bill.customer && bill.customer.points > 0);
+      _payState.canDiscount = !!(cfg.caps && cfg.caps.can_discount);
       document.getElementById('payRedeem').value = 0;
-      if (bill.customer && bill.customer.points > 0) {
-        document.getElementById('payLoyaltyInfo').textContent =
-          `${bill.customer.name} has ${bill.customer.points} pts (worth $${(bill.customer.points * _payState.pointValue).toFixed(2)}). Up to ${_payState.maxRedeem} redeemable here.`;
-        loyEl.style.display = 'block';
-      } else {
-        loyEl.style.display = 'none';
-      }
-      // Manual discount / comp — only for staff permitted to discount.
-      const discEl = document.getElementById('payDiscount');
       document.getElementById('payManualDiscount').value = 0;
       document.getElementById('payDiscountReason').value = '';
-      discEl.style.display = (cfg.caps && cfg.caps.can_discount) ? 'block' : 'none';
+      if (_payState.hasLoyalty) document.getElementById('payLoyaltyInfo').textContent =
+        `${bill.customer.name} has ${bill.customer.points} pts (worth $${(bill.customer.points * _payState.pointValue).toFixed(2)}). Up to ${_payState.maxRedeem} redeemable.`;
       setPayMethod(_payState.method);   // restores card-field visibility per Stripe config
       const lines = bill.items.map(i => `<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${i.item_name} ×${i.quantity}</span><span>$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('');
       const svc = (bill.service_charge || 0) > 0
