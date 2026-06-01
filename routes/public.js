@@ -2,11 +2,18 @@
 // (menu browsing + online reservation requests). No JWT required.
 
 const express = require('express');
+const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const db = require('../db/database');
 const { broadcast } = require('../lib/ws');
+const { sendEmail } = require('../lib/email');
 
 const router = express.Router();
+
+// Short, human-friendly confirmation/receipt code (e.g. "RSV-7K3Q2H")
+function makeCode(prefix) {
+  return prefix + '-' + crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
+}
 
 // Active locations (minimal public fields)
 router.get('/locations', (req, res) => {
