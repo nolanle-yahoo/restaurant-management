@@ -126,6 +126,8 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 4. ✅ **#35 (QR ordering)** + **#37 (accounts/loyalty)** + **#38 (email marketing)** — **done in v1.11.0**.
 5. ✅ **Loyalty redemption** + **two-way/broadcast staff messaging** — **done in v1.12.0**.
 6. ✅ **Configurable permissions** + **discounts/comps/voids** + **loyalty tiers/referrals** — **done in v1.13.0**.
-7. **Next:** **split-the-bill** (partial-payment accumulation — a focused money-path change),
-   then the remaining **Tier-1 polish** (menu allergens/photos + dietary filter, ticket
-   allergen flags, post-visit receipt feedback link).
+7. ✅ **Split-the-bill** + **Tier-1 polish** (menu allergens/photos + dietary filter, ticket
+   allergen flags, receipt feedback) — **done in v1.14.0**.
+8. **Next (Tier 2–3 operational depth):** course firing & table transfer/merge; vendor master
+   records + cycle counts / barcode receiving + waste/FIFO; consolidated approvals dashboard;
+   self-service staff portal; central menu with per-location overrides; 2FA.
