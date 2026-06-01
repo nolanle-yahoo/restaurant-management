@@ -36,7 +36,7 @@ const passwordChangeLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => (req.user && req.user.id ? `u${req.user.id}` : req.ip),
+  keyGenerator: (req) => `u${req.user && req.user.id ? req.user.id : 'anon'}`,
   message: { error: 'Too many password-change attempts. Please try again later.' },
 });
 
