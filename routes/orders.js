@@ -15,7 +15,7 @@ router.get('/', requireRole('owner','manager','waiter','chef','employee','frontd
     SELECT o.*, t.table_number, u.name as waiter_name,
            EXISTS(SELECT 1 FROM payments p WHERE p.order_id=o.id AND p.status='paid') as paid
     FROM orders o
-    JOIN tables t ON o.table_id=t.id
+    LEFT JOIN tables t ON o.table_id=t.id
     LEFT JOIN users u ON o.waiter_id=u.id
     WHERE 1=1
   `;
