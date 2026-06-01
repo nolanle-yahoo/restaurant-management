@@ -116,5 +116,7 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
    biggest operational gap.
 3. ✅ Tier-5 **#44 (notifications)** + **#45 (online ordering)** — **done in v1.10.0**.
 4. ✅ **#35 (QR ordering)** + **#37 (accounts/loyalty)** + **#38 (email marketing)** — **done in v1.11.0**.
-5. **Next:** **loyalty redemption** (turn accrued points into discounts — the natural extension),
-   **two-way/broadcast staff messaging** (#12), and the remaining Tier-1 polish (#5–#9).
+5. ✅ **Loyalty redemption** + **two-way/broadcast staff messaging** — **done in v1.12.0**.
+6. **Next:** **configurable roles/permissions** + **discounts/comps/voids**; **split the bill**
+   / order edit-void with approval; loyalty **tiers/referrals**; and the remaining Tier-1
+   polish (#5–#9: allergen filters/photos, ticket allergen flags, receipt feedback link).
