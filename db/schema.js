@@ -278,6 +278,7 @@ function createSchema() {
   try { db.exec(`ALTER TABLE supply_orders ADD COLUMN shipping_address TEXT`); } catch {}
   try { db.exec(`ALTER TABLE supply_orders ADD COLUMN tracking_number TEXT`); } catch {}
   try { db.exec(`ALTER TABLE supply_orders ADD COLUMN expected_date TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE payments ADD COLUMN service_charge REAL NOT NULL DEFAULT 0`); } catch {}
 
   // Migrate tables table: remove old CHECK constraint, add area_id
   try {
