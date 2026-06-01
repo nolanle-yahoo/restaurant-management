@@ -210,8 +210,10 @@ async function loadInventory() {
 
 loadQueue();
 loadInventory();
+loadMenuAvail();
 setInterval(loadQueue, 5000);
 setInterval(loadInventory, 30000);
+setInterval(loadMenuAvail, 30000);
 
 connectWebSocket(user?.location_id, {
   order_update: () => loadQueue(),
