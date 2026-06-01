@@ -63,8 +63,17 @@ router.post('/items', requireRole('owner','manager'), (req, res) => {
   res.json({ success: true, id: r.lastInsertRowid });
 });
 
-router.put('/items/:id', requireRole('owner','manager','waiter'), (req, res) => {
+router.put('/items/:id', requireRole('owner','manager','waiter','chef'), (req, res) => {
   const { name, description, price, is_available, sort_order, category_id } = req.body;
+  // Waiters and chefs may only toggle availability ("86" an item) — not edit
+  // names, prices, or structure.
+  if (!['owner','manager'].includes(req.user.role)) {
+    const onlyAvailability = is_available !== undefined &&
+      [name, description, price, sort_order, category_id].every(v => v === undefined);
+    if (!onlyAvailability) {
+      return res.status(403).json({ error: 'Your role may only change item availability.' });
+    }
+  }
   const fields = [], vals = [];
   if (name !== undefined)         { fields.push('name=?');         vals.push(name); }
   if (description !== undefined)  { fields.push('description=?');  vals.push(description); }
