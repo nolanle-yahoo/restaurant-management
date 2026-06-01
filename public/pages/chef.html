@@ -179,8 +179,10 @@ function renderLowStockBanner(lowItems) {
     </div>`;
 }
 
+let allergenMap = {};
 async function loadMenuAvail() {
   const items = await API.menuItems(user.location_id);
+  allergenMap = {}; items.forEach(i => { if (i.allergens) allergenMap[i.name] = i.allergens; });
   document.getElementById('menuAvail').innerHTML = items.map(i => `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
       <span style="font-size:13px;${i.is_available?'':'color:var(--muted);text-decoration:line-through'}">${i.name}</span>
