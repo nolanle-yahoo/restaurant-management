@@ -313,6 +313,8 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   with their **tier** (Bronze/Silver/Gold by lifetime points) and progress to the next tier.
 - **FR-17.8** **Referrals** — each customer has a referral code; entering a friend's code at
   sign-up awards both members a bonus (50 points each).
+- **FR-17.9** **Post-visit feedback** — the digital receipt page invites a 1–5 star rating and
+  comment; submissions are visible to owners/managers (with an average) under Sales Analytics.
 - **FR-17.7** **Email marketing** — owners send campaigns to customers who opted in; every
   email carries a one-click **unsubscribe** link. Opt-in is captured at registration and is
   toggleable in the account; unsubscribing is honored immediately.
