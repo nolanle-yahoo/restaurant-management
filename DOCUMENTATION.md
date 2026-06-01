@@ -451,7 +451,10 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 |---|---|---|---|
 | GET | `/locations` | Public | Active locations (name, address, phone). |
 | GET | `/menu` | Public | Available menu (categories + items with prices) for a location. |
-| POST | `/reservations` | Public (rate-limited) | Submit an online reservation request; created as **pending** for staff approval. |
+| POST | `/reservations` | Public (rate-limited) | Submit an online reservation request; created as **pending**, returns a confirmation code, emails the guest. |
+| GET | `/reservations/lookup` | Public | Look up a reservation by confirmation code + matching email/phone. |
+| POST | `/reservations/cancel` | Public | Cancel a reservation by confirmation code + matching email/phone. |
+| GET | `/receipt` | Public | View an itemized digital receipt by receipt code. |
 
 ### Analytics — `/api/analytics`
 | Method | Path | Access | Description |
