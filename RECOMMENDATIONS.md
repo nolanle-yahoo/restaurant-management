@@ -131,6 +131,6 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 6. ✅ **Configurable permissions** + **discounts/comps/voids** + **loyalty tiers/referrals** — **done in v1.13.0**.
 7. ✅ **Split-the-bill** + **Tier-1 polish** (menu allergens/photos + dietary filter, ticket
    allergen flags, receipt feedback) — **done in v1.14.0**.
-8. **Next (Tier 2–3 operational depth):** course firing & table transfer/merge; vendor master
-   records + cycle counts / barcode receiving + waste/FIFO; consolidated approvals dashboard;
-   self-service staff portal; central menu with per-location overrides; 2FA.
+8. ✅ **Table transfer/merge** + **waste tracking** + **approvals dashboard** — **done in v1.15.0**.
+9. **Next (remaining Tier 2–3):** course firing & order edit; vendor master records; self-service
+   staff portal; central menu with per-location overrides; 2FA; cycle counts / barcode receiving.
