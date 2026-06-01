@@ -595,7 +595,7 @@ Shared client modules:
 | `ALLOWED_ORIGIN` | Permitted CORS origin | http://localhost:3000 |
 | `STRIPE_SECRET_KEY` | Stripe secret key (`sk_...`); enables live card processing. If unset, payments run in simulated record-only mode. | — |
 | `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (`pk_...`) used by the in-browser card form. | — |
-| `SALES_TAX_RATE` | Sales tax applied to bills at settlement. | 0.08 |
+| `SALES_TAX_RATE` | Fallback sales-tax rate used when no in-app rate is set (owners can override in Settings; service charge is in-app only). | 0.08 |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_SECURE` | SMTP server for outbound email. If unset, email runs in simulated mode (logged to `email_log`, nothing sent). | — |
 | `MAIL_FROM` | From address for outbound email. | Restaurant <no-reply@restaurant.local> |
 
