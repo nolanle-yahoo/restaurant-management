@@ -134,7 +134,7 @@ router.post('/intent', requireRole(...STAFF), requireOnDuty, async (req, res) =>
 });
 
 // Confirm a card payment after the client completes the Stripe flow
-router.post('/:id/confirm', requireRole(...STAFF), async (req, res) => {
+router.post('/:id/confirm', requireRole(...STAFF), requireOnDuty, async (req, res) => {
   const payment = db.prepare(`SELECT * FROM payments WHERE id=?`).get(req.params.id);
   if (!payment) return res.status(404).json({ error: 'Payment not found' });
   if (payment.status === 'paid') return res.json({ success: true, already: true });
