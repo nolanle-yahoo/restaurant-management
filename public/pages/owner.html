@@ -763,7 +763,28 @@ function showSection(name) {
 
 async function loadAll() {
   await loadSummary();
+  loadOwnerApprovals();
   if (currentSection !== 'overview') showSection(currentSection);
+}
+
+// Consolidated pending approvals across all locations.
+async function loadOwnerApprovals() {
+  const el = document.getElementById('ownerApprovals'); if (!el) return;
+  let to = [], tr = [], so = [];
+  try { [to, tr, so] = await Promise.all([API.timeOffList(), API.transferRequests(), API.supplyOrders()]); } catch(e) { return; }
+  const toP = to.filter(x => x.status === 'pending').length;
+  const trP = tr.filter(x => x.status === 'pending').length;
+  const soP = so.filter(x => x.status === 'pending').length;
+  if (!(toP + trP + soP)) { el.innerHTML = ''; return; }
+  const row = (n, label, sec) => n ? `<button class="btn btn-sm btn-ghost" onclick="showSection('${sec}')" style="display:flex;gap:8px;align-items:center"><span class="badge badge-danger">${n}</span> ${label}</button>` : '';
+  el.innerHTML = `<div class="card" style="margin-bottom:24px">
+    <div class="card-header"><div class="card-title">✅ Pending Approvals (${toP+trP+soP})</div></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      ${row(toP, 'Time-off requests', 'timeoff')}
+      ${row(trP, 'Transfer requests', 'transfers')}
+      ${row(soP, 'Supply orders', 'supply')}
+    </div>
+  </div>`;
 }
 
 async function loadSummary() {
