@@ -322,6 +322,8 @@ function createSchema() {
   try { db.exec(`ALTER TABLE orders ADD COLUMN delivery_address TEXT`); } catch {}
   try { db.exec(`ALTER TABLE orders ADD COLUMN tracking_code TEXT`); } catch {}
   try { db.exec(`ALTER TABLE orders ADD COLUMN customer_id INTEGER REFERENCES customers(id)`); } catch {}
+  try { db.exec(`ALTER TABLE payments ADD COLUMN discount REAL NOT NULL DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE employee_messages ADD COLUMN parent_id INTEGER REFERENCES employee_messages(id)`); } catch {}
 
   // Migrate tables table: remove old CHECK constraint, add area_id
   try {
