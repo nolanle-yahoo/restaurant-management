@@ -150,10 +150,13 @@ router.post('/order', requireRole('owner','manager','chef','stockroom','employee
     }
   }
 
+  // If a vendor_id is given, capture its name into the text column too (for history).
+  let vendorName = vendor || null;
+  if (vendor_id) { const v = db.prepare(`SELECT name FROM vendors WHERE id=?`).get(vendor_id); if (v) vendorName = v.name; }
   db.prepare(`
-    INSERT INTO supply_orders (item_id, item_name, location_id, quantity, vendor, shipping_address, tracking_number, expected_date, notes, status, ordered_by)
-    VALUES (?,?,?,?,?,?,?,?,?,'pending',?)
-  `).run(itemId, itemName, forLocId, quantity, vendor||null, shipping_address||null, tracking_number||null, expected_date||null, notes||null, req.user.id);
+    INSERT INTO supply_orders (item_id, item_name, location_id, quantity, vendor, vendor_id, shipping_address, tracking_number, expected_date, notes, status, ordered_by)
+    VALUES (?,?,?,?,?,?,?,?,?,?,'pending',?)
+  `).run(itemId, itemName, forLocId, quantity, vendorName, vendor_id || null, shipping_address||null, tracking_number||null, expected_date||null, notes||null, req.user.id);
 
   res.json({ success: true });
 });
