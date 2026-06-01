@@ -350,6 +350,16 @@ function _injectPaymentModal() {
       <div id="payCardWrap" style="display:none;margin-bottom:12px">
         <div id="payCardElement" style="padding:11px;border:1.5px solid var(--border);border-radius:8px"></div>
       </div>
+      <div id="payLoyalty" style="display:none;margin-bottom:12px;background:var(--cream);border-radius:8px;padding:10px 12px">
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Loyalty Points</label>
+        <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px" id="payLoyaltyInfo"></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="payRedeem" min="0" step="1" value="0" oninput="renderPayTotal()"
+            style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+          <button class="btn btn-sm btn-ghost" type="button" onclick="redeemMax()">Use max</button>
+        </div>
+        <div style="font-size:12px;color:var(--success);margin-top:5px" id="payDiscountLine"></div>
+      </div>
       <div style="font-size:20px;font-weight:800;color:var(--burgundy);text-align:right;margin:8px 0 14px">
         Total: $<span id="payTotal">0.00</span>
       </div>
