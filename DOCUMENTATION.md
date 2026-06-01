@@ -552,7 +552,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 ### Payments — `/api/payments`
 | Method | Path | Access | Description |
 |---|---|---|---|
-| GET | `/config` | Any staff | Returns whether Stripe is enabled, the publishable key, and the sales-tax & service-charge rates. |
+| GET | `/config` | Any staff | Returns Stripe status/key, sales-tax & service-charge rates, and the caller's capabilities (`can_discount/refund/void`). |
 | GET | `/order/:orderId` | Order-handling staff | Itemized bill (items, subtotal, service charge, tax) + any existing payment. |
 | GET | `/` | Owner, Manager | Payment history for a location. |
 | POST | `/` | Order-handling staff | Record a cash/mobile (or simulated card) payment; settles the order. Accepts `redeem_points` to apply a loyalty discount. |
