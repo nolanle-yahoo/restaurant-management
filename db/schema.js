@@ -250,6 +250,21 @@ function createSchema() {
       used INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now'))
     );
+
+    -- Global key/value settings (e.g., sales-tax and service-charge rates).
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    );
+
+    -- Recipe / bill-of-materials: how much of each inventory item a menu item consumes.
+    CREATE TABLE IF NOT EXISTS recipes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      menu_item_id INTEGER NOT NULL REFERENCES menu_items(id),
+      inventory_id INTEGER NOT NULL REFERENCES inventory(id),
+      quantity REAL NOT NULL DEFAULT 0,
+      UNIQUE(menu_item_id, inventory_id)
+    );
   `);
 
   // Column migrations
