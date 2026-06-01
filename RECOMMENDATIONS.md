@@ -29,10 +29,10 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 ---
 
 ## Tier 1 — Smallest impact (polish / hygiene, mostly tiny effort)
-1. **Refund UI button** — endpoint already exists; just wire a button (R6). *XS* — quick win
-2. **Low-stock alerts to the stockroom role** (today only managers see the banner). *XS*
-3. **Configurable tax/service-charge** (move from env var to admin UI). *S*
-4. **Raise password minimum / broaden rate-limiting** beyond login — security hygiene. *XS*
+1. ✅ **DONE (v1.9.0)** — **Refund UI button** in the Payments & Refunds table (owner + manager).
+2. ✅ **DONE (v1.9.0)** — **Low-stock alerts** now shown to the stockroom role and on the Chef Station.
+3. ✅ **DONE (v1.9.0)** — **Configurable tax/service-charge** via owner Settings (env value is the fallback).
+4. ✅ **DONE (v1.9.0)** — **Password minimum raised to 8** and password-change rate-limited per user.
 5. **Allergen/dietary filters + photos** on the public menu. *S*
 6. **Structured allergen flags** on kitchen tickets (vs. free-text). *S*
 7. **Post-visit feedback link on the receipt**. *S*
