@@ -302,7 +302,10 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   kitchen, the table flips to *ordered*, and a server settles the bill as usual.
 - **FR-17.6** **Customer accounts & loyalty** — customers can register/sign in (separate from
   staff), view order history, and earn **1 loyalty point per $1** on paid orders linked to their
-  account (online or QR while signed in). Points and a ledger are shown in their account.
+  account (online or QR while signed in). Points and a ledger are shown in their account, along
+  with their **tier** (Bronze/Silver/Gold by lifetime points) and progress to the next tier.
+- **FR-17.8** **Referrals** — each customer has a referral code; entering a friend's code at
+  sign-up awards both members a bonus (50 points each).
 - **FR-17.7** **Email marketing** — owners send campaigns to customers who opted in; every
   email carries a one-click **unsubscribe** link. Opt-in is captured at registration and is
   toggleable in the account; unsubscribing is honored immediately.
