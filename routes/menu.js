@@ -54,11 +54,11 @@ router.get('/items', (req, res) => {
 });
 
 router.post('/items', requireRole('owner','manager'), (req, res) => {
-  const { category_id, name, description, price, sort_order, location_id: reqLocId } = req.body;
+  const { category_id, name, description, price, sort_order, location_id: reqLocId, image_url, allergens, dietary } = req.body;
   if (!category_id || !name || price === undefined) return res.status(400).json({ error: 'category_id, name and price required' });
   const locId = req.user.role === 'owner' ? reqLocId : req.user.location_id;
-  const r = db.prepare(`INSERT INTO menu_items (category_id, location_id, name, description, price, sort_order) VALUES (?,?,?,?,?,?)`)
-    .run(category_id, locId, name, description||null, price, sort_order||0);
+  const r = db.prepare(`INSERT INTO menu_items (category_id, location_id, name, description, price, sort_order, image_url, allergens, dietary) VALUES (?,?,?,?,?,?,?,?,?)`)
+    .run(category_id, locId, name, description||null, price, sort_order||0, image_url||null, allergens||null, dietary||null);
   auditLog(req, 'menu_item_create', 'menu_item', r.lastInsertRowid, { name, price });
   res.json({ success: true, id: r.lastInsertRowid });
 });
