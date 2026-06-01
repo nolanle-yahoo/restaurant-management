@@ -112,6 +112,6 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 2. ✅ **#20 (chef 86-ing)** + **#43 (auto-depletion)** — **done in v1.9.0**; closed the single
    biggest operational gap.
 3. ✅ Tier-5 **#44 (notifications)** + **#45 (online ordering)** — **done in v1.10.0**.
-4. **Next:** **QR-code table ordering** (#35, builds on online ordering), then customer
-   **accounts + loyalty** (#37) and **email marketing** (#38); plus the remaining Tier-1
-   polish (#5–#9).
+4. ✅ **#35 (QR ordering)** + **#37 (accounts/loyalty)** + **#38 (email marketing)** — **done in v1.11.0**.
+5. **Next:** **loyalty redemption** (turn accrued points into discounts — the natural extension),
+   **two-way/broadcast staff messaging** (#12), and the remaining Tier-1 polish (#5–#9).
