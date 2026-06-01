@@ -257,6 +257,19 @@
           </table>
         </div>
 
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><div class="card-title">🏷️ Vendors</div></div>
+          <div id="vendorAlert" class="alert hidden" style="margin-bottom:10px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+            <input id="venName" placeholder="Vendor name *" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+            <input id="venContact" placeholder="Contact" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+            <input id="venPhone" placeholder="Phone" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+            <input id="venLead" type="number" min="0" placeholder="Lead days" style="width:90px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+            <button class="btn btn-primary btn-sm" onclick="addVendor()">+ Add</button>
+          </div>
+          <div id="vendorList"></div>
+        </div>
+
         <div class="card">
           <div class="card-header"><div class="card-title">Inventory Transactions</div></div>
           <table class="data-table">
