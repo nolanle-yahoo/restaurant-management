@@ -86,6 +86,9 @@ async function api(path, opts = {}) {
   return r.json();
 }
 const money = n => '$' + (Number(n)||0).toFixed(2);
+const DIET_LABELS = { vegetarian: '🥗 Veg', vegan: '🌱 Vegan', gluten_free: '🌾 GF' };
+const dietBadges = d => (d || '').split(',').map(x => x.trim()).filter(Boolean)
+  .map(x => `<span class="badge badge-success" style="font-size:10px">${DIET_LABELS[x] || x}</span>`).join(' ');
 
 // Reflect signed-in state in the account link.
 function refreshAccountLink() {
