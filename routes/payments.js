@@ -34,7 +34,7 @@ function emailReceipt(paymentId) {
 }
 
 function computeBill(orderId) {
-  const order = db.prepare(`SELECT o.*, t.table_number FROM orders o JOIN tables t ON o.table_id=t.id WHERE o.id=?`).get(orderId);
+  const order = db.prepare(`SELECT o.*, t.table_number FROM orders o LEFT JOIN tables t ON o.table_id=t.id WHERE o.id=?`).get(orderId);
   if (!order) return null;
   const items = db.prepare(`SELECT * FROM order_items WHERE order_id=?`).all(orderId);
   const { sales_tax_rate, service_charge_rate } = getRates();
