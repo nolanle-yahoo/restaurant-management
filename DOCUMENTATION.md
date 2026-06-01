@@ -558,7 +558,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/` | Order-handling staff | Record a cash/mobile (or simulated card) payment; settles the order. Accepts `redeem_points` to apply a loyalty discount. |
 | POST | `/intent` | Order-handling staff | Create a Stripe PaymentIntent for card payment. |
 | POST | `/:id/confirm` | Order-handling staff | Confirm a card payment after the client completes the Stripe flow. |
-| POST | `/:id/refund` | Owner, Manager | Refund a paid payment. |
+| POST | `/:id/refund` | Staff with `refund` permission | Refund a paid payment. |
 
 ### Public (customer-facing, no authentication) — `/api/public`
 | Method | Path | Access | Description |
