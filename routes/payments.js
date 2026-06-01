@@ -121,6 +121,7 @@ router.post('/', requireRole(...STAFF), requireOnDuty, (req, res) => {
 
   settleOrder(req, order_id);
   emailReceipt(r.lastInsertRowid);
+  awardLoyalty(order_id, bill.subtotal);
   auditLog(req, 'payment_recorded', 'payment', r.lastInsertRowid, { method: m, total, tip: tipAmt });
   res.json({ success: true, payment_id: r.lastInsertRowid, total, receipt_code: receipt });
 });
