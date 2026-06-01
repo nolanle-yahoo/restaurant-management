@@ -116,6 +116,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   roles may use the mobile interface.
 - **FR-1.5** Any user can update their own profile (name, email) and change their own
   password (current password required; minimum 6 characters).
+- **FR-1.6** Any user can **log out everywhere** — revoking every previously issued token
+  while keeping the current device signed in. Changing a password, resetting a password, and
+  account deactivation also revoke all existing sessions immediately.
 
 ### 5.2 Staff Management
 - **FR-2.1** Owners manage staff across all locations; managers manage staff within their own
