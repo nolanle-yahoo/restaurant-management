@@ -1671,6 +1671,94 @@ async function deleteMenuItem(id) {
   loadOwnerMenu();
 }
 
+// ── Recipe editor (drives inventory auto-depletion & auto-86) ──
+let recipeItemId = null, recipeRows = [], recipeInv = [];
+async function openRecipe(itemId, itemName) {
+  recipeItemId = itemId;
+  document.getElementById('recipeTitle').textContent = `Recipe — ${itemName}`;
+  document.getElementById('recipeAlert').classList.add('hidden');
+  const locId = document.getElementById('menuLocFilter')?.value || locations[0]?.id;
+  const [recipe, inv] = await Promise.all([API.itemRecipe(itemId), API.inventory(locId)]);
+  recipeInv = inv;
+  recipeRows = recipe.map(r => ({ inventory_id: r.inventory_id, item_name: r.item_name, unit: r.unit, quantity: r.quantity }));
+  document.getElementById('recipeIngSel').innerHTML = inv.map(i => `<option value="${i.id}">${i.item_name} (${i.unit})</option>`).join('') || '<option value="">No inventory at this location</option>';
+  document.getElementById('recipeIngQty').value = '';
+  renderRecipeRows();
+  showModal('recipeModal');
+}
+function renderRecipeRows() {
+  const el = document.getElementById('recipeRows');
+  if (!recipeRows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">No ingredients yet.</div>'; return; }
+  el.innerHTML = recipeRows.map((r,idx) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13.5px">${r.item_name} <span style="color:var(--muted)">— ${r.quantity} ${r.unit||''}</span></span>
+      <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="removeRecipeRow(${idx})">Remove</button>
+    </div>`).join('');
+}
+function addRecipeRow() {
+  const sel = document.getElementById('recipeIngSel');
+  const invId = parseInt(sel.value), qty = parseFloat(document.getElementById('recipeIngQty').value);
+  if (!invId || !(qty > 0)) return showAlert('recipeAlert', 'Pick an ingredient and a quantity greater than 0.');
+  const inv = recipeInv.find(i => i.id === invId);
+  const existing = recipeRows.find(r => r.inventory_id === invId);
+  if (existing) existing.quantity = qty;
+  else recipeRows.push({ inventory_id: invId, item_name: inv.item_name, unit: inv.unit, quantity: qty });
+  document.getElementById('recipeIngQty').value = '';
+  renderRecipeRows();
+}
+function removeRecipeRow(idx) { recipeRows.splice(idx, 1); renderRecipeRows(); }
+async function saveRecipe() {
+  try {
+    await API.itemRecipeUpdate(recipeItemId, recipeRows.map(r => ({ inventory_id: r.inventory_id, quantity: r.quantity })));
+    hideModal('recipeModal');
+    showAlert('menuAlert', 'Recipe saved.', 'success');
+  } catch(e) { showAlert('recipeAlert', e.message); }
+}
+
+// ── Settings (tax / service charge) ───────────────────────────
+async function loadSettings() {
+  try {
+    const s = await API.settings();
+    const pct = v => String(Math.round((v||0) * 1000) / 10);
+    document.getElementById('setTax').value = pct(s.sales_tax_rate);
+    document.getElementById('setSvc').value = pct(s.service_charge_rate);
+  } catch(e) {}
+}
+async function saveSettings() {
+  const tax = parseFloat(document.getElementById('setTax').value);
+  const svc = parseFloat(document.getElementById('setSvc').value);
+  try {
+    await API.updateSettings({ sales_tax_rate: (tax||0)/100, service_charge_rate: (svc||0)/100 });
+    showAlert('settingsAlert', 'Saved. New rates apply to future bills.', 'success');
+  } catch(e) { showAlert('settingsAlert', e.message); }
+}
+
+// ── Payments & refunds ────────────────────────────────────────
+async function loadOwnerPayments() {
+  const loc = document.getElementById('anLocFilter')?.value || '';
+  let rows = [];
+  try { rows = await API.payments(loc); } catch(e) { return; }
+  const el = document.getElementById('ownerPayments');
+  if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);padding:16px;text-align:center">No payments yet.</div>'; return; }
+  const badge = s => s==='paid'?'badge-success':s==='refunded'?'badge-danger':'badge-warning';
+  el.innerHTML = `<table class="data-table"><thead><tr><th>When</th><th>Location</th><th>Table</th><th>Server</th><th>Method</th><th>Total</th><th>Status</th><th></th></tr></thead><tbody>${
+    rows.slice(0,100).map(p => `<tr>
+      <td>${new Date((p.created_at||'').replace(' ','T')+'Z').toLocaleString()}</td>
+      <td>${p.location_name||'—'}</td>
+      <td>${p.table_number ?? '—'}</td>
+      <td>${p.waiter_name||'—'}</td>
+      <td style="text-transform:capitalize">${p.method}</td>
+      <td class="fw-700">$${(p.total||0).toFixed(2)}</td>
+      <td><span class="badge ${badge(p.status)}">${p.status}</span></td>
+      <td>${p.status==='paid' ? `<button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="doRefund(${p.id})">Refund</button>` : ''}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+async function doRefund(id) {
+  if (!confirm('Refund this payment? This cannot be undone.')) return;
+  try { await API.refundPayment(id); showAlert('payAlertOwner', 'Payment refunded.', 'success'); loadOwnerPayments(); }
+  catch(e) { showAlert('payAlertOwner', e.message); }
+}
+
 // ── Audit Log ─────────────────────────────────────────────────
 let auditData = [];
 async function loadAuditLog() {
