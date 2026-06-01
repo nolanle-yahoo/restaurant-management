@@ -182,6 +182,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-6.5** Each item can carry a **recipe** (bill of materials) mapping it to inventory
   items and per-serving quantities, maintained by owners/managers. Recipes drive automatic
   inventory depletion and auto-86 (see FR-8.6).
+- **FR-6.6** Items can carry a **photo**, **allergens**, and **dietary** tags
+  (vegetarian/vegan/gluten-free), shown on the public menu/ordering pages (with a dietary
+  filter) and surfaced as allergen flags on kitchen tickets.
 
 ### 5.7 Reservations
 - **FR-7.1** Owners, managers, and front desk create and manage reservations (guest name,
