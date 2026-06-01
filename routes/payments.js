@@ -148,8 +148,8 @@ router.post('/', requireRole(...STAFF), requireOnDuty, (req, res) => {
   settleOrder(req, order_id);
   emailReceipt(r.lastInsertRowid);
   awardLoyalty(order_id, bill.subtotal);
-  auditLog(req, 'payment_recorded', 'payment', r.lastInsertRowid, { method: m, total, tip: tipAmt });
-  res.json({ success: true, payment_id: r.lastInsertRowid, total, receipt_code: receipt });
+  auditLog(req, 'payment_recorded', 'payment', r.lastInsertRowid, { method: m, total, tip: tipAmt, discount });
+  res.json({ success: true, payment_id: r.lastInsertRowid, total, discount, points_redeemed: redeemPts, receipt_code: receipt });
 });
 
 // Create a Stripe PaymentIntent for card payment (real gateway flow)
