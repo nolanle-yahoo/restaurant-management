@@ -129,38 +129,49 @@ router.post('/', requireRole(...STAFF), requireOnDuty, (req, res) => {
   if (!bill) return res.status(404).json({ error: 'Order not found' });
 
   if (bill.order.voided) return res.status(409).json({ error: 'This order was voided and cannot be paid.' });
-  const existing = db.prepare(`SELECT id FROM payments WHERE order_id=? AND status='paid'`).get(order_id);
-  if (existing) return res.status(409).json({ error: 'This order is already paid' });
+  if (bill.balance_subtotal <= 0.005 && bill.covered_subtotal > 0) {
+    return res.status(409).json({ error: 'This order is already fully paid' });
+  }
 
   const tipAmt = round2(Math.max(0, parseFloat(tip) || 0));
-  const billAmt = round2(bill.subtotal + bill.service_charge + bill.tax);
+  const fullSubtotal = bill.subtotal;
+  const remaining = bill.balance_subtotal;
 
-  // Loyalty redemption: redeem the customer's points for a discount, capped at
-  // their balance and at the pre-tip bill amount.
+  // Split-the-bill: `amount` is the food (subtotal) portion this payment covers.
+  // Omitted ⇒ pay the full remaining balance. Tax/service are charged pro-rata.
+  const wantAmt = parseFloat(req.body.amount);
+  const thisSubtotal = round2(Math.min(Number.isFinite(wantAmt) && wantAmt > 0 ? wantAmt : remaining, remaining));
+  if (thisSubtotal <= 0) return res.status(400).json({ error: 'Nothing left to pay on this order.' });
+  const proportion = fullSubtotal > 0 ? thisSubtotal / fullSubtotal : 1;
+  const thisService = round2(bill.service_charge * proportion);
+  const thisTax = round2(bill.tax * proportion);
+  const thisBillAmt = round2(thisSubtotal + thisService + thisTax);
+  const willFullyPay = (bill.covered_subtotal + thisSubtotal) >= fullSubtotal - 0.005;
+
+  // Discounts / redemption only apply to a single full payment (not split parts).
+  const cleanFull = bill.covered_subtotal <= 0.005 && willFullyPay;
   let discount = 0, redeemPts = 0;
-  const wantPts = Math.max(0, parseInt(req.body.redeem_points) || 0);
-  if (wantPts > 0 && bill.customer) {
-    const maxByBill = Math.floor(billAmt / POINT_VALUE);
-    redeemPts = Math.min(wantPts, bill.customer.points, maxByBill);
-    discount = round2(redeemPts * POINT_VALUE);
+  if (cleanFull) {
+    const wantPts = Math.max(0, parseInt(req.body.redeem_points) || 0);
+    if (wantPts > 0 && bill.customer) {
+      redeemPts = Math.min(wantPts, bill.customer.points, Math.floor(thisBillAmt / POINT_VALUE));
+      discount = round2(redeemPts * POINT_VALUE);
+    }
   }
-
-  // Manual discount / comp (permission-gated). Capped at the bill less any
-  // loyalty discount. A "comp" is simply a 100% manual discount.
-  let manualDiscount = round2(Math.max(0, parseFloat(req.body.manual_discount) || 0));
-  const discountReason = (req.body.discount_reason || '').trim() || null;
+  let manualDiscount = cleanFull ? round2(Math.max(0, parseFloat(req.body.manual_discount) || 0)) : 0;
+  const discountReason = cleanFull ? ((req.body.discount_reason || '').trim() || null) : null;
   if (manualDiscount > 0) {
     if (!can(req, 'discount')) return res.status(403).json({ error: 'Your role is not permitted to apply discounts.' });
-    manualDiscount = Math.min(manualDiscount, round2(billAmt - discount));
+    manualDiscount = Math.min(manualDiscount, round2(thisBillAmt - discount));
   }
 
-  const total = round2(billAmt - discount - manualDiscount + tipAmt);
+  const total = round2(thisBillAmt - discount - manualDiscount + tipAmt);
   const receipt = makeReceiptCode();
 
   const r = db.prepare(`
     INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, discount, manual_discount, discount_reason, tip, total, method, status, processed_by, receipt_code, receipt_email)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'paid',?,?,?)
-  `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.service_charge, bill.tax, discount, manualDiscount, discountReason, tipAmt, total, m, req.user.id, receipt, (email||'').trim() || null);
+  `).run(order_id, bill.order.location_id, bill.order.waiter_id, thisSubtotal, thisService, thisTax, discount, manualDiscount, discountReason, tipAmt, total, m, req.user.id, receipt, (email||'').trim() || null);
 
   if (redeemPts > 0 && bill.customer) {
     db.prepare(`UPDATE customers SET points=points-? WHERE id=?`).run(redeemPts, bill.customer.id);
@@ -168,12 +179,20 @@ router.post('/', requireRole(...STAFF), requireOnDuty, (req, res) => {
       .run(bill.customer.id, order_id, -redeemPts, 'Redeemed for discount');
   }
 
-  settleOrder(req, order_id);
+  // Only settle + earn loyalty once the whole bill is covered.
+  if (willFullyPay) {
+    settleOrder(req, order_id);
+    awardLoyalty(order_id, fullSubtotal);
+  } else {
+    broadcast('order_update', { type: 'partial_paid', order_id: Number(order_id), location_id: bill.order.location_id }, bill.order.location_id);
+  }
   emailReceipt(r.lastInsertRowid);
-  awardLoyalty(order_id, bill.subtotal);
   if (manualDiscount > 0) auditLog(req, 'manual_discount', 'payment', r.lastInsertRowid, { amount: manualDiscount, reason: discountReason });
-  auditLog(req, 'payment_recorded', 'payment', r.lastInsertRowid, { method: m, total, tip: tipAmt, discount, manual_discount: manualDiscount });
-  res.json({ success: true, payment_id: r.lastInsertRowid, total, discount, manual_discount: manualDiscount, points_redeemed: redeemPts, receipt_code: receipt });
+  auditLog(req, 'payment_recorded', 'payment', r.lastInsertRowid, { method: m, total, tip: tipAmt, discount, manual_discount: manualDiscount, split: !willFullyPay || bill.covered_subtotal > 0 });
+
+  const balance_subtotal = round2(Math.max(0, fullSubtotal - bill.covered_subtotal - thisSubtotal));
+  res.json({ success: true, payment_id: r.lastInsertRowid, total, discount, manual_discount: manualDiscount,
+             points_redeemed: redeemPts, receipt_code: receipt, fully_paid: willFullyPay, balance_subtotal });
 });
 
 // Create a Stripe PaymentIntent for card payment (real gateway flow)
