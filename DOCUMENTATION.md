@@ -319,6 +319,8 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/me` | Any | Current user profile. |
 | PUT | `/profile` | Any | Update own name/email. |
 | PUT | `/password` | Any | Change own password. |
+| POST | `/forgot-password` | Public (rate-limited) | Email a reset link; always returns generic success (no account enumeration). |
+| POST | `/reset-password` | Public (rate-limited) | Set a new password using a valid, unused, unexpired token. |
 
 ### Employees — `/api/employees`
 | Method | Path | Access | Description |
