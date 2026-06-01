@@ -156,8 +156,40 @@ async function advance(id, status) {
   loadQueue();
 }
 
+function renderLowStockBanner(lowItems) {
+  const el = document.getElementById('lowStockBanner');
+  if (!el) return;
+  if (!lowItems.length) { el.innerHTML = ''; return; }
+  const critical = lowItems.filter(i => i.quantity <= i.min_quantity * 0.5);
+  el.innerHTML = `
+    <div style="background:rgba(196,118,42,.10);border:1px solid var(--warning);border-left:4px solid var(--warning);border-radius:10px;padding:12px 16px;margin-bottom:16px">
+      <div style="font-weight:800;color:var(--warning);font-size:13.5px;margin-bottom:6px">⚠️ ${lowItems.length} ingredient${lowItems.length>1?'s':''} low on stock${critical.length?` (${critical.length} critical)`:''}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${lowItems.slice(0,12).map(i => {
+          const isCrit = i.quantity <= i.min_quantity * 0.5;
+          return `<span class="badge ${isCrit?'badge-danger':'badge-warning'}" style="font-size:11px">${i.item_name}: ${i.quantity}${i.unit?' '+i.unit:''} / min ${i.min_quantity}</span>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+async function loadMenuAvail() {
+  const items = await API.menuItems(user.location_id);
+  document.getElementById('menuAvail').innerHTML = items.map(i => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px;${i.is_available?'':'color:var(--muted);text-decoration:line-through'}">${i.name}</span>
+      <button class="btn btn-sm ${i.is_available?'btn-success':'btn-ghost'}" onclick="toggleAvail(${i.id},${i.is_available})">${i.is_available?'Available':'86 — Out'}</button>
+    </div>`).join('') || '<div style="color:var(--muted);padding:12px;text-align:center">No menu items</div>';
+}
+
+async function toggleAvail(id, cur) {
+  try { await API.menuItemUpdate(id, { is_available: cur ? 0 : 1 }); loadMenuAvail(); }
+  catch(e) { alert(e.message); }
+}
+
 async function loadInventory() {
   const items = await API.inventory(user.location_id);
+  renderLowStockBanner(items.filter(i => i.quantity < i.min_quantity));
   const keyItems = items.filter(i => ['Meat','Seafood','Dairy'].includes(i.category));
   document.getElementById('invQuick').innerHTML = keyItems.map(i => {
     const pct = Math.min(100, Math.round(i.quantity / (i.min_quantity * 2) * 100));
