@@ -242,7 +242,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   configured (real test/live card flow via Stripe.js); without Stripe keys the system runs in
   a simulated record-only mode so all totals, tips, and reporting still function.
 - **FR-16.4** Settling a bill marks the order served and the table ready-to-clean; a paid
-  order cannot be paid twice.
+  order cannot be paid twice. Once paid, the UI reflects this: the payment dialog's **Charge**
+  action is disabled and relabeled **Paid**, and the order's "Settle Bill" button becomes a
+  disabled **✓ Paid** indicator.
 - **FR-16.5** Owners and managers can refund a paid payment and view payment history.
 
 ### 5.17 Customer-Facing Site (Public)
