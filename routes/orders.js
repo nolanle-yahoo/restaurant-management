@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db/database');
 const { verifyToken, requireRole, requireOnDuty } = require('../middleware/auth');
-const { broadcast } = require('../lib/ws');
+const { broadcast, notify } = require('../lib/ws');
 const { auditLog } = require('../lib/audit');
 const { depleteForOrder } = require('../lib/recipes');
 
