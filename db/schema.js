@@ -348,6 +348,14 @@ function createSchema() {
      ['discount','employee',0], ['void','employee',0]].forEach(([c,r,a]) => insPerm.run(c,r,a));
   } catch {}
 
+  // Backfill referral codes for any customers created before the column existed.
+  try {
+    const crypto = require('crypto');
+    const need = db.prepare(`SELECT id FROM customers WHERE referral_code IS NULL`).all();
+    const upd = db.prepare(`UPDATE customers SET referral_code=? WHERE id=?`);
+    need.forEach(c => upd.run('REF-' + crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6), c.id));
+  } catch {}
+
   // Migrate tables table: remove old CHECK constraint, add area_id
   try {
     const cols = db.prepare('PRAGMA table_info(tables)').all().map(c => c.name);
