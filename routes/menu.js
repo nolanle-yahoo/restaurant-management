@@ -64,12 +64,12 @@ router.post('/items', requireRole('owner','manager'), (req, res) => {
 });
 
 router.put('/items/:id', requireRole('owner','manager','waiter','chef'), (req, res) => {
-  const { name, description, price, is_available, sort_order, category_id } = req.body;
+  const { name, description, price, is_available, sort_order, category_id, image_url, allergens, dietary } = req.body;
   // Waiters and chefs may only toggle availability ("86" an item) — not edit
   // names, prices, or structure.
   if (!['owner','manager'].includes(req.user.role)) {
     const onlyAvailability = is_available !== undefined &&
-      [name, description, price, sort_order, category_id].every(v => v === undefined);
+      [name, description, price, sort_order, category_id, image_url, allergens, dietary].every(v => v === undefined);
     if (!onlyAvailability) {
       return res.status(403).json({ error: 'Your role may only change item availability.' });
     }
@@ -81,6 +81,9 @@ router.put('/items/:id', requireRole('owner','manager','waiter','chef'), (req, r
   if (is_available !== undefined) { fields.push('is_available=?'); vals.push(is_available ? 1 : 0); }
   if (sort_order !== undefined)   { fields.push('sort_order=?');   vals.push(sort_order); }
   if (category_id !== undefined)  { fields.push('category_id=?'); vals.push(category_id); }
+  if (image_url !== undefined)    { fields.push('image_url=?');   vals.push(image_url || null); }
+  if (allergens !== undefined)    { fields.push('allergens=?');   vals.push(allergens || null); }
+  if (dietary !== undefined)      { fields.push('dietary=?');     vals.push(dietary || null); }
   if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
   vals.push(req.params.id);
   db.prepare(`UPDATE menu_items SET ${fields.join(',')} WHERE id=?`).run(...vals);
