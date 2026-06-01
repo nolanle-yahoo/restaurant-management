@@ -123,6 +123,10 @@ function _injectAccountSettingsModal() {
           <button class="btn btn-primary" onclick="savePassword()">Update Password</button>
           <button class="btn btn-ghost" onclick="hideModal('accountSettingsModal')">Cancel</button>
         </div>
+        <div style="border-top:1px solid var(--border);margin-top:18px;padding-top:14px">
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Signed in on another device or a shared computer? Revoke every other session.</div>
+          <button class="btn btn-ghost" style="width:100%;color:var(--danger);border-color:var(--danger)" onclick="logoutEverywhere()">🔒 Log Out Everywhere Else</button>
+        </div>
       </div>
     </div>
   </div>`;
