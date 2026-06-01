@@ -516,6 +516,12 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 |---|---|---|---|
 | GET | `/` | Owner, Manager | Sales analytics for a date range: KPIs (revenue, paid orders, avg ticket, tips), revenue by day, payment-method split, top-selling items, and revenue by location (owner, all-locations view). Managers are scoped to their own location. |
 
+### Settings — `/api/settings`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/` | Owner, Manager | Current sales-tax and service-charge rates. |
+| PUT | `/` | Owner | Update sales-tax and/or service-charge rates (fractions, 0–1). |
+
 ### Real-Time Events (WebSocket)
 Clients connect to the server's WebSocket endpoint and send `{ type: "auth", location_id }`
 to scope their subscription. The server broadcasts:
