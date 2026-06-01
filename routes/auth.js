@@ -152,7 +152,7 @@ router.post('/forgot-password', resetLimiter, async (req, res) => {
 router.post('/reset-password', resetLimiter, (req, res) => {
   const { token, new_password } = req.body;
   if (!token || !new_password) return res.status(400).json({ error: 'token and new_password required' });
-  if (new_password.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
+  if (new_password.length < MIN_PASSWORD) return res.status(400).json({ error: `New password must be at least ${MIN_PASSWORD} characters` });
 
   const row = db.prepare(`SELECT * FROM password_reset_tokens WHERE token=?`).get(token);
   if (!row || row.used) return res.status(400).json({ error: 'This reset link is invalid or has already been used.' });
