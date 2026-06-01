@@ -509,7 +509,7 @@ async function submitPayment() {
       if (result.error) throw new Error(result.error.message);
       await API.confirmPayment(intent.payment_id);
     } else {
-      await API.recordPayment({ order_id: _payState.orderId, tip, method: _payState.method, email });
+      await API.recordPayment({ order_id: _payState.orderId, tip, method: _payState.method, email, redeem_points: _redeemPts() });
     }
     hideModal('paymentModal');
     showAlert('alertBox', 'Payment received — bill settled.', 'success');
