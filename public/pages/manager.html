@@ -1092,6 +1092,33 @@ function renderSupply() {
 
 function filterSupply() { renderSupply(); }
 
+// ── Vendors ───────────────────────────────────────────────
+let vendorData = [];
+async function loadVendors() {
+  try { vendorData = await API.vendors(); } catch(e) { return; }
+  const sel = document.getElementById('orderVendorSelect');
+  if (sel) sel.innerHTML = '<option value="">— Select / type a vendor —</option>' + vendorData.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
+  const list = document.getElementById('vendorList');
+  if (list) list.innerHTML = vendorData.length ? `<table class="data-table"><thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Lead</th><th></th></tr></thead><tbody>${
+    vendorData.map(v => `<tr><td class="fw-700">${v.name}</td><td>${v.contact_name||'—'}</td><td>${v.phone||'—'}</td><td>${v.lead_time_days||0}d</td>
+      <td><button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteVendor(${v.id})">Remove</button></td></tr>`).join('')
+  }</tbody></table>` : '<p style="color:var(--muted);padding:10px">No vendors yet.</p>';
+}
+async function addVendor() {
+  const name = document.getElementById('venName').value.trim();
+  if (!name) return showAlert('vendorAlert', 'Vendor name required');
+  try {
+    await API.vendorCreate({ name, contact_name: document.getElementById('venContact').value.trim(), phone: document.getElementById('venPhone').value.trim(), lead_time_days: document.getElementById('venLead').value });
+    ['venName','venContact','venPhone','venLead'].forEach(id => document.getElementById(id).value = '');
+    loadVendors();
+  } catch(e) { showAlert('vendorAlert', e.message); }
+}
+async function deleteVendor(id) { if(!confirm('Remove this vendor?'))return; try{ await API.vendorDelete(id); loadVendors(); }catch(e){ alert(e.message); } }
+function onVendorSelect() {
+  const sel = document.getElementById('orderVendorSelect'); const txt = document.getElementById('orderVendor');
+  if (sel.value) { txt.value = ''; txt.disabled = true; } else { txt.disabled = false; }
+}
+
 function openNewOrder() {
   ['orderItemName','orderVendor','orderShipAddr','orderNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('orderQty').value = 10;
