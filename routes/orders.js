@@ -11,7 +11,8 @@ router.get('/', requireRole('owner','manager','waiter','chef','employee','frontd
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
   const status = req.query.status;
   let sql = `
-    SELECT o.*, t.table_number, u.name as waiter_name
+    SELECT o.*, t.table_number, u.name as waiter_name,
+           EXISTS(SELECT 1 FROM payments p WHERE p.order_id=o.id AND p.status='paid') as paid
     FROM orders o
     JOIN tables t ON o.table_id=t.id
     LEFT JOIN users u ON o.waiter_id=u.id
