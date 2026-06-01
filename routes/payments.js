@@ -96,13 +96,13 @@ router.post('/', requireRole(...STAFF), requireOnDuty, (req, res) => {
   if (existing) return res.status(409).json({ error: 'This order is already paid' });
 
   const tipAmt = round2(Math.max(0, parseFloat(tip) || 0));
-  const total = round2(bill.subtotal + bill.tax + tipAmt);
+  const total = round2(bill.subtotal + bill.service_charge + bill.tax + tipAmt);
   const receipt = makeReceiptCode();
 
   const r = db.prepare(`
-    INSERT INTO payments (order_id, location_id, waiter_id, subtotal, tax, tip, total, method, status, processed_by, receipt_code, receipt_email)
-    VALUES (?,?,?,?,?,?,?,?,'paid',?,?,?)
-  `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.tax, tipAmt, total, m, req.user.id, receipt, (email||'').trim() || null);
+    INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, tip, total, method, status, processed_by, receipt_code, receipt_email)
+    VALUES (?,?,?,?,?,?,?,?,?,'paid',?,?,?)
+  `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.service_charge, bill.tax, tipAmt, total, m, req.user.id, receipt, (email||'').trim() || null);
 
   settleOrder(req, order_id);
   emailReceipt(r.lastInsertRowid);
