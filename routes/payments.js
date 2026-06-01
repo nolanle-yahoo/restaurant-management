@@ -108,7 +108,7 @@ router.post('/', requireRole(...STAFF), (req, res) => {
 
 // Create a Stripe PaymentIntent for card payment (real gateway flow)
 router.post('/intent', requireRole(...STAFF), async (req, res) => {
-  const { order_id, tip } = req.body;
+  const { order_id, tip, email } = req.body;
   if (!order_id) return res.status(400).json({ error: 'order_id required' });
   const bill = computeBill(order_id);
   if (!bill) return res.status(404).json({ error: 'Order not found' });
@@ -122,9 +122,9 @@ router.post('/intent', requireRole(...STAFF), async (req, res) => {
   try {
     const intent = await stripeLib.createIntent(Math.round(total * 100), { order_id: String(order_id), location_id: String(bill.order.location_id) });
     const r = db.prepare(`
-      INSERT INTO payments (order_id, location_id, waiter_id, subtotal, tax, tip, total, method, status, stripe_payment_intent_id, processed_by)
-      VALUES (?,?,?,?,?,?,?,'card','pending',?,?)
-    `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.tax, tipAmt, total, intent.id, req.user.id);
+      INSERT INTO payments (order_id, location_id, waiter_id, subtotal, tax, tip, total, method, status, stripe_payment_intent_id, processed_by, receipt_code, receipt_email)
+      VALUES (?,?,?,?,?,?,?,'card','pending',?,?,?,?)
+    `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.tax, tipAmt, total, intent.id, req.user.id, makeReceiptCode(), (email||'').trim() || null);
     res.json({ payment_id: r.lastInsertRowid, client_secret: intent.client_secret, simulated: !!intent.simulated, total,
                publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || null });
   } catch (e) {
