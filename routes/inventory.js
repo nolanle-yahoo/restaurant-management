@@ -123,7 +123,7 @@ router.get('/supply-orders', requireRole('owner','manager','stockroom','chef'), 
 
 router.post('/order', requireRole('owner','manager','chef','stockroom','employee'), (req, res) => {
   const { item_id, item_name: reqItemName, quantity, location_id: reqLocId,
-          vendor, shipping_address, tracking_number, expected_date, notes } = req.body;
+          vendor, vendor_id, shipping_address, tracking_number, expected_date, notes } = req.body;
   if (!quantity) return res.status(400).json({ error: 'quantity required' });
   if (!item_id && !reqItemName) return res.status(400).json({ error: 'item_id or item_name required' });
 
