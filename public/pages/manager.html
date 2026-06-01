@@ -910,6 +910,27 @@ function exportCSV() {
 async function loadInventory() {
   invData = await API.inventory(user.location_id);
   renderInv(invData);
+  loadWasteLog();
+}
+
+async function logWasteFor(id, name, stock) {
+  const qty = prompt(`Log waste for ${name} (in stock: ${stock}). Quantity to write off:`);
+  if (qty === null) return;
+  const reason = prompt('Reason (e.g. spoiled, dropped, expired):') || '';
+  try { await API.logWaste({ item_id: id, quantity: parseFloat(qty), reason }); showToast('Waste logged', 'info'); loadInventory(); }
+  catch(e) { alert(e.message); }
+}
+async function loadWasteLog() {
+  let rows = []; try { rows = await API.wasteLog(user.location_id); } catch(e) { return; }
+  const el = document.getElementById('wasteLog'); if (!el) return;
+  el.innerHTML = rows.length ? `<table class="data-table"><thead><tr><th>When</th><th>Item</th><th>Qty</th><th>Reason</th><th>By</th></tr></thead><tbody>${
+    rows.slice(0,50).map(w => `<tr>
+      <td>${new Date((w.created_at||'').replace(' ','T')+'Z').toLocaleString()}</td>
+      <td class="fw-700">${w.item_name}</td>
+      <td>${w.quantity} ${w.unit||''}</td>
+      <td>${w.reason||'—'}</td>
+      <td>${w.user_name||'—'}</td>
+    </tr>`).join('')}</tbody></table>` : '<p style="color:var(--muted);padding:12px">No waste logged.</p>';
 }
 
 function renderInv(items) {
