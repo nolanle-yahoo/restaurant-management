@@ -1102,10 +1102,12 @@ async function submitOrder() {
   const qty = parseInt(document.getElementById('orderQty').value);
   if (!item_name || !qty || qty < 1) return showAlert('orderAlert', 'Item name and quantity required');
   try {
+    const vid = document.getElementById('orderVendorSelect').value;
     const payload = {
       quantity: qty,
       item_name,
-      vendor: document.getElementById('orderVendor').value.trim() || undefined,
+      vendor_id: vid || undefined,
+      vendor: vid ? undefined : (document.getElementById('orderVendor').value.trim() || undefined),
       shipping_address: document.getElementById('orderShipAddr').value.trim() || undefined,
       expected_date: document.getElementById('orderExpDate').value || undefined,
       notes: document.getElementById('orderNotes').value.trim() || undefined,
