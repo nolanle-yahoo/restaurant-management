@@ -708,6 +708,7 @@ async function loadOnlineOrders() {
           <td>
             ${next ? `<button class="btn btn-sm btn-ghost" onclick="advanceOnline(${o.id},'${next}')">${nextLabel}</button>` : ''}
             ${o.paid ? '<span class="badge badge-success">Paid</span>' : `<button class="btn btn-sm btn-gold" onclick="openPaymentModal(${o.id}, loadOnlineOrders)">💳 Settle</button>`}
+            ${!o.paid ? `<button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="voidOrderPrompt(${o.id}, loadOnlineOrders)">Void</button>` : ''}
           </td>
         </tr>`;
       }).join('')
