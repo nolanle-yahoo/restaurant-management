@@ -105,5 +105,7 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 1. ✅ Tier-1 quick wins (#1–#4) — **done in v1.9.0**.
 2. ✅ **#20 (chef 86-ing)** + **#43 (auto-depletion)** — **done in v1.9.0**; closed the single
    biggest operational gap.
-3. **Next:** Tier-5 **#44 (operational/real-time notifications)** and **#45 (online ordering)** —
-   the major revenue/efficiency bets. Then the remaining Tier-1 polish (#5–#9).
+3. ✅ Tier-5 **#44 (notifications)** + **#45 (online ordering)** — **done in v1.10.0**.
+4. **Next:** **QR-code table ordering** (#35, builds on online ordering), then customer
+   **accounts + loyalty** (#37) and **email marketing** (#38); plus the remaining Tier-1
+   polish (#5–#9).
