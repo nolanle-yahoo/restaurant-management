@@ -340,6 +340,51 @@ async function markServed(id) {
   loadAll();
 }
 
+// ── Edit order (add / change qty / remove items) ──────────────
+let _editOrderId = null;
+const _qbtn = "width:26px;height:26px;border-radius:6px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-weight:700";
+async function openEditOrder(id) {
+  _editOrderId = id;
+  document.getElementById('editOrderAlert').classList.add('hidden');
+  const [orders, items] = await Promise.all([API.orders(user.location_id), API.menuItems(user.location_id)]);
+  const o = orders.find(x => x.id === id);
+  if (!o) return;
+  document.getElementById('editOrderTitle').textContent = `Edit Order — Table ${o.table_number ?? ''}`;
+  const avail = items.filter(i => i.is_available);
+  document.getElementById('editAddSelect').innerHTML = '<option value="">— Add an item —</option>' +
+    avail.map(i => `<option value="${i.id}" data-name="${i.name.replace(/"/g,'&quot;')}" data-price="${i.price}">${i.name} ($${i.price.toFixed(2)})</option>`).join('');
+  renderEditItems(o.items || []);
+  showModal('editOrderModal');
+}
+function renderEditItems(items) {
+  document.getElementById('editOrderItems').innerHTML = items.length ? items.map(i => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="flex:1">${i.item_name} <span style="color:var(--muted);font-size:12px">$${(i.price||0).toFixed(2)}</span></span>
+      <button style="${_qbtn}" onclick="editQty(${i.id},${i.quantity-1})">−</button>
+      <span style="min-width:20px;text-align:center">${i.quantity}</span>
+      <button style="${_qbtn}" onclick="editQty(${i.id},${i.quantity+1})">+</button>
+      <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="editRemove(${i.id})">✕</button>
+    </div>`).join('') : '<div style="color:var(--muted);padding:8px;text-align:center">No items on this order.</div>';
+}
+async function refreshEdit() {
+  const o = (await API.orders(user.location_id)).find(x => x.id === _editOrderId);
+  renderEditItems(o ? (o.items || []) : []);
+}
+async function editQty(itemId, qty) {
+  try { if (qty < 1) return editRemove(itemId); await API.updateOrderItemQty(_editOrderId, itemId, qty); refreshEdit(); }
+  catch(e) { showAlert('editOrderAlert', e.message); }
+}
+async function editRemove(itemId) {
+  try { await API.removeOrderItem(_editOrderId, itemId); refreshEdit(); }
+  catch(e) { showAlert('editOrderAlert', e.message); }
+}
+async function editAddItem() {
+  const sel = document.getElementById('editAddSelect'); const opt = sel.options[sel.selectedIndex];
+  if (!sel.value) return;
+  try { await API.addOrderItem(_editOrderId, { name: opt.dataset.name, price: parseFloat(opt.dataset.price), quantity: 1 }); sel.value = ''; refreshEdit(); }
+  catch(e) { showAlert('editOrderAlert', e.message); }
+}
+
 async function moveOrderTo(id) {
   const num = prompt('Move this order to which table number?');
   if (num === null) return;
