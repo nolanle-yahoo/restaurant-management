@@ -79,8 +79,9 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 42. **Finance/accounting export & integration** (QuickBooks/Xero), scheduled reports, payroll export. *M–L*
 
 ## Tier 5 — Highest impact (transformational / strategic)
-43. **Inventory auto-depletion** — link menu items → ingredients (recipes/BOM) so sales decrement
-    stock (R1). Unlocks accurate COGS, par levels, and chef 86-ing. *L*
+43. ✅ **DONE (v1.9.0)** — **Inventory auto-depletion**: recipes/BOM link menu items → ingredients;
+    orders decrement stock (logged, clamped at 0) and auto-86 items when ingredients run short.
+    (Defining richer recipes, par levels, and COGS reporting remain follow-ups.)
 44. **Operational + real-time notifications** — order-ready→waiter, "needs-help"→manager,
     reservation reminders, low-stock pushes; extend the existing WebSocket bus (R4). *M–L*
 45. **Online ordering (pickup/delivery)** — the largest missing revenue channel; menu, pricing,
