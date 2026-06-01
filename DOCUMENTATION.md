@@ -168,6 +168,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   returns the table to "ready to clean".
 - **FR-5.5** The kitchen queue shows live orders with elapsed time and urgency flags, and
   updates in real time as orders are placed or advanced.
+- **FR-5.6** **Void** — permitted staff can void an unpaid order with a reason; voided orders
+  leave the active views, their auto-depleted inventory is restored, the table is freed, and
+  the action is audited. A paid order cannot be voided (refund instead).
 
 ### 5.6 Menu Management & Pricing
 - **FR-6.1** Owners and managers maintain a per-location menu of categories and priced items.
