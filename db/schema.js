@@ -254,6 +254,7 @@ function createSchema() {
 
   // Column migrations
   try { db.exec(`ALTER TABLE users ADD COLUMN hourly_rate REAL DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE users ADD COLUMN token_version INTEGER DEFAULT 0`); } catch {}
   try { db.exec(`ALTER TABLE reservations ADD COLUMN confirmation_code TEXT`); } catch {}
   try { db.exec(`ALTER TABLE payments ADD COLUMN receipt_code TEXT`); } catch {}
   try { db.exec(`ALTER TABLE payments ADD COLUMN receipt_email TEXT`); } catch {}
