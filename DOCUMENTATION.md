@@ -277,6 +277,12 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   redeem the customer's points at settlement (20 points = $1) for a discount, capped at the
   bill and the customer's balance; points are deducted and logged. (Direct-payment path; Stripe
   card prepay redemption is a follow-up.)
+- **FR-16.7** **Discounts & comps** — permitted staff can apply a manual discount (or "Comp
+  100%") with a reason at settlement; it is stored on the payment, shown on the receipt, and
+  audited.
+- **FR-16.8** **Configurable permissions** — the owner controls which roles may refund, void,
+  and discount (Sales Analytics → Staff Permissions). Enforced server-side; the owner is always
+  permitted. The UI shows these controls only to permitted staff.
 
 ### 5.17 Customer-Facing Site (Public)
 - **FR-17.1** Anyone can browse a location's menu (categories and available, priced items)
