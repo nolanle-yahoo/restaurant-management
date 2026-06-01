@@ -1,9 +1,11 @@
 const express = require('express');
+const crypto = require('crypto');
 const db = require('../db/database');
 const { verifyToken, requireRole } = require('../middleware/auth');
 const stripeLib = require('../lib/stripe');
 const { broadcast } = require('../lib/ws');
 const { auditLog } = require('../lib/audit');
+const { sendEmail } = require('../lib/email');
 
 const router = express.Router();
 router.use(verifyToken);
@@ -11,6 +13,23 @@ router.use(verifyToken);
 const SALES_TAX = parseFloat(process.env.SALES_TAX_RATE || '0.08');
 const STAFF = ['owner','manager','waiter','employee','frontdesk','chef','stockroom'];
 const round2 = n => Math.round(n * 100) / 100;
+const makeReceiptCode = () => 'RCT-' + crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
+
+// Emails a receipt for a paid payment if a receipt_email is on file.
+function emailReceipt(paymentId) {
+  const p = db.prepare(`SELECT * FROM payments WHERE id=?`).get(paymentId);
+  if (!p || !p.receipt_email) return;
+  const loc = (db.prepare(`SELECT l.name FROM payments p JOIN locations l ON p.location_id=l.id WHERE p.id=?`).get(paymentId) || {}).name || 'our restaurant';
+  const items = db.prepare(`SELECT oi.item_name, oi.quantity, oi.price FROM order_items oi WHERE oi.order_id=?`).all(p.order_id);
+  const lines = items.map(i => `  ${i.item_name} x${i.quantity}  $${(i.price*i.quantity).toFixed(2)}`).join('\n');
+  const base = process.env.ALLOWED_ORIGIN || 'http://localhost:3000';
+  sendEmail(p.receipt_email,
+    `Your receipt from ${loc} — ${p.receipt_code}`,
+    `Thank you for dining with us at ${loc}!\n\n${lines}\n\n` +
+    `Subtotal: $${p.subtotal.toFixed(2)}\nTax: $${p.tax.toFixed(2)}\nTip: $${p.tip.toFixed(2)}\nTotal: $${p.total.toFixed(2)}\n` +
+    `Paid by: ${p.method}\n\nReceipt code: ${p.receipt_code}\nView online: ${base}/receipt.html?code=${p.receipt_code}\n`,
+    'receipt');
+}
 
 function computeBill(orderId) {
   const order = db.prepare(`SELECT o.*, t.table_number FROM orders o JOIN tables t ON o.table_id=t.id WHERE o.id=?`).get(orderId);
