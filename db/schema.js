@@ -310,6 +310,7 @@ function createSchema() {
   try { db.exec(`ALTER TABLE orders ADD COLUMN customer_email TEXT`); } catch {}
   try { db.exec(`ALTER TABLE orders ADD COLUMN delivery_address TEXT`); } catch {}
   try { db.exec(`ALTER TABLE orders ADD COLUMN tracking_code TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE orders ADD COLUMN customer_id INTEGER REFERENCES customers(id)`); } catch {}
 
   // Migrate tables table: remove old CHECK constraint, add area_id
   try {
