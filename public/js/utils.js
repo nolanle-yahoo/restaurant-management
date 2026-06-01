@@ -425,7 +425,7 @@ function setPayMethod(m) {
 function renderPayTotal() {
   const b = _payState.bill; if (!b) return;
   const tip = parseFloat(document.getElementById('payTip').value) || 0;
-  document.getElementById('payTotal').textContent = (b.subtotal + b.tax + Math.max(0, tip)).toFixed(2);
+  document.getElementById('payTotal').textContent = (b.subtotal + (b.service_charge || 0) + b.tax + Math.max(0, tip)).toFixed(2);
 }
 
 function _loadStripeJs() {
