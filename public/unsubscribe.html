@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unsubscribe — Restaurant</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--cream); display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .box { background:#fff; border-radius:14px; padding:34px; max-width:420px; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,.08); }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div style="font-size:42px">🍷</div>
+    <h2 style="color:var(--burgundy);margin:8px 0">Email Preferences</h2>
+    <div id="msg" style="margin:16px 0;font-size:14px">Updating your preferences…</div>
+    <a class="btn btn-ghost" href="/">Back to site</a>
+  </div>
+<script>
+(async () => {
+  const token = new URLSearchParams(location.search).get('token');
+  const msg = document.getElementById('msg');
+  if (!token) { msg.textContent = 'Invalid unsubscribe link.'; return; }
+  try {
+    const r = await fetch('/api/public/unsubscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token }) });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.error || 'Request failed');
+    msg.innerHTML = '✅ ' + (d.message || 'You have been unsubscribed.');
+  } catch (e) {
+    msg.innerHTML = '<span style="color:var(--danger)">' + e.message + '</span>';
+  }
+})();
+</script>
+</body>
+</html>
