@@ -23,11 +23,26 @@ router.get('/', requireRole('owner','manager'), (req, res) => {
     FROM employee_messages m
     JOIN users u ON m.user_id=u.id
     LEFT JOIN locations l ON m.location_id=l.id
-    WHERE 1=1 ${cond}
+    WHERE m.parent_id IS NULL ${cond}
     ORDER BY m.is_read ASC, m.created_at DESC
   `).all(...args);
-  res.json(rows);
+  res.json(attachReplies(rows));
 });
+
+// Attach threaded replies (children) to a set of top-level messages.
+function attachReplies(rows) {
+  if (!rows.length) return rows;
+  const ids = rows.map(r => r.id);
+  const replies = db.prepare(`
+    SELECT r.*, u.name as sender_name, u.role as sender_role
+    FROM employee_messages r JOIN users u ON r.user_id=u.id
+    WHERE r.parent_id IN (${ids.map(()=>'?').join(',')})
+    ORDER BY r.created_at ASC
+  `).all(...ids);
+  const byParent = {};
+  replies.forEach(r => { (byParent[r.parent_id] = byParent[r.parent_id] || []).push(r); });
+  return rows.map(r => ({ ...r, replies: byParent[r.id] || [] }));
+}
 
 // Employee — their own sent messages
 router.get('/mine', (req, res) => {
