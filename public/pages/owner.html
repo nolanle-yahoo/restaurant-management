@@ -1579,7 +1579,8 @@ function renderMenu() {
         <td style="color:var(--muted)">${i.description||'—'}</td>
         <td class="fw-700" style="color:var(--success)">$${i.price.toFixed(2)}</td>
         <td><button class="btn btn-sm ${i.is_available?'btn-success':'btn-ghost'}" onclick="toggleItemAvail(${i.id},${i.is_available})">${i.is_available?'✓ Yes':'✗ No'}</button></td>
-        <td><button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteMenuItem(${i.id})">Delete</button></td>
+        <td><button class="btn btn-sm btn-ghost" onclick="openRecipe(${i.id},'${(i.name||'').replace(/'/g,"\\'")}')">🧪 Recipe</button>
+            <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteMenuItem(${i.id})">Delete</button></td>
       </tr>`).join('')}</tbody></table>` : '<p style="padding:8px;color:var(--muted);font-size:13px">No items in this category.</p>'}
     </div>`;
   }).join('');
