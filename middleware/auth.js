@@ -37,4 +37,19 @@ function requireRole(...roles) {
   };
 }
 
-module.exports = { verifyToken, requireRole };
+// Floor operations require the staff member to be on the clock. The owner is
+// exempt (oversight role, never clocks in); everyone else must have an open
+// clock_records row (clocked in, not yet clocked out).
+function isOnDuty(userId) {
+  return !!db.prepare(`SELECT 1 FROM clock_records WHERE user_id=? AND check_out IS NULL`).get(userId);
+}
+
+function requireOnDuty(req, res, next) {
+  if (req.user.role === 'owner') return next();
+  if (!isOnDuty(req.user.id)) {
+    return res.status(403).json({ error: 'You must be clocked in to do this. Please clock in first.' });
+  }
+  next();
+}
+
+module.exports = { verifyToken, requireRole, requireOnDuty, isOnDuty };
