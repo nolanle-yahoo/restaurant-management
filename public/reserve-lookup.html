@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Find My Reservation — Restaurant</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--cream); }
+    .pub-header { background: var(--burgundy); color:#fff; padding: 22px 20px; text-align:center; }
+    .pub-header .logo { font-size: 34px; } .pub-header h1 { font-size: 22px; font-weight: 800; margin-top: 6px; }
+    .pub-nav { display:flex; gap:10px; justify-content:center; padding:14px; flex-wrap:wrap; background:#fff; border-bottom:1px solid var(--border); }
+    .card-wrap { max-width: 480px; margin: 28px auto; background:#fff; border:1px solid var(--border); border-radius:14px; padding:28px; box-shadow: var(--shadow); }
+    .card-wrap h2 { font-size:18px; font-weight:800; color:var(--burgundy); margin-bottom:14px; }
+    .res-detail { background:var(--cream); border-radius:10px; padding:16px; font-size:14px; line-height:1.8; margin-top:8px; }
+    .pub-foot { text-align:center; color:var(--muted); font-size:12px; padding:24px; }
+  </style>
+</head>
+<body>
+  <div class="pub-header"><div class="logo">🍷</div><h1>Find My Reservation</h1></div>
+  <div class="pub-nav">
+    <a class="btn btn-ghost" href="/menu.html">🍽️ View Menu</a>
+    <a class="btn btn-ghost" href="/reserve.html">📅 Book a Table</a>
+    <a class="btn btn-ghost" href="/">Staff Login</a>
+  </div>
+  <div class="card-wrap">
+    <h2>Look Up Your Reservation</h2>
+    <div id="alert" class="alert hidden"></div>
+    <div class="form-group"><label>Confirmation Code</label><input id="code" placeholder="RSV-XXXXXX"></div>
+    <div class="form-group"><label>Email or Phone (used to book)</label><input id="contact" placeholder="you@example.com"></div>
+    <button class="btn btn-primary" style="width:100%;padding:11px" onclick="lookup()">Find Reservation</button>
+    <div id="result" class="hidden"></div>
+  </div>
+  <div class="pub-foot">© 2026 Restaurant Management System</div>
+<script>
+  function showErr(m){ const e=document.getElementById('alert'); e.className='alert alert-danger'; e.textContent=m; e.classList.remove('hidden'); }
+  let current = null;
+  async function lookup() {
+    const code = document.getElementById('code').value.trim();
+    const contact = document.getElementById('contact').value.trim();
+    if (!code || !contact) return showErr('Please enter your confirmation code and contact.');
+    document.getElementById('alert').classList.add('hidden');
+    try {
+      const r = await fetch(`/api/public/reservations/lookup?code=${encodeURIComponent(code)}&contact=${encodeURIComponent(contact)}`);
+      const d = await r.json();
+      if (!r.ok) { document.getElementById('result').classList.add('hidden'); return showErr(d.error || 'Not found'); }
+      current = { code, contact };
+      const badge = { pending:'badge-gold', confirmed:'badge-success', seated:'badge-info', completed:'badge-muted', no_show:'badge-danger', cancelled:'badge-danger' }[d.status] || 'badge-muted';
+      const canCancel = !['completed','cancelled','no_show'].includes(d.status);
+      document.getElementById('result').innerHTML = `
+        <div class="res-detail">
+          <strong>${d.guest_name}</strong> · ${d.location_name}<br>
+          📅 ${d.reservation_date} at ${d.reservation_time}<br>
+          👥 Party of ${d.party_size}<br>
+          Status: <span class="badge ${badge}">${d.status}</span>
+          ${d.notes ? `<br>📝 ${d.notes}` : ''}
+        </div>
+        ${canCancel ? `<button class="btn btn-ghost" style="width:100%;margin-top:12px;color:var(--danger);border-color:var(--danger)" onclick="cancelRes()">Cancel Reservation</button>` : ''}`;
+      document.getElementById('result').classList.remove('hidden');
+    } catch { showErr('Network error. Please try again.'); }
+  }
+  async function cancelRes() {
+    if (!current || !confirm('Cancel this reservation?')) return;
+    try {
+      const r = await fetch('/api/public/reservations/cancel', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(current) });
+      const d = await r.json();
+      if (!r.ok) return showErr(d.error || 'Could not cancel');
+      lookup();
+    } catch { showErr('Network error.'); }
+  }
+</script>
+</body>
+</html>
