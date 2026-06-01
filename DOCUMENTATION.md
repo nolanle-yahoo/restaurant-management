@@ -674,7 +674,8 @@ Prioritized by value-to-effort:
 | 1.3.0 | Universal clock-in for non-owner staff, employees act as waiters, order special requests, manager low-stock alerts. |
 | 1.4.0 | Bill settlement & payments (Stripe, with simulated fallback) and tips into payroll; public customer menu and online reservation booking. |
 | 1.5.0 | Sales & revenue analytics dashboard (owner + manager); Stripe test-key setup guide (`.env.example`, `PAYMENTS_SETUP.md`); configurable sales-tax rate. |
-| 1.6.0 | **Email layer (SMTP or simulated): reservation confirmations with codes + guest lookup/cancel, emailed digital receipts with public receipt page, and self-service forgot/reset password. ER-diagram overview added.** |
+| 1.6.0 | Email layer (SMTP or simulated): reservation confirmations with codes + guest lookup/cancel, emailed digital receipts with public receipt page, and self-service forgot/reset password. ER-diagram overview added. |
+| 1.7.0 | **Session revocation: "log out everywhere" plus automatic token invalidation on password change, password reset, and account deactivation, via a per-user `token_version` checked on every request.** |
 
 ---
 
