@@ -107,7 +107,7 @@ router.post('/', requireRole(...STAFF), requireOnDuty, (req, res) => {
 });
 
 // Create a Stripe PaymentIntent for card payment (real gateway flow)
-router.post('/intent', requireRole(...STAFF), async (req, res) => {
+router.post('/intent', requireRole(...STAFF), requireOnDuty, async (req, res) => {
   const { order_id, tip, email } = req.body;
   if (!order_id) return res.status(400).json({ error: 'order_id required' });
   const bill = computeBill(order_id);
