@@ -586,6 +586,8 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 |---|---|---|---|
 | GET | `/` | Owner, Manager | Current sales-tax and service-charge rates. |
 | PUT | `/` | Owner | Update sales-tax and/or service-charge rates (fractions, 0–1). |
+| GET | `/permissions` | Owner | Capability×role permission matrix (refund/void/discount). |
+| PUT | `/permissions` | Owner | Grant/revoke a capability for a role. |
 
 ### Marketing — `/api/marketing`
 | Method | Path | Access | Description |
