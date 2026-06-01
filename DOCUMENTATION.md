@@ -509,6 +509,8 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | PUT | `/transfer-request/:id` | Owner, Manager, Stockroom | Update transfer (stock-validated). |
 | POST | `/transfer` | Owner, Manager, Stockroom | Immediate transfer. |
 | GET | `/transactions` | Owner, Manager, Stockroom | Last 100 transactions. |
+| POST | `/waste` | Owner, Manager, Stockroom, Chef | Write off stock (quantity + reason); deducts inventory + logs. |
+| GET | `/waste` | Owner, Manager, Stockroom, Chef | Recent waste entries (location-scoped). |
 
 ### Locations — `/api/locations`
 | Method | Path | Access | Description |
