@@ -321,9 +321,10 @@ router.get('/account/orders', requireCustomer, (req, res) => {
 });
 
 router.get('/account/loyalty', requireCustomer, (req, res) => {
-  const c = db.prepare(`SELECT points FROM customers WHERE id=?`).get(req.customerId);
+  const c = db.prepare(`SELECT points, referral_code FROM customers WHERE id=?`).get(req.customerId);
   const ledger = db.prepare(`SELECT points, reason, created_at FROM loyalty_transactions WHERE customer_id=? ORDER BY created_at DESC LIMIT 50`).all(req.customerId);
-  res.json({ points: c ? c.points : 0, ledger });
+  const points = c ? c.points : 0;
+  res.json({ points, tier: tierFor(points), referral_code: c ? c.referral_code : null, ledger });
 });
 
 // Public unsubscribe from marketing email (one-click token from email footer).
