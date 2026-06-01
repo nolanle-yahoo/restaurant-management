@@ -297,9 +297,10 @@ router.post('/account/login', accountLimiter, (req, res) => {
 });
 
 router.get('/account/me', requireCustomer, (req, res) => {
-  const c = db.prepare(`SELECT id, name, email, phone, points, marketing_opt_in FROM customers WHERE id=?`).get(req.customerId);
+  const c = db.prepare(`SELECT id, name, email, phone, points, marketing_opt_in, referral_code FROM customers WHERE id=?`).get(req.customerId);
   if (!c) return res.status(404).json({ error: 'Account not found' });
-  res.json(c);
+  const nextTier = TIERS.slice().reverse().find(t => t.min > c.points);
+  res.json({ ...c, tier: tierFor(c.points), next_tier: nextTier ? { name: nextTier.name, points_needed: nextTier.min - c.points } : null });
 });
 
 router.put('/account/preferences', requireCustomer, (req, res) => {
