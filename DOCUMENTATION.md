@@ -779,16 +779,16 @@ change), and the menu **allergen/photo + dietary-filter** polish.
 allergen flags on tickets; post-visit feedback link on receipts.
 
 **Tier 2–3 — Operational depth:** course firing and table transfer/merge; consolidated
-approvals dashboard; certification tracking; cycle counts / barcode receiving; split the bill;
-order edit/void with approval; vendor master records; waste/expiry (FIFO) tracking;
-per-employee performance; discounts/comps/voids; shift swapping; self-service staff portal;
-waitlist; regional-manager role & cross-location staff lending; central menu with overrides;
-2FA; inventory valuation & COGS. *(Two-way + broadcast staff messaging shipped in 1.12.0.)*
+approvals dashboard; certification tracking; cycle counts / barcode receiving; **split the
+bill**; order edit; vendor master records; waste/expiry (FIFO) tracking; per-employee
+performance; shift swapping; self-service staff portal; waitlist; regional-manager role &
+cross-location staff lending; central menu with overrides; 2FA; inventory valuation & COGS.
+*(Two-way + broadcast messaging shipped in 1.12.0; discounts/comps/voids in 1.13.0.)*
 
-**Tier 4 — High impact:** par levels + auto-reorder; configurable roles/permissions; executive
-multi-location dashboard & benchmarking; demand-based scheduling; finance/accounting
-integration; loyalty **referrals/tiers** (accrual + redemption shipped in 1.11.0–1.12.0).
-*(QR-code table ordering, customer accounts/loyalty, and email marketing shipped in 1.11.0.)*
+**Tier 4 — High impact:** par levels + auto-reorder; executive multi-location dashboard &
+benchmarking; demand-based scheduling; finance/accounting integration. *(Configurable
+roles/permissions shipped in 1.13.0; QR ordering, accounts/loyalty incl. tiers/referrals, and
+email marketing in 1.11.0–1.13.0.)*
 
 **Tier 5 — Transformational:** *(All three shipped — inventory auto-depletion in 1.9.0;
 real-time notifications and online ordering in 1.10.0.)* Remaining extensions: online
