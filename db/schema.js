@@ -231,10 +231,32 @@ function createSchema() {
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS email_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      to_email TEXT,
+      subject TEXT,
+      body TEXT,
+      category TEXT,
+      status TEXT NOT NULL DEFAULT 'sent' CHECK(status IN ('sent','simulated','failed')),
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      token TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      used INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
   `);
 
   // Column migrations
   try { db.exec(`ALTER TABLE users ADD COLUMN hourly_rate REAL DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE reservations ADD COLUMN confirmation_code TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE payments ADD COLUMN receipt_code TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE payments ADD COLUMN receipt_email TEXT`); } catch {}
   try { db.exec(`ALTER TABLE supply_orders ADD COLUMN item_name TEXT`); } catch {}
   try { db.exec(`ALTER TABLE supply_orders ADD COLUMN vendor TEXT`); } catch {}
   try { db.exec(`ALTER TABLE supply_orders ADD COLUMN shipping_address TEXT`); } catch {}
