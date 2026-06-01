@@ -279,6 +279,15 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   notified. The customer gets a **tracking code** to follow status (received → preparing →
   ready → completed) and an email confirmation. Payment is collected by staff at
   collection/handoff (online prepayment is a planned follow-up).
+- **FR-17.5** **QR-code table ordering** — each table has a QR code (printable from the manager
+  Floor Plan) that opens the menu in "table mode"; guests order **dine-in** straight to the
+  kitchen, the table flips to *ordered*, and a server settles the bill as usual.
+- **FR-17.6** **Customer accounts & loyalty** — customers can register/sign in (separate from
+  staff), view order history, and earn **1 loyalty point per $1** on paid orders linked to their
+  account (online or QR while signed in). Points and a ledger are shown in their account.
+- **FR-17.7** **Email marketing** — owners send campaigns to customers who opted in; every
+  email carries a one-click **unsubscribe** link. Opt-in is captured at registration and is
+  toggleable in the account; unsubscribing is honored immediately.
 
 ### 5.18 Sales & Revenue Analytics
 - **FR-18.1** Owners and managers view a sales analytics dashboard over a selectable date
