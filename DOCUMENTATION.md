@@ -542,6 +542,7 @@ to scope their subscription. The server broadcasts:
 | Event | Trigger |
 |---|---|
 | `order_update` | Order created or status changed. |
+| `notify` | Operational alert (order-ready, needs-help, low-stock, new online order, reservation reminder); client shows a role-targeted toast. |
 | `table_update` | Table status changed. |
 | `reservation_update` | Reservation created or updated. |
 
