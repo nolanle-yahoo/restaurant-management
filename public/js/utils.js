@@ -395,8 +395,12 @@ async function openPaymentModal(orderId, onPaid) {
       totalRow.style.display = '';
       setPayMethod(_payState.method);   // restores card-field visibility per Stripe config
       const lines = bill.items.map(i => `<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${i.item_name} ×${i.quantity}</span><span>$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('');
+      const svc = (bill.service_charge || 0) > 0
+        ? `<div style="display:flex;justify-content:space-between;color:var(--muted)"><span>Service charge (${Math.round((bill.service_rate||0)*100)}%)</span><span>$${bill.service_charge.toFixed(2)}</span></div>`
+        : '';
       document.getElementById('payBill').innerHTML = lines +
         `<div style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px;display:flex;justify-content:space-between"><span>Subtotal</span><span>$${bill.subtotal.toFixed(2)}</span></div>` +
+        svc +
         `<div style="display:flex;justify-content:space-between;color:var(--muted)"><span>Tax (${Math.round(bill.tax_rate*100)}%)</span><span>$${bill.tax.toFixed(2)}</span></div>`;
       renderPayTotal();
     }
