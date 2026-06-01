@@ -609,10 +609,12 @@ Prioritized by value-to-effort:
 1. **Inventory auto-depletion** — link menu items to ingredients so sales reduce stock.
 2. **QR-code table ordering** — guests scan at the table to view the menu and order to that table.
 3. **Customer accounts & loyalty** — order history, points, saved details.
-4. **Operational notifications** — order-ready, table-needs-help, reservation reminders via email/SMS/push.
-5. **Forgot/reset password & 2FA** — self-service recovery and optional MFA for owner/manager.
-6. **Shift swapping & availability** — staff-initiated schedule changes.
-7. **Waitlist** — walk-in queue alongside reservations.
+4. **Operational notifications** — order-ready, table-needs-help, reservation reminders via SMS/push.
+5. **Split the bill** — settle a single order across multiple guests or by item.
+6. **Refund UI** — a refund button in payment history (endpoint already exists).
+7. **2FA** — optional multi-factor authentication for owner/manager accounts.
+8. **Shift swapping & availability** — staff-initiated schedule changes.
+9. **Waitlist** — walk-in queue alongside reservations.
 
 ## 16. Glossary
 
