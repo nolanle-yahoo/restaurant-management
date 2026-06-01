@@ -157,6 +157,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-4.4** Waiters can be assigned to areas; assignments drive each waiter's "My Area" view.
 - **FR-4.5** Table status changes broadcast in real time to all connected clients at that
   location.
+- **FR-4.6** **Transfer & merge** — an open order can be moved to another table (transfer), and
+  all of a table's open orders can be merged into another table. Table statuses update
+  automatically (freed tables return to empty), changes broadcast, and the action is audited.
 
 ### 5.5 Order Processing
 - **FR-5.1** Waiters, managers, and all non-owner staff can take orders against a table.
