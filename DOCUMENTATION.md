@@ -345,7 +345,8 @@ SQLite database with 24 tables. Core entities and relationships:
 - **areas** / **tables** — floor layout; tables belong to areas and locations.
 - **waiter_assignments** — waiter ↔ area mapping (unique pair).
 - **orders** / **order_items** — orders per table (status enum, notes/special request) and
-  their line items (name, qty, price, notes).
+  their line items (name, qty, price, notes). `table_id` is nullable; online orders carry
+  `order_type` (dine_in/pickup/delivery), customer contact, delivery address, and a tracking code.
 - **menu_categories** / **menu_items** — per-location menu with pricing and availability.
 - **reservations** — guest bookings with lifecycle status.
 - **inventory** / **inventory_transactions** — stock and movement ledger.
