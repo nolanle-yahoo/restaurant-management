@@ -77,6 +77,8 @@ const API = {
   createOrder(data)  { return this.post('/orders', data); },
   updateOrder(id, status) { return this.put(`/orders/${id}`, { status }); },
   voidOrder(id, reason)   { return this.put(`/orders/${id}/void`, { reason }); },
+  moveOrder(id, to_table_id) { return this.put(`/orders/${id}/move`, { to_table_id }); },
+  mergeTables(from_table_id, to_table_id) { return this.put('/orders/merge', { from_table_id, to_table_id }); },
 
   inventory(locId)   { return this.get('/inventory' + (locId ? `?location_id=${locId}` : '')); },
   warehouse()        { return this.get('/inventory/warehouse'); },
