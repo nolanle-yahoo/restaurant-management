@@ -533,8 +533,12 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/reservations` | Public (rate-limited) | Submit an online reservation request; created as **pending**, returns a confirmation code, emails the guest. |
 | GET | `/reservations/lookup` | Public | Look up a reservation by confirmation code + matching email/phone. |
 | POST | `/reservations/cancel` | Public | Cancel a reservation by confirmation code + matching email/phone. |
-| POST | `/order` | Public (rate-limited) | Place a pickup/delivery order (server-priced); returns a tracking code. Pay on collection. |
+| POST | `/order` | Public (rate-limited) | Place a dine-in (QR), pickup, or delivery order (server-priced); links the customer if signed in; returns a tracking code. |
 | GET | `/order` | Public | Track an online order by tracking code (status + items). |
+| POST | `/account/register` · `/account/login` | Public (rate-limited) | Customer sign-up / sign-in; returns a customer JWT. |
+| GET | `/account/me` · `/account/orders` · `/account/loyalty` | Customer | Profile, order history, and points + ledger. |
+| PUT | `/account/preferences` | Customer | Toggle marketing opt-in. |
+| POST | `/unsubscribe` | Public | One-click unsubscribe via emailed token. |
 | GET | `/receipt` | Public | View an itemized digital receipt by receipt code. |
 
 ### Analytics — `/api/analytics`
