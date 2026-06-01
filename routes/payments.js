@@ -77,6 +77,19 @@ router.get('/', requireRole('owner','manager'), (req, res) => {
   res.json(rows);
 });
 
+// Award loyalty points (1 per $1 of food) when a customer-linked order is paid.
+function awardLoyalty(orderId, subtotal) {
+  try {
+    const o = db.prepare(`SELECT customer_id FROM orders WHERE id=?`).get(orderId);
+    if (!o || !o.customer_id) return;
+    const pts = Math.floor(subtotal || 0);
+    if (pts <= 0) return;
+    db.prepare(`UPDATE customers SET points=points+? WHERE id=?`).run(pts, o.customer_id);
+    db.prepare(`INSERT INTO loyalty_transactions (customer_id, order_id, points, reason) VALUES (?,?,?,?)`)
+      .run(o.customer_id, orderId, pts, 'Earned on order');
+  } catch (e) { console.error('awardLoyalty failed:', e.message); }
+}
+
 function settleOrder(req, orderId) {
   const order = db.prepare(`SELECT * FROM orders WHERE id=?`).get(orderId);
   if (!order) return;
