@@ -289,6 +289,17 @@ function createSchema() {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
+    -- Post-visit guest feedback, tied to a settled payment's receipt.
+    CREATE TABLE IF NOT EXISTS feedback (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      receipt_code TEXT,
+      order_id INTEGER REFERENCES orders(id),
+      location_id INTEGER REFERENCES locations(id),
+      rating INTEGER NOT NULL,
+      comment TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     -- Configurable permissions: which staff roles may perform sensitive actions.
     CREATE TABLE IF NOT EXISTS permissions (
       capability TEXT NOT NULL,
