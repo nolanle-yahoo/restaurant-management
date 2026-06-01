@@ -38,8 +38,10 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 | ✅ done | Loyalty redemption — *shipped v1.12.0* | Customer, Owner | 4 |
 | ✅ done | Configurable permissions + discounts/comps/voids — *shipped v1.13.0* | Owner, Manager | 3–4 |
 | ✅ done | Loyalty tiers + referrals — *shipped v1.13.0* | Customer, Owner | 4 |
-| 🔴 1 | Split the bill (partial payments) | Waiter, Manager | 3 |
-| 🟠 2 | Tier-1 polish: menu allergens/photos, ticket allergen flags, receipt feedback link | Customer, Chef | 1 |
+| ✅ done | Split the bill (partial payments) — *shipped v1.14.0* | Waiter, Manager | 3 |
+| ✅ done | Menu allergens/photos + dietary filter; ticket flags; receipt feedback — *shipped v1.14.0* | Customer, Chef | 1 |
+| 🔴 1 | Course firing; table transfer/merge; order edit | Waiter, Chef | 2–3 |
+| 🟠 2 | Vendor master records; cycle counts / barcode receiving; waste/expiry (FIFO) | Stockroom | 2–3 |
 
 ---
 
