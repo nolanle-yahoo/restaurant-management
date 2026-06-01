@@ -173,7 +173,7 @@ async function savePassword() {
   const confirm  = document.getElementById('confirmPw').value;
   if (!current || !newPw) return showAlert('pwAlert', 'All fields required');
   if (newPw !== confirm)  return showAlert('pwAlert', 'New passwords do not match');
-  if (newPw.length < 6)   return showAlert('pwAlert', 'Password must be at least 6 characters');
+  if (newPw.length < 8)   return showAlert('pwAlert', 'Password must be at least 8 characters');
   try {
     const r = await API.changePassword({ current_password: current, new_password: newPw });
     // Server rotated the session; keep this device signed in with the fresh token.
