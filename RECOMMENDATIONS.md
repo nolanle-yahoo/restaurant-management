@@ -42,8 +42,9 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 | ✅ done | Loyalty tiers + referrals — *shipped v1.13.0* | Customer, Owner | 4 |
 | ✅ done | Split the bill (partial payments) — *shipped v1.14.0* | Waiter, Manager | 3 |
 | ✅ done | Menu allergens/photos + dietary filter; ticket flags; receipt feedback — *shipped v1.14.0* | Customer, Chef | 1 |
-| 🔴 1 | Course firing; table transfer/merge; order edit | Waiter, Chef | 2–3 |
-| 🟠 2 | Vendor master records; cycle counts / barcode receiving; waste/expiry (FIFO) | Stockroom | 2–3 |
+| ✅ done | Table transfer/merge · waste tracking · approvals dashboard — *shipped v1.15.0* | Floor, Stockroom, Mgr | 2–3 |
+| 🔴 1 | Course firing; order edit; vendor master records | Waiter, Chef, Stockroom | 2–3 |
+| 🟠 2 | Self-service staff portal; central menu overrides; 2FA; cycle counts/barcode | Staff, Owner | 2–4 |
 
 ---
 
