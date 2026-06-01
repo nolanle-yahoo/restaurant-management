@@ -1,9 +1,43 @@
 const express = require('express');
 const db = require('../db/database');
 const { verifyToken, requireRole } = require('../middleware/auth');
+const { auditLog } = require('../lib/audit');
 
 const router = express.Router();
 router.use(verifyToken);
+
+// ── Waste / spoilage ───────────────────────────────────────
+router.post('/waste', requireRole('owner','manager','stockroom','chef'), (req, res) => {
+  const item = db.prepare(`SELECT * FROM inventory WHERE id=?`).get(req.body.item_id);
+  if (!item) return res.status(404).json({ error: 'Inventory item not found' });
+  if (req.user.role !== 'owner' && item.location_id !== req.user.location_id) {
+    return res.status(403).json({ error: 'You can only log waste for your location.' });
+  }
+  const qty = Math.max(0, parseFloat(req.body.quantity) || 0);
+  if (qty <= 0) return res.status(400).json({ error: 'Quantity must be greater than 0.' });
+  if (qty > item.quantity) return res.status(400).json({ error: `Only ${item.quantity} ${item.unit} in stock.` });
+  const reason = (req.body.reason || '').toString().slice(0, 200) || null;
+  db.prepare(`UPDATE inventory SET quantity=quantity-?, last_updated=datetime('now') WHERE id=?`).run(qty, item.id);
+  db.prepare(`INSERT INTO waste_log (item_id, location_id, quantity, reason, user_id) VALUES (?,?,?,?,?)`).run(item.id, item.location_id, qty, reason, req.user.id);
+  db.prepare(`INSERT INTO inventory_transactions (item_id, from_location_id, quantity, type, user_id, notes) VALUES (?,?,?,'out',?,?)`).run(item.id, item.location_id, qty, req.user.id, `Waste${reason ? ': ' + reason : ''}`);
+  auditLog(req, 'waste_logged', 'inventory', item.id, { item: item.item_name, quantity: qty, reason });
+  res.json({ success: true });
+});
+
+router.get('/waste', requireRole('owner','manager','stockroom','chef'), (req, res) => {
+  const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
+  const cond = locId ? 'WHERE w.location_id=?' : '';
+  const args = locId ? [locId] : [];
+  const rows = db.prepare(`
+    SELECT w.*, i.item_name, i.unit, l.name as location_name, u.name as user_name
+    FROM waste_log w
+    JOIN inventory i ON w.item_id=i.id
+    LEFT JOIN locations l ON w.location_id=l.id
+    LEFT JOIN users u ON w.user_id=u.id
+    ${cond} ORDER BY w.created_at DESC LIMIT 100
+  `).all(...args);
+  res.json(rows);
+});
 
 // ── Inventory levels ───────────────────────────────────────
 router.get('/', requireRole('owner','manager','chef','stockroom'), (req, res) => {
