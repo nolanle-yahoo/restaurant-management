@@ -4,6 +4,10 @@
 **Status:** Advisory backlog
 **Organization:** Ordered **ascending by impact** — Tier 1 (smallest) → Tier 5 (highest / transformational).
 
+> ✅ **Delivered in v1.9.0:** #1 Refund UI · #2 Low-stock alerts (stockroom + chef) ·
+> #3 Configurable tax/service-charge · #4 Stronger password policy + broader rate limiting ·
+> #20 Chef "86" with live availability · #43 Inventory auto-depletion (recipes/BOM) + auto-86.
+
 Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
 from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
 (customer, owner/admin, manager, chef, waiter, front desk, employee, stockroom/warehouse) plus
