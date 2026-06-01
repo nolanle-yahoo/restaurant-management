@@ -1421,6 +1421,7 @@ async function loadMgrMessages() {
   renderMessages();
   const unread = msgData.filter(m => !m.is_read).length;
   document.getElementById('navMessages').innerHTML = `<span class="nav-icon">💬</span>Messages${unread ? ` <span style="background:var(--burgundy);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">${unread}</span>` : ''}`;
+  loadMgrAnnouncements();
 }
 
 function renderMessages() {
