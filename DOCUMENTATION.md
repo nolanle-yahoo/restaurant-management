@@ -544,10 +544,10 @@ to scope their subscription. The server broadcasts:
 | `reserve-lookup.html` | Public (customers) | Look up or cancel a reservation by code + contact; no login. |
 | `receipt.html` | Public (customers) | View/print an itemized receipt by receipt code; no login. |
 | `reset.html` | Public | Set a new password from an emailed reset link. |
-| `owner.html` | Owner | Overview, Staff & Locations, Timesheets, Warehouse, Supply, Transfers, Floor Plan, Admin Panel, Reservations, Menu, Sales Analytics, Audit Log, Time Off, Messages. |
+| `owner.html` | Owner | Overview, Staff & Locations, Timesheets, Warehouse, Supply, Transfers, Floor Plan, Admin Panel, Reservations, Menu (with recipe editor), Sales Analytics (incl. Tax & Service Charge settings and Payments & Refunds), Audit Log, Time Off, Messages. |
 | `manager.html` | Manager / Stockroom | Staff, Schedule, Timesheets, Inventory, Warehouse, Supply, Transfers, Floor Plan, Reservations, Menu, Sales Analytics, Time Off, Messages; low-stock banner. |
 | `waiter.html` | Waiter | My Area, Full Floor, My Orders; take/serve with menu picker + special request; Settle Bill. |
-| `chef.html` | Chef | Kitchen queue (pending/preparing/ready), inventory quick view. |
+| `chef.html` | Chef | Kitchen queue (pending/preparing/ready), inventory quick view, low-stock alert, and Menu Availability (86/un-86). |
 | `frontdesk.html` | Front Desk | Floor Map, Areas & Staff, Reservations. |
 | `employee.html` | Employee | My Time (clock), Tables & Orders (take orders, Settle Bill), Time Off, Messages. |
 | `mobile.html` | Field roles | Floor, My Area, Orders, Profile (clock) — touch-optimized. |
