@@ -1819,6 +1819,23 @@ async function saveSettings() {
   } catch(e) { showAlert('settingsAlert', e.message); }
 }
 
+// ── Permissions matrix ────────────────────────────────────────
+const CAP_LABELS = { refund: 'Refund payment', void: 'Void order', discount: 'Discount / comp' };
+async function loadPermissions() {
+  let m; try { m = await API.permissions(); } catch(e) { return; }
+  const el = document.getElementById('permMatrix'); if (!el) return;
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Capability</th><th>Owner</th>${
+    m.roles.map(r => `<th style="text-transform:capitalize">${r}</th>`).join('')}</tr></thead><tbody>${
+    m.capabilities.map(cap => `<tr>
+      <td class="fw-700">${CAP_LABELS[cap] || cap}</td>
+      <td><span class="badge badge-success">Always</span></td>
+      ${m.roles.map(r => `<td><input type="checkbox" ${m.matrix[cap][r] ? 'checked' : ''} onchange="togglePerm('${cap}','${r}',this.checked)"></td>`).join('')}
+    </tr>`).join('')}</tbody></table>`;
+}
+async function togglePerm(capability, role, allowed) {
+  try { await API.setPermission({ capability, role, allowed }); } catch(e) { alert(e.message); loadPermissions(); }
+}
+
 // ── Payments & refunds ────────────────────────────────────────
 async function loadOwnerPayments() {
   const loc = document.getElementById('anLocFilter')?.value || '';
