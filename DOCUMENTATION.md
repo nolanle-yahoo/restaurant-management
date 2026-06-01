@@ -671,9 +671,11 @@ Harbor View.
 - **Payments** — card processing requires a configured Stripe key; without it the system runs in a simulated record-only mode (see §11).
 - **Inventory vs. menu** — menu items now auto-deplete inventory via recipes (FR-8.6), but only
   items that have a recipe defined; items without a recipe do not affect stock.
-- **Notifications** — email is supported for reservation confirmations, receipts, and password
-  resets (real via SMTP, or simulated/logged without it). No SMS/push, and no operational
-  alerts (order-ready, table-help, reservation reminders) yet.
+- **Notifications** — in-app real-time toasts cover order-ready, table-help, low-stock, new
+  online orders, and reservation reminders (FR-14.2/14.3); email covers reservation
+  confirmations, receipts, online-order confirmations, and password resets. No SMS/push yet.
+- **Online ordering** — pickup/delivery orders are **pay-on-collection**; online prepayment
+  (public card flow) and a dedicated driver/delivery-dispatch workflow are not yet built.
 
 ## 15. Roadmap / Future Enhancements
 
