@@ -52,7 +52,7 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 19. **Gift cards**. *M*
 
 ## Tier 3 — Moderate
-20. **Chef "86" items → live availability** (kitchen flips menu availability instantly). *S–M* — small effort, high daily value
+20. ✅ **DONE (v1.9.0)** — **Chef "86" items → live availability**: the Chef Station Menu Availability panel flips items on/off, and items auto-86 when ingredients run out.
 21. **Split the bill** (by guest or item) (R5). *M*
 22. **Order edit/void after sending** with manager approval + audit. *M*
 23. **Vendor master records** (lead time, pricing, history). *M*
