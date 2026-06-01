@@ -724,8 +724,8 @@ Harbor View.
   confirmations, receipts, online-order confirmations, and password resets. No SMS/push yet.
 - **Online ordering** — pickup/delivery orders are **pay-on-collection**; online prepayment
   (public card flow) and a dedicated driver/delivery-dispatch workflow are not yet built.
-- **Loyalty** — points **accrue** on paid orders and are shown to customers, but there is no
-  redemption/discount flow yet. Tiers and rewards are follow-ups.
+- **Loyalty** — points accrue and **redeem** for discounts at settlement (direct-payment path).
+  Redemption during a real Stripe card prepay, plus tiers/rewards, are follow-ups.
 - **QR codes** — printable table QR images are generated via an external QR image service, so
   generating them needs internet at print time (the customer ordering flow itself is local).
 
