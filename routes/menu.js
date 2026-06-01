@@ -89,7 +89,38 @@ router.put('/items/:id', requireRole('owner','manager','waiter','chef'), (req, r
 });
 
 router.delete('/items/:id', requireRole('owner','manager'), (req, res) => {
+  db.prepare(`DELETE FROM recipes WHERE menu_item_id=?`).run(req.params.id);
   db.prepare(`DELETE FROM menu_items WHERE id=?`).run(req.params.id);
+  res.json({ success: true });
+});
+
+// ── Recipe / ingredients (drives inventory auto-depletion & auto-86) ──
+// GET the ingredient list for an item (with current stock for context).
+router.get('/items/:id/recipe', requireRole('owner','manager','chef'), (req, res) => {
+  const rows = db.prepare(`
+    SELECT r.id, r.inventory_id, r.quantity, i.item_name, i.unit, i.quantity AS in_stock
+    FROM recipes r JOIN inventory i ON i.id = r.inventory_id
+    WHERE r.menu_item_id = ?
+    ORDER BY i.item_name
+  `).all(req.params.id);
+  res.json(rows);
+});
+
+// Replace an item's recipe with the supplied ingredient list.
+router.put('/items/:id/recipe', requireRole('owner','manager'), (req, res) => {
+  const item = db.prepare(`SELECT id FROM menu_items WHERE id=?`).get(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Menu item not found' });
+  const ingredients = Array.isArray(req.body.ingredients) ? req.body.ingredients : [];
+  const tx = db.transaction(() => {
+    db.prepare(`DELETE FROM recipes WHERE menu_item_id=?`).run(item.id);
+    const ins = db.prepare(`INSERT INTO recipes (menu_item_id, inventory_id, quantity) VALUES (?,?,?)`);
+    ingredients.forEach(g => {
+      const invId = parseInt(g.inventory_id), qty = parseFloat(g.quantity);
+      if (invId && Number.isFinite(qty) && qty > 0) ins.run(item.id, invId, qty);
+    });
+  });
+  tx();
+  auditLog(req, 'menu_recipe_update', 'menu_item', item.id, { ingredients: ingredients.length });
   res.json({ success: true });
 });
 
