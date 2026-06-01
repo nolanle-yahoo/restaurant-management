@@ -143,7 +143,8 @@ router.post('/reset-password', resetLimiter, (req, res) => {
   if (!row || row.used) return res.status(400).json({ error: 'This reset link is invalid or has already been used.' });
   if (new Date(row.expires_at + 'Z') < new Date()) return res.status(400).json({ error: 'This reset link has expired. Please request a new one.' });
 
-  db.prepare(`UPDATE users SET password_hash=? WHERE id=?`).run(bcrypt.hashSync(new_password, 10), row.user_id);
+  // A reset revokes all existing sessions for that account.
+  db.prepare(`UPDATE users SET password_hash=?, token_version=token_version+1 WHERE id=?`).run(bcrypt.hashSync(new_password, 10), row.user_id);
   db.prepare(`UPDATE password_reset_tokens SET used=1 WHERE id=?`).run(row.id);
   res.json({ success: true, message: 'Password updated. You can now sign in.' });
 });
