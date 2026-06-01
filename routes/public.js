@@ -242,4 +242,73 @@ router.get('/receipt', (req, res) => {
   res.json({ ...p, items });
 });
 
+// ── Customer accounts & loyalty ─────────────────────────────────────
+const accountLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false,
+  message: { error: 'Too many attempts. Please try again later.' },
+});
+
+router.post('/account/register', accountLimiter, (req, res) => {
+  const { name, email, password, phone, marketing_opt_in } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ error: 'Name, email and password are required.' });
+  if (String(password).length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+  const em = String(email).trim().toLowerCase();
+  if (db.prepare(`SELECT id FROM customers WHERE email=?`).get(em)) {
+    return res.status(409).json({ error: 'An account with that email already exists.' });
+  }
+  const unsub = crypto.randomBytes(16).toString('hex');
+  const r = db.prepare(`INSERT INTO customers (name, email, phone, password_hash, marketing_opt_in, unsubscribe_token) VALUES (?,?,?,?,?,?)`)
+    .run(String(name).slice(0, 120), em, phone ? String(phone).slice(0, 40) : null, bcrypt.hashSync(String(password), 10), marketing_opt_in ? 1 : 0, unsub);
+  const c = { id: r.lastInsertRowid, name, email: em };
+  res.json({ token: signCustomer(c), customer: { ...c, points: 0, marketing_opt_in: marketing_opt_in ? 1 : 0 } });
+});
+
+router.post('/account/login', accountLimiter, (req, res) => {
+  const { email, password } = req.body;
+  const c = db.prepare(`SELECT * FROM customers WHERE email=?`).get(String(email || '').trim().toLowerCase());
+  if (!c || !bcrypt.compareSync(String(password || ''), c.password_hash)) {
+    return res.status(401).json({ error: 'Invalid email or password.' });
+  }
+  res.json({ token: signCustomer(c), customer: { id: c.id, name: c.name, email: c.email, points: c.points, marketing_opt_in: c.marketing_opt_in } });
+});
+
+router.get('/account/me', requireCustomer, (req, res) => {
+  const c = db.prepare(`SELECT id, name, email, phone, points, marketing_opt_in FROM customers WHERE id=?`).get(req.customerId);
+  if (!c) return res.status(404).json({ error: 'Account not found' });
+  res.json(c);
+});
+
+router.put('/account/preferences', requireCustomer, (req, res) => {
+  const optIn = req.body.marketing_opt_in ? 1 : 0;
+  db.prepare(`UPDATE customers SET marketing_opt_in=? WHERE id=?`).run(optIn, req.customerId);
+  res.json({ success: true, marketing_opt_in: optIn });
+});
+
+router.get('/account/orders', requireCustomer, (req, res) => {
+  const orders = db.prepare(`
+    SELECT id, tracking_code, order_type, status, created_at,
+           (SELECT COALESCE(SUM(price*quantity),0) FROM order_items WHERE order_id=orders.id) AS subtotal
+    FROM orders WHERE customer_id=? ORDER BY created_at DESC LIMIT 50
+  `).all(req.customerId);
+  const itemsBy = {};
+  orders.forEach(o => { itemsBy[o.id] = db.prepare(`SELECT item_name, quantity, price FROM order_items WHERE order_id=?`).all(o.id); });
+  res.json(orders.map(o => ({ ...o, items: itemsBy[o.id] || [] })));
+});
+
+router.get('/account/loyalty', requireCustomer, (req, res) => {
+  const c = db.prepare(`SELECT points FROM customers WHERE id=?`).get(req.customerId);
+  const ledger = db.prepare(`SELECT points, reason, created_at FROM loyalty_transactions WHERE customer_id=? ORDER BY created_at DESC LIMIT 50`).all(req.customerId);
+  res.json({ points: c ? c.points : 0, ledger });
+});
+
+// Public unsubscribe from marketing email (one-click token from email footer).
+router.post('/unsubscribe', (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ error: 'Missing unsubscribe token.' });
+  const c = db.prepare(`SELECT id FROM customers WHERE unsubscribe_token=?`).get(String(token));
+  if (!c) return res.status(404).json({ error: 'This unsubscribe link is invalid.' });
+  db.prepare(`UPDATE customers SET marketing_opt_in=0 WHERE id=?`).run(c.id);
+  res.json({ success: true, message: 'You have been unsubscribed from marketing emails.' });
+});
+
 module.exports = router;
