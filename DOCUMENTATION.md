@@ -684,9 +684,8 @@ cross-location staff lending; central menu with overrides; 2FA; inventory valuat
 roles/permissions; executive multi-location dashboard & benchmarking; demand-based scheduling;
 finance/accounting integration.
 
-**Tier 5 — Transformational:** inventory auto-depletion (recipes/BOM linking sales to stock);
-operational + real-time notifications (order-ready, needs-help, reminders); online ordering
-for pickup/delivery.
+**Tier 5 — Transformational:** operational + real-time notifications (order-ready, needs-help,
+reminders); online ordering for pickup/delivery. *(Inventory auto-depletion shipped in 1.9.0.)*
 
 **Scale-dependent (defer until past a single server):** PostgreSQL migration; Redis pub/sub for
 multi-instance WebSocket fan-out; accessibility (WCAG); i18n / multi-currency; GDPR
