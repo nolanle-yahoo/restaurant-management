@@ -346,6 +346,7 @@ async function openPaymentModal(orderId, onPaid) {
   _payState = { orderId, onPaid, bill: null, tipPct: 0, method: 'card', stripe: null, card: null, cfg: null };
   document.getElementById('payAlert').classList.add('hidden');
   document.getElementById('payTip').value = '0.00';
+  const pe = document.getElementById('payEmail'); if (pe) pe.value = '';
   setPayMethod('card');
   try {
     const [bill, cfg] = await Promise.all([API.bill(orderId), API.paymentConfig()]);
