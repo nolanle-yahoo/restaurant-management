@@ -309,6 +309,39 @@ function createSchema() {
       db.exec(`PRAGMA foreign_keys = ON`);
     }
   } catch(e) { db.exec(`PRAGMA foreign_keys = ON`); }
+
+  // Migrate orders: make table_id nullable so online (pickup/delivery) orders,
+  // which have no table, can be stored alongside dine-in orders.
+  try {
+    const tcol = db.prepare('PRAGMA table_info(orders)').all().find(c => c.name === 'table_id');
+    if (tcol && tcol.notnull === 1) {
+      db.exec(`PRAGMA foreign_keys = OFF`);
+      db.exec(`
+        CREATE TABLE orders_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          table_id INTEGER REFERENCES tables(id),
+          location_id INTEGER NOT NULL REFERENCES locations(id),
+          waiter_id INTEGER REFERENCES users(id),
+          status TEXT DEFAULT 'pending' CHECK(status IN ('pending','preparing','ready','served')),
+          notes TEXT,
+          order_type TEXT NOT NULL DEFAULT 'dine_in',
+          customer_name TEXT,
+          customer_phone TEXT,
+          customer_email TEXT,
+          delivery_address TEXT,
+          tracking_code TEXT,
+          created_at TEXT DEFAULT (datetime('now')),
+          updated_at TEXT DEFAULT (datetime('now'))
+        )
+      `);
+      db.exec(`INSERT INTO orders_new
+        (id,table_id,location_id,waiter_id,status,notes,order_type,customer_name,customer_phone,customer_email,delivery_address,tracking_code,created_at,updated_at)
+        SELECT id,table_id,location_id,waiter_id,status,notes,order_type,customer_name,customer_phone,customer_email,delivery_address,tracking_code,created_at,updated_at FROM orders`);
+      db.exec(`DROP TABLE orders`);
+      db.exec(`ALTER TABLE orders_new RENAME TO orders`);
+      db.exec(`PRAGMA foreign_keys = ON`);
+    }
+  } catch(e) { db.exec(`PRAGMA foreign_keys = ON`); }
 }
 
 module.exports = { createSchema };
