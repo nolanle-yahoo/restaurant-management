@@ -832,12 +832,14 @@ approvals dashboard** (owner + manager).
 **Delivered in 1.16.0:** **vendor master records**; **self-service My Pay & Tips** (all staff);
 **course tagging** with kitchen grouping.
 
-**Tier 2–3 — Operational depth (remaining):** order edit (add/remove items); certification
-tracking; cycle counts / barcode receiving; expiry/lot (FIFO) tracking; per-employee
-performance; shift swapping; waitlist; regional-manager role & cross-location staff lending;
-central menu with overrides; 2FA; inventory valuation & COGS. *(Through 1.16.0: messaging,
-discounts/comps/voids, split-the-bill, transfer/merge, waste, approvals dashboard, vendors,
-self-service pay, and courses are all shipped.)*
+**Delivered in 1.17.0:** **order edit** (add/change-qty/remove items with inventory
+re-depletion + audit, blocked once paid).
+
+**Tier 2–3 — Operational depth (remaining):** certification tracking; cycle counts / barcode
+receiving; expiry/lot (FIFO) tracking; per-employee performance; shift swapping; waitlist;
+regional-manager role & cross-location staff lending; central menu with overrides; 2FA;
+inventory valuation & COGS. *(Through 1.17.0: messaging, discounts/comps/voids, split-the-bill,
+transfer/merge, waste, approvals, vendors, self-service pay, courses, and order edit shipped.)*
 
 **Tier 4 — High impact:** par levels + auto-reorder; executive multi-location dashboard &
 benchmarking; demand-based scheduling; finance/accounting integration. *(Configurable
