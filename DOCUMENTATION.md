@@ -270,6 +270,10 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   disabled **✓ Paid** indicator.
 - **FR-16.5** Owners and managers can view payment history and **refund** a paid payment
   directly from the Payments & Refunds table (under Sales Analytics).
+- **FR-16.6** **Loyalty redemption** — when an order is linked to a customer account, staff can
+  redeem the customer's points at settlement (20 points = $1) for a discount, capped at the
+  bill and the customer's balance; points are deducted and logged. (Direct-payment path; Stripe
+  card prepay redemption is a follow-up.)
 
 ### 5.17 Customer-Facing Site (Public)
 - **FR-17.1** Anyone can browse a location's menu (categories and available, priced items)
