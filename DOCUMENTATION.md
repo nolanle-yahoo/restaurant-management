@@ -534,6 +534,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | Method | Path | Access | Description |
 |---|---|---|---|
 | GET | `/` | Owner, Manager | Payroll report (gross, tax 10%, benefit 5%, net, plus tips and take-home). |
+| GET | `/me` | Any staff | The caller's own hours, gross/net pay, and tips for a date range (default 7 days). |
 
 ### Time Off — `/api/time-off`
 | Method | Path | Access | Description |
