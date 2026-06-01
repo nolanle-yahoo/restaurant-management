@@ -309,6 +309,7 @@ async function loadMyOrders() {
             ${o.paid
               ? `<button class="btn btn-sm" disabled style="opacity:.65">✓ Paid</button>`
               : `<button class="btn btn-gold btn-sm" onclick="openPaymentModal(${o.id}, loadMyOrders)">💳 Settle Bill</button>`}
+            ${!o.paid && caps.can_void ? `<button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="voidOrderPrompt(${o.id}, loadMyOrders)">Void</button>` : ''}
           </div>
         </div>
       `).join('')
