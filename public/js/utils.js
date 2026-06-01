@@ -567,18 +567,24 @@ async function submitPayment() {
   const btn = document.getElementById('payChargeBtn');
   btn.disabled = true; btn.textContent = 'Processing…';
   try {
+    const amount = _splitSub();
+    const partial = _isPartial();
     const useStripe = _payState.method === 'card' && _payState.cfg && _payState.cfg.stripe_enabled && _payState.cfg.publishable_key;
+    let res;
     if (useStripe) {
-      const intent = await API.paymentIntent({ order_id: _payState.orderId, tip, email });
+      const intent = await API.paymentIntent({ order_id: _payState.orderId, tip, email, amount });
       const result = await _payState.stripe.confirmCardPayment(intent.client_secret, { payment_method: { card: _payState.card } });
       if (result.error) throw new Error(result.error.message);
-      await API.confirmPayment(intent.payment_id);
+      res = await API.confirmPayment(intent.payment_id);
     } else {
-      await API.recordPayment({ order_id: _payState.orderId, tip, method: _payState.method, email, redeem_points: _redeemPts(),
-        manual_discount: _manualDiscount(), discount_reason: (document.getElementById('payDiscountReason') || {}).value || '' });
+      const portionBill = (() => { const b=_payState.bill, full=_payState.fullSub||b.subtotal, prop=full>0?amount/full:1; return amount + (b.service_charge||0)*prop + b.tax*prop; })();
+      res = await API.recordPayment({ order_id: _payState.orderId, tip, method: _payState.method, email, amount,
+        redeem_points: partial ? 0 : _redeemPts(),
+        manual_discount: partial ? 0 : _manualDiscount(portionBill), discount_reason: (document.getElementById('payDiscountReason') || {}).value || '' });
     }
     hideModal('paymentModal');
-    showAlert('alertBox', 'Payment received — bill settled.', 'success');
+    const settled = !res || res.fully_paid !== false;
+    showAlert('alertBox', settled ? 'Payment received — bill settled.' : `Partial payment received — balance $${(res.balance_subtotal||0).toFixed(2)} remaining.`, 'success');
     if (typeof _payState.onPaid === 'function') _payState.onPaid();
   } catch (e) {
     showAlert('payAlert', e.message || 'Payment failed');
