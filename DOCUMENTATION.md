@@ -652,6 +652,8 @@ Shared client modules:
   is keyed per user so staff sharing a public IP aren't collectively locked out).
 - **Authorization:** every protected route validates the token and, where applicable, the
   caller's role; location scoping prevents cross-location data access for non-owners.
+  Sensitive actions (refund, void, discount) use an owner-configurable permission overlay
+  enforced server-side (the owner is always permitted).
 - **Login protection:** per-IP rate limiting on the login endpoint.
 - **Secret hygiene:** the server refuses to start with a missing or known-weak `JWT_SECRET`.
 - **CORS:** restricted to a configured origin.
