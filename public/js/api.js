@@ -99,7 +99,12 @@ const API = {
   messagesMine()           { return this.get('/messages/mine'); },
   messagesSend(data)       { return this.post('/messages', data); },
   messagesRead(id)         { return this.put(`/messages/${id}/read`, {}); },
+  messagesReply(id, message) { return this.post(`/messages/${id}/reply`, { message }); },
   messagesDelete(id)       { return this.delete(`/messages/${id}`); },
+
+  announcements()          { return this.get('/announcements'); },
+  announcementCreate(data) { return this.post('/announcements', data); },
+  announcementDelete(id)   { return this.delete(`/announcements/${id}`); },
 
   reservations(params = {}) {
     const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
