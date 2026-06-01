@@ -585,6 +585,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/account/me` · `/account/orders` · `/account/loyalty` | Customer | Profile, order history, and points + ledger. |
 | PUT | `/account/preferences` | Customer | Toggle marketing opt-in. |
 | POST | `/unsubscribe` | Public | One-click unsubscribe via emailed token. |
+| POST | `/feedback` | Public (rate-limited) | Submit a 1–5 rating + comment for a receipt code. |
 | GET | `/receipt` | Public | View an itemized digital receipt by receipt code. |
 
 ### Analytics — `/api/analytics`
