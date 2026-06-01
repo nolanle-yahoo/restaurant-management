@@ -327,6 +327,22 @@ router.get('/account/loyalty', requireCustomer, (req, res) => {
   res.json({ points, tier: tierFor(points), referral_code: c ? c.referral_code : null, ledger });
 });
 
+// Post-visit feedback from the receipt page (rating 1–5 + optional comment).
+router.post('/feedback', orderLimiter, (req, res) => {
+  const code = String(req.body.receipt_code || '').trim().toUpperCase();
+  const rating = parseInt(req.body.rating);
+  const comment = (req.body.comment || '').toString().slice(0, 1000) || null;
+  if (!code || !(rating >= 1 && rating <= 5)) return res.status(400).json({ error: 'A receipt code and a rating (1–5) are required.' });
+  const p = db.prepare(`SELECT order_id, location_id FROM payments WHERE receipt_code=?`).get(code);
+  if (!p) return res.status(404).json({ error: 'We could not find that receipt.' });
+  if (db.prepare(`SELECT id FROM feedback WHERE receipt_code=?`).get(code)) {
+    return res.status(409).json({ error: 'Feedback has already been submitted for this receipt. Thank you!' });
+  }
+  db.prepare(`INSERT INTO feedback (receipt_code, order_id, location_id, rating, comment) VALUES (?,?,?,?,?)`)
+    .run(code, p.order_id, p.location_id, rating, comment);
+  res.json({ success: true, message: 'Thank you for your feedback!' });
+});
+
 // Public unsubscribe from marketing email (one-click token from email footer).
 router.post('/unsubscribe', (req, res) => {
   const { token } = req.body;
