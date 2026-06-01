@@ -288,6 +288,17 @@ function createSchema() {
       reason TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
+
+    -- Broadcast announcements from owner/manager to staff (location-scoped or global).
+    CREATE TABLE IF NOT EXISTS announcements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      location_id INTEGER REFERENCES locations(id),
+      author_id INTEGER REFERENCES users(id),
+      author_name TEXT,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
   `);
 
   // Column migrations
