@@ -1,9 +1,11 @@
 const express = require('express');
 const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
+const crypto  = require('crypto');
 const rateLimit = require('express-rate-limit');
 const db      = require('../db/database');
 const { verifyToken } = require('../middleware/auth');
+const { sendEmail } = require('../lib/email');
 
 const router = express.Router();
 
@@ -13,6 +15,14 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many login attempts. Please try again in 15 minutes.' },
+});
+
+const resetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please try again later.' },
 });
 
 router.post('/login', loginLimiter, (req, res) => {
