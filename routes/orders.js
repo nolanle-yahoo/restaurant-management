@@ -29,7 +29,7 @@ router.get('/', requireRole('owner','manager','waiter','chef','employee','frontd
   res.json(orders.map(o => ({ ...o, items: itemMap[o.id] || [] })));
 });
 
-router.post('/', requireRole('waiter','manager','employee','chef','frontdesk','stockroom'), (req, res) => {
+router.post('/', requireRole('waiter','manager','employee','chef','frontdesk','stockroom'), requireOnDuty, (req, res) => {
   const { table_id, items, notes } = req.body;
   if (!table_id || !items?.length) return res.status(400).json({ error: 'table_id and items required' });
   const table = db.prepare(`SELECT * FROM tables WHERE id=?`).get(table_id);
