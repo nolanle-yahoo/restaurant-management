@@ -494,31 +494,55 @@ function _redeemPts() {
   return Math.max(0, Math.min(v, _payState.maxRedeem || 0));
 }
 
-function _manualDiscount() {
-  const billAmt = _payState.bill ? _payState.bill.subtotal + (_payState.bill.service_charge || 0) + _payState.bill.tax : 0;
+// Subtotal portion being paid now (clamped to the remaining balance).
+function _splitSub() {
+  const rem = _payState.remainingSub != null ? _payState.remainingSub : (_payState.bill ? _payState.bill.subtotal : 0);
+  const v = parseFloat(document.getElementById('paySplitSub').value);
+  if (!Number.isFinite(v) || v <= 0) return rem;
+  return Math.min(Math.round(v * 100) / 100, rem);
+}
+function _isPartial() { return _splitSub() < (_payState.remainingSub || 0) - 0.005; }
+function splitWay(n) {
+  const rem = _payState.remainingSub || 0;
+  document.getElementById('paySplitSub').value = (n <= 1 ? rem : Math.round((rem / n) * 100) / 100).toFixed(2);
+  renderPayTotal();
+}
+
+function _manualDiscount(portionBill) {
+  if (_isPartial()) return 0;
   const loyalty = Math.round(_redeemPts() * (_payState.pointValue || 0.05) * 100) / 100;
   const v = Math.max(0, parseFloat(document.getElementById('payManualDiscount').value) || 0);
-  return Math.min(v, Math.max(0, Math.round((billAmt - loyalty) * 100) / 100));
+  return Math.min(v, Math.max(0, Math.round((portionBill - loyalty) * 100) / 100));
 }
 
 function compBill() {
   const b = _payState.bill; if (!b) return;
+  splitWay(1); // comp implies paying the full remaining bill
+  const portionBill = b.subtotal + (b.service_charge || 0) + b.tax;
   const loyalty = Math.round(_redeemPts() * (_payState.pointValue || 0.05) * 100) / 100;
-  const billAmt = b.subtotal + (b.service_charge || 0) + b.tax;
-  document.getElementById('payManualDiscount').value = Math.max(0, Math.round((billAmt - loyalty) * 100) / 100).toFixed(2);
+  document.getElementById('payManualDiscount').value = Math.max(0, Math.round((portionBill - loyalty) * 100) / 100).toFixed(2);
   if (!document.getElementById('payDiscountReason').value) document.getElementById('payDiscountReason').value = 'comp';
   renderPayTotal();
 }
 
 function renderPayTotal() {
   const b = _payState.bill; if (!b) return;
+  const full = _payState.fullSub || b.subtotal;
+  const portionSub = _splitSub();
+  const prop = full > 0 ? portionSub / full : 1;
+  const portionService = Math.round((b.service_charge || 0) * prop * 100) / 100;
+  const portionTax = Math.round(b.tax * prop * 100) / 100;
+  const partial = _isPartial();
+  // Loyalty + manual discount only apply to a single full payment.
+  if (document.getElementById('payLoyalty')) document.getElementById('payLoyalty').style.display = (!partial && _payState.hasLoyalty && _payState.method !== 'card_stripe') ? 'block' : 'none';
+  if (document.getElementById('payDiscount')) document.getElementById('payDiscount').style.display = (!partial && _payState.canDiscount) ? 'block' : 'none';
   const tip = parseFloat(document.getElementById('payTip').value) || 0;
-  const pts = _redeemPts();
+  const pts = partial ? 0 : _redeemPts();
   const discount = Math.round(pts * (_payState.pointValue || 0.05) * 100) / 100;
   const line = document.getElementById('payDiscountLine');
   if (line) line.textContent = discount > 0 ? `−$${discount.toFixed(2)} loyalty discount (${pts} pts)` : '';
-  const manual = _manualDiscount();
-  const total = b.subtotal + (b.service_charge || 0) + b.tax - discount - manual + Math.max(0, tip);
+  const manual = _manualDiscount(portionSub + portionService + portionTax);
+  const total = portionSub + portionService + portionTax - discount - manual + Math.max(0, tip);
   document.getElementById('payTotal').textContent = Math.max(0, total).toFixed(2);
 }
 
