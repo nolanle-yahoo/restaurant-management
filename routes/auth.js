@@ -40,7 +40,7 @@ router.post('/login', loginLimiter, (req, res) => {
   }
 
   const token = jwt.sign(
-    { id: user.id, role: user.role, location_id: user.location_id, name: user.name },
+    { id: user.id, role: user.role, location_id: user.location_id, name: user.name, tv: user.token_version || 0 },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN }
   );
