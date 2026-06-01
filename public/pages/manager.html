@@ -290,7 +290,10 @@
         <div class="card">
           <div class="card-header">
             <div class="card-title">Floor Plan</div>
-            <button class="btn btn-ghost btn-sm" onclick="openMgrTableModal()">+ Add Table</button>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost btn-sm" onclick="mergeTablesPrompt()">↔ Merge Tables</button>
+              <button class="btn btn-ghost btn-sm" onclick="openMgrTableModal()">+ Add Table</button>
+            </div>
           </div>
           <div id="mgrFpContent" style="padding:4px 0"></div>
         </div>
