@@ -273,6 +273,12 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   date, time, notes); requests are created as **pending** for staff confirmation and are
   rate-limited to deter abuse.
 - **FR-17.3** The public pages are linked from the staff login screen and require no account.
+- **FR-17.4** **Online ordering** — anyone can place a **pickup or delivery** order from a
+  location's menu without logging in. Prices are taken from the server; the order enters the
+  kitchen queue as a normal order (no table/waiter), inventory auto-depletes, and staff are
+  notified. The customer gets a **tracking code** to follow status (received → preparing →
+  ready → completed) and an email confirmation. Payment is collected by staff at
+  collection/handoff (online prepayment is a planned follow-up).
 
 ### 5.18 Sales & Revenue Analytics
 - **FR-18.1** Owners and managers view a sales analytics dashboard over a selectable date
