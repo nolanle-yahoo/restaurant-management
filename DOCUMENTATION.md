@@ -258,7 +258,8 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   order cannot be paid twice. Once paid, the UI reflects this: the payment dialog's **Charge**
   action is disabled and relabeled **Paid**, and the order's "Settle Bill" button becomes a
   disabled **✓ Paid** indicator.
-- **FR-16.5** Owners and managers can refund a paid payment and view payment history.
+- **FR-16.5** Owners and managers can view payment history and **refund** a paid payment
+  directly from the Payments & Refunds table (under Sales Analytics).
 
 ### 5.17 Customer-Facing Site (Public)
 - **FR-17.1** Anyone can browse a location's menu (categories and available, priced items)
