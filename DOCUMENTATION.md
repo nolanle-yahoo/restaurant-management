@@ -243,6 +243,15 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   rate-limited to deter abuse.
 - **FR-17.3** The public pages are linked from the staff login screen and require no account.
 
+### 5.18 Sales & Revenue Analytics
+- **FR-18.1** Owners and managers view a sales analytics dashboard over a selectable date
+  range (with 7/30/90-day quick ranges).
+- **FR-18.2** Headline KPIs: total revenue, paid orders, average ticket, and tips collected.
+- **FR-18.3** Visual breakdowns: revenue trend by day, top-selling items, and a
+  payment-method split.
+- **FR-18.4** Owners additionally see revenue broken down by location; managers are scoped to
+  their own location.
+
 ### 5.19 Notifications & Self-Service (Email)
 - **FR-19.1** A shared email layer sends transactional messages via SMTP when configured, or
   records them to an email log in simulated mode otherwise — so all flows work without setup.
@@ -252,15 +261,6 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   and viewable/printable at a public receipt page via its receipt code.
 - **FR-19.4** Users can request a **password reset**; a one-time, expiring link is emailed and
   consumed on the reset page. Requests never reveal whether an email is registered.
-
-### 5.18 Sales & Revenue Analytics
-- **FR-18.1** Owners and managers view a sales analytics dashboard over a selectable date
-  range (with 7/30/90-day quick ranges).
-- **FR-18.2** Headline KPIs: total revenue, paid orders, average ticket, and tips collected.
-- **FR-18.3** Visual breakdowns: revenue trend by day, top-selling items, and a
-  payment-method split.
-- **FR-18.4** Owners additionally see revenue broken down by location; managers are scoped to
-  their own location.
 
 ---
 
