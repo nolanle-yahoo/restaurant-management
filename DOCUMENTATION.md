@@ -562,7 +562,7 @@ to scope their subscription. The server broadcasts:
 | `owner.html` | Owner | Overview, Staff & Locations, Timesheets, Warehouse, Supply, Transfers, Floor Plan, Admin Panel, Reservations, Menu (with recipe editor), Sales Analytics (incl. Tax & Service Charge settings and Payments & Refunds), Audit Log, Time Off, Messages. |
 | `manager.html` | Manager / Stockroom | Staff, Schedule, Timesheets, Inventory, Warehouse, Supply, Transfers, Floor Plan, Reservations, Menu, Sales Analytics (incl. Payments & Refunds), Time Off, Messages; low-stock banner; Online Orders panel; live toasts. |
 | `waiter.html` | Waiter | My Area, Full Floor, My Orders; take/serve with menu picker + special request; Settle Bill. |
-| `chef.html` | Chef | Kitchen queue (pending/preparing/ready), inventory quick view, low-stock alert, and Menu Availability (86/un-86). |
+| `chef.html` | Chef | Kitchen queue (dine-in + online pickup/delivery), inventory quick view, low-stock alert, Menu Availability (86/un-86), and live toasts. |
 | `frontdesk.html` | Front Desk | Floor Map, Areas & Staff, Reservations. |
 | `employee.html` | Employee | My Time (clock), Tables & Orders (take orders, Settle Bill), Time Off, Messages. |
 | `mobile.html` | Field roles | Floor, My Area, Orders, Profile (clock) — touch-optimized. |
