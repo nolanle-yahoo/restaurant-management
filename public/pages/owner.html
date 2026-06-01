@@ -1859,6 +1859,21 @@ async function togglePerm(capability, role, allowed) {
   try { await API.setPermission({ capability, role, allowed }); } catch(e) { alert(e.message); loadPermissions(); }
 }
 
+// ── Guest feedback ────────────────────────────────────────────
+async function loadOwnerFeedback() {
+  let d; try { d = await API.feedback(document.getElementById('anLocFilter')?.value || ''); } catch(e) { return; }
+  document.getElementById('fbAvg').textContent = d.count ? `★ ${d.average} · ${d.count} reviews` : 'No reviews yet';
+  const el = document.getElementById('ownerFeedback');
+  el.innerHTML = d.items.length ? d.items.slice(0, 50).map(f => `
+    <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--gold)">${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}</span>
+        <span class="text-sm text-muted">${f.location_name || ''} · ${fmtDateTime(f.created_at)}</span>
+      </div>
+      ${f.comment ? `<div style="font-size:13.5px;margin-top:4px">${f.comment}</div>` : ''}
+    </div>`).join('') : '<p style="color:var(--muted);padding:12px">No feedback yet.</p>';
+}
+
 // ── Payments & refunds ────────────────────────────────────────
 async function loadOwnerPayments() {
   const loc = document.getElementById('anLocFilter')?.value || '';
