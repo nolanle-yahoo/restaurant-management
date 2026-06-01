@@ -12,6 +12,7 @@ function seed() {
     DELETE FROM menu_items; DELETE FROM menu_categories;
     DELETE FROM waiter_assignments; DELETE FROM schedules;
     DELETE FROM supply_orders; DELETE FROM inventory_transactions; DELETE FROM transfer_requests;
+    DELETE FROM payments; DELETE FROM email_log; DELETE FROM password_reset_tokens;
     DELETE FROM inventory; DELETE FROM order_items; DELETE FROM orders;
     DELETE FROM tables; DELETE FROM areas; DELETE FROM clock_records; DELETE FROM users; DELETE FROM locations;
     DELETE FROM sqlite_sequence;
