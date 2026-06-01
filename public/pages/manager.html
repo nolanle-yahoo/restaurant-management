@@ -1123,6 +1123,8 @@ function openNewOrder() {
   ['orderItemName','orderVendor','orderShipAddr','orderNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('orderQty').value = 10;
   document.getElementById('orderExpDate').value = '';
+  document.getElementById('orderVendor').disabled = false;
+  const vs = document.getElementById('orderVendorSelect'); if (vs) vs.value = '';
   document.getElementById('orderAlert').classList.add('hidden');
   selectedItemId = null;
   showModal('orderModal');
