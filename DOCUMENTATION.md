@@ -68,7 +68,7 @@ Express app  ──────────────  HTTP server + ws server
    └─ SPA fallback + global error handler
    │
    ▼
-SQLite database (30 tables)
+SQLite database (31 tables)
 ```
 
 - The server boots by validating `JWT_SECRET`, creating the schema (idempotent), mounting all
