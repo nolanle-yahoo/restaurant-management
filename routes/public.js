@@ -44,7 +44,7 @@ router.get('/menu', (req, res) => {
   if (!location) return res.status(404).json({ error: 'Location not found' });
   const categories = db.prepare(`SELECT id, name FROM menu_categories WHERE location_id=? AND is_active=1 ORDER BY sort_order, name`).all(locId);
   const items = db.prepare(`
-    SELECT id, category_id, name, description, price
+    SELECT id, category_id, name, description, price, image_url, allergens, dietary
     FROM menu_items WHERE location_id=? AND is_available=1
     ORDER BY sort_order, name
   `).all(locId);
