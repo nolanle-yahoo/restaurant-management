@@ -9,6 +9,9 @@ const { sendEmail } = require('../lib/email');
 
 const router = express.Router();
 
+// Minimum password length (used on change and reset).
+const MIN_PASSWORD = 8;
+
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -23,6 +26,18 @@ const resetLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please try again later.' },
+});
+
+// Throttle password-change attempts to slow current-password guessing. Keyed by
+// user id (not IP) so staff sharing a restaurant's public IP aren't collectively
+// locked out.
+const passwordChangeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => (req.user && req.user.id ? `u${req.user.id}` : req.ip),
+  message: { error: 'Too many password-change attempts. Please try again later.' },
 });
 
 router.post('/login', loginLimiter, (req, res) => {
