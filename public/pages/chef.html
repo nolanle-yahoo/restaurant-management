@@ -151,6 +151,12 @@ async function loadQueue() {
   document.getElementById('orderQueue').innerHTML = activeHtml + readyHtml;
 }
 
+function orderLabel(o) {
+  if (o.table_id) return 'Table ' + o.table_number;
+  const t = o.order_type === 'delivery' ? '🚗 Delivery' : '🥡 Pickup';
+  return `${t} — ${o.customer_name || 'Online'}`;
+}
+
 async function advance(id, status) {
   await API.updateOrder(id, status);
   loadQueue();
