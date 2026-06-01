@@ -493,6 +493,8 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/` | Waiter, Manager, Employee, Chef, Front Desk, Stockroom | Create order with items + special request; broadcasts; audited. |
 | PUT | `/:id` | Same as POST + Owner | Advance status; broadcasts; audited. |
 | PUT | `/:id/void` | On-duty staff with `void` permission | Void an unpaid order (reason); restores inventory; audited. |
+| PUT | `/:id/move` | On-duty floor staff | Move an order to another table (transfer). |
+| PUT | `/merge` | On-duty floor staff | Merge a table's open orders into another table. |
 
 ### Inventory — `/api/inventory`
 | Method | Path | Access | Description |
