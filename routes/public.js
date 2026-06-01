@@ -114,6 +114,95 @@ router.post('/reservations/cancel', (req, res) => {
   res.json({ success: true, message: 'Your reservation has been cancelled.' });
 });
 
+// ── Online ordering (pickup / delivery), pay on collection ──────────
+const orderLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many order attempts. Please try again later.' },
+});
+
+// Place an online order. Prices are taken from the server (never trusted from
+// the client). Created as a 'pending' kitchen order with no table/waiter.
+router.post('/order', orderLimiter, (req, res) => {
+  const { location_id, order_type, items, customer_name, customer_phone, customer_email, delivery_address, notes } = req.body;
+  const type = order_type === 'delivery' ? 'delivery' : 'pickup';
+  if (!location_id || !customer_name || !customer_phone || !Array.isArray(items) || !items.length) {
+    return res.status(400).json({ error: 'Location, name, phone and at least one item are required.' });
+  }
+  if (type === 'delivery' && !delivery_address) {
+    return res.status(400).json({ error: 'A delivery address is required for delivery orders.' });
+  }
+  const loc = db.prepare(`SELECT id FROM locations WHERE id=? AND status='active'`).get(location_id);
+  if (!loc) return res.status(404).json({ error: 'Location not found' });
+
+  // Resolve each requested item to a real, available menu item at this location.
+  const lookup = db.prepare(`SELECT id, name, price FROM menu_items WHERE id=? AND location_id=? AND is_available=1`);
+  const resolved = [];
+  for (const it of items) {
+    const mi = lookup.get(it.id, location_id);
+    if (!mi) return res.status(400).json({ error: 'One or more items are unavailable. Please refresh the menu.' });
+    const qty = Math.max(1, Math.min(50, parseInt(it.quantity) || 1));
+    resolved.push({ name: mi.name, price: mi.price, quantity: qty });
+  }
+
+  const code = makeCode('ORD');
+  const tx = db.transaction(() => {
+    const r = db.prepare(`
+      INSERT INTO orders (table_id, location_id, waiter_id, status, notes, order_type, customer_name, customer_phone, customer_email, delivery_address, tracking_code)
+      VALUES (NULL, ?, NULL, 'pending', ?, ?, ?, ?, ?, ?, ?)
+    `).run(location_id, notes ? String(notes).slice(0, 500) : null, type,
+           String(customer_name).slice(0, 120), String(customer_phone).slice(0, 40),
+           (customer_email || '').trim() || null, type === 'delivery' ? String(delivery_address).slice(0, 300) : null, code);
+    const orderId = r.lastInsertRowid;
+    const ins = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price) VALUES (?,?,?,?)`);
+    resolved.forEach(i => ins.run(orderId, i.name, i.quantity, i.price));
+    return orderId;
+  });
+  const orderId = tx();
+
+  // Deplete inventory (no req.user → logged with null actor) and alert staff.
+  depleteForOrder({}, orderId, Number(location_id));
+
+  const subtotal = round2(resolved.reduce((s, i) => s + i.price * i.quantity, 0));
+  const { sales_tax_rate, service_charge_rate } = getRates();
+  const service = round2(subtotal * service_charge_rate);
+  const tax = round2((subtotal + service) * sales_tax_rate);
+  const estimated_total = round2(subtotal + service + tax);
+
+  notify(`New ${type} order — ${customer_name} (${code})`, { locId: Number(location_id), roles: ['chef', 'manager', 'owner'], kind: 'online_order' });
+  broadcast('order_update', { type: 'new', order_id: orderId, location_id: Number(location_id) }, location_id);
+
+  const locName = (db.prepare(`SELECT name FROM locations WHERE id=?`).get(location_id) || {}).name || 'our restaurant';
+  if (customer_email) {
+    sendEmail(customer_email.trim(),
+      `Your order is in — ${code}`,
+      `Hi ${customer_name},\n\nThanks for your ${type} order at ${locName}.\n\n` +
+      resolved.map(i => `  ${i.name} x${i.quantity}  $${(i.price * i.quantity).toFixed(2)}`).join('\n') +
+      `\n\nEstimated total (pay on ${type === 'delivery' ? 'delivery' : 'collection'}): $${estimated_total.toFixed(2)}\n` +
+      `Tracking code: ${code}\nTrack it at: ${(process.env.ALLOWED_ORIGIN || 'http://localhost:3000')}/order.html?code=${code}\n\nWe'll have it ready soon!`,
+      'online_order');
+  }
+
+  res.json({ success: true, tracking_code: code, estimated_total,
+             message: `Order placed! Your tracking code is ${code}.` });
+});
+
+// Track an online order by code (+ phone to verify).
+router.get('/order', (req, res) => {
+  const { code, contact } = req.query;
+  if (!code) return res.status(400).json({ error: 'Tracking code required' });
+  const o = db.prepare(`
+    SELECT o.tracking_code, o.status, o.order_type, o.customer_name, o.delivery_address, o.created_at, l.name as location_name
+    FROM orders o JOIN locations l ON o.location_id=l.id
+    WHERE o.tracking_code=?
+  `).get(String(code).trim().toUpperCase());
+  if (!o) return res.status(404).json({ error: 'No order found for that code.' });
+  const items = db.prepare(`SELECT oi.item_name, oi.quantity, oi.price FROM order_items oi JOIN orders o ON oi.order_id=o.id WHERE o.tracking_code=?`).all(String(code).trim().toUpperCase());
+  res.json({ ...o, items });
+});
+
 // Public receipt view by code
 router.get('/receipt', (req, res) => {
   const { code } = req.query;
