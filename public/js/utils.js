@@ -124,7 +124,7 @@ function _injectAccountSettingsModal() {
       <div id="tabPassword" class="tab-pane">
         <div id="pwAlert" class="alert hidden"></div>
         <div class="form-group"><label>Current Password</label><input id="currentPw" type="password" placeholder="••••••••"></div>
-        <div class="form-group"><label>New Password</label><input id="newPw" type="password" placeholder="Min 6 characters"></div>
+        <div class="form-group"><label>New Password</label><input id="newPw" type="password" placeholder="Min 8 characters"></div>
         <div class="form-group"><label>Confirm New Password</label><input id="confirmPw" type="password" placeholder="Repeat new password"></div>
         <div style="display:flex;gap:10px;margin-top:16px">
           <button class="btn btn-primary" onclick="savePassword()">Update Password</button>
