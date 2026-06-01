@@ -293,7 +293,7 @@ router.post('/account/login', accountLimiter, (req, res) => {
   if (!c || !bcrypt.compareSync(String(password || ''), c.password_hash)) {
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
-  res.json({ token: signCustomer(c), customer: { id: c.id, name: c.name, email: c.email, points: c.points, marketing_opt_in: c.marketing_opt_in } });
+  res.json({ token: signCustomer(c), customer: { id: c.id, name: c.name, email: c.email, points: c.points, marketing_opt_in: c.marketing_opt_in, tier: tierFor(c.points), referral_code: c.referral_code } });
 });
 
 router.get('/account/me', requireCustomer, (req, res) => {
