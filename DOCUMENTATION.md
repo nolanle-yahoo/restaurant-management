@@ -344,11 +344,14 @@ SQLite database with 24 tables. Core entities and relationships:
 - **time_off_requests** — leave requests with review workflow.
 - **employee_messages** — internal messaging/feedback.
 - **audit_log** — immutable record of sensitive actions.
-- **payments** — bill settlement per order: subtotal, tax, tip, total, method (card/cash/mobile),
-  status (pending/paid/refunded/failed), Stripe intent reference, receipt code/email, and the
-  processing employee. Reservations also carry a public confirmation code.
+- **payments** — bill settlement per order: subtotal, service charge, tax, tip, total, method
+  (card/cash/mobile), status (pending/paid/refunded/failed), Stripe intent reference, receipt
+  code/email, and the processing employee. Reservations also carry a public confirmation code.
 - **email_log** — every outbound notification (sent or simulated) for auditability.
 - **password_reset_tokens** — one-time, expiring tokens backing the self-service password reset.
+- **settings** — global key/value configuration (e.g., sales-tax and service-charge rates).
+- **recipes** — bill-of-materials mapping `menu_items` → `inventory` with per-serving
+  quantities; drives auto-depletion and auto-86.
 
 Referential integrity is enforced with foreign keys; status fields use CHECK constraints;
 emails are unique. Schema creation and lightweight column migrations run automatically on
