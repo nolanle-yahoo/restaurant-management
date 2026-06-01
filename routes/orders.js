@@ -177,4 +177,60 @@ router.put('/:id/move', requireRole('owner','manager','waiter','employee','front
   res.json({ success: true });
 });
 
+// ── Order edit (add / change qty / remove items) ──────────────
+const EDIT_ROLES = ['owner','manager','waiter','employee','frontdesk','stockroom','chef'];
+
+// Fetch an editable order or send the appropriate error (404/400/409).
+function getEditableOrder(req, res) {
+  const order = db.prepare(`SELECT * FROM orders WHERE id=?`).get(req.params.id);
+  if (!order) { res.status(404).json({ error: 'Order not found' }); return null; }
+  if (order.voided) { res.status(400).json({ error: 'Cannot edit a voided order.' }); return null; }
+  if (db.prepare(`SELECT 1 FROM payments WHERE order_id=? AND status='paid'`).get(order.id)) {
+    res.status(409).json({ error: 'This order has a payment and can no longer be edited.' }); return null;
+  }
+  return order;
+}
+
+router.post('/:id/items', requireRole(...EDIT_ROLES), requireOnDuty, (req, res) => {
+  const order = getEditableOrder(req, res); if (!order) return;
+  const { name, quantity, price, notes } = req.body;
+  const qty = Math.max(1, parseInt(quantity) || 1);
+  if (!name) return res.status(400).json({ error: 'Item name required' });
+  const cat = (db.prepare(`SELECT c.name FROM menu_items mi JOIN menu_categories c ON mi.category_id=c.id WHERE mi.location_id=? AND mi.name=?`).get(order.location_id, name) || {}).name || '';
+  const r = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, notes, course) VALUES (?,?,?,?,?,?)`)
+    .run(order.id, name, qty, price || 0, notes || null, courseFromCategory(cat));
+  adjustForLine(req, order.id, order.location_id, name, qty);
+  db.prepare(`UPDATE orders SET updated_at=datetime('now') WHERE id=?`).run(order.id);
+  broadcast('order_update', { type: 'edit', order_id: order.id, location_id: order.location_id }, order.location_id);
+  auditLog(req, 'order_item_add', 'order', order.id, { item: name, quantity: qty });
+  res.json({ success: true, item_id: r.lastInsertRowid });
+});
+
+router.put('/:id/items/:itemId', requireRole(...EDIT_ROLES), requireOnDuty, (req, res) => {
+  const order = getEditableOrder(req, res); if (!order) return;
+  const it = db.prepare(`SELECT * FROM order_items WHERE id=? AND order_id=?`).get(req.params.itemId, order.id);
+  if (!it) return res.status(404).json({ error: 'Item not found on this order' });
+  const newQty = parseInt(req.body.quantity);
+  if (!(newQty >= 1)) return res.status(400).json({ error: 'Quantity must be at least 1 (remove the item instead).' });
+  const delta = newQty - it.quantity;
+  db.prepare(`UPDATE order_items SET quantity=? WHERE id=?`).run(newQty, it.id);
+  adjustForLine(req, order.id, order.location_id, it.item_name, delta);
+  db.prepare(`UPDATE orders SET updated_at=datetime('now') WHERE id=?`).run(order.id);
+  broadcast('order_update', { type: 'edit', order_id: order.id, location_id: order.location_id }, order.location_id);
+  auditLog(req, 'order_item_qty', 'order', order.id, { item: it.item_name, from: it.quantity, to: newQty });
+  res.json({ success: true });
+});
+
+router.delete('/:id/items/:itemId', requireRole(...EDIT_ROLES), requireOnDuty, (req, res) => {
+  const order = getEditableOrder(req, res); if (!order) return;
+  const it = db.prepare(`SELECT * FROM order_items WHERE id=? AND order_id=?`).get(req.params.itemId, order.id);
+  if (!it) return res.status(404).json({ error: 'Item not found on this order' });
+  adjustForLine(req, order.id, order.location_id, it.item_name, -it.quantity); // restock
+  db.prepare(`DELETE FROM order_items WHERE id=?`).run(it.id);
+  db.prepare(`UPDATE orders SET updated_at=datetime('now') WHERE id=?`).run(order.id);
+  broadcast('order_update', { type: 'edit', order_id: order.id, location_id: order.location_id }, order.location_id);
+  auditLog(req, 'order_item_remove', 'order', order.id, { item: it.item_name, quantity: it.quantity });
+  res.json({ success: true });
+});
+
 module.exports = router;
