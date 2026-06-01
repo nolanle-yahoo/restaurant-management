@@ -139,7 +139,7 @@ async function loadQueue() {
     ${readySorted.map(o => `
       <div class="order-card status-ready" style="margin-bottom:10px;opacity:.75">
         <div class="order-header">
-          <div class="order-table">Table ${o.table_number}</div>
+          <div class="order-table">${orderLabel(o)}</div>
           ${statusBadge(o.status)}
         </div>
         <div class="order-items" style="margin:8px 0">
