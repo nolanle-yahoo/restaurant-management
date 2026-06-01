@@ -174,6 +174,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-5.6** **Void** — permitted staff can void an unpaid order with a reason; voided orders
   leave the active views, their auto-depleted inventory is restored, the table is freed, and
   the action is audited. A paid order cannot be voided (refund instead).
+- **FR-5.7** **Courses** — each order item is tagged with a course (derived from its menu
+  category: Appetizers/Mains/Desserts/Drinks); the kitchen queue groups a ticket's items by
+  course for clearer prep/firing.
 
 ### 5.6 Menu Management & Pricing
 - **FR-6.1** Owners and managers maintain a per-location menu of categories and priced items.
