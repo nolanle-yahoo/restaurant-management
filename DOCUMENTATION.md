@@ -246,7 +246,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 
 ### 5.16 Payments & Bill Settlement
 - **FR-16.1** Order-handling staff settle a table's bill, producing an itemized total of
-  subtotal + sales tax (configurable, default 8%) + optional tip.
+  subtotal + optional service charge + sales tax + optional tip. The sales-tax and
+  service-charge rates are owner-configurable in-app (Sales Analytics → Tax & Service Charge),
+  falling back to the `SALES_TAX_RATE` env default when unset.
 - **FR-16.2** Tips can be selected by quick percentage (15/18/20%) or entered manually, and
   are recorded against the serving employee for payroll.
 - **FR-16.3** Payment method may be card, cash, or mobile. Card payments use Stripe when
