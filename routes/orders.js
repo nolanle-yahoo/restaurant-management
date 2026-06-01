@@ -18,7 +18,7 @@ router.get('/', requireRole('owner','manager','waiter','chef','employee','frontd
     FROM orders o
     LEFT JOIN tables t ON o.table_id=t.id
     LEFT JOIN users u ON o.waiter_id=u.id
-    WHERE 1=1
+    WHERE o.voided=0
   `;
   const params = [];
   if (locId) { sql += ` AND o.location_id=?`; params.push(locId); }
