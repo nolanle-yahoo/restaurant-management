@@ -255,6 +255,19 @@ function seed() {
     });
   });
 
+  // ── Allergens & dietary tags on representative menu items ────────
+  const dietMap = {
+    'Caesar Salad':      ['gluten, dairy', 'vegetarian'],
+    'Bruschetta':        ['gluten', 'vegetarian,vegan'],
+    'Grilled Salmon':    ['fish', 'gluten_free'],
+    'Mushroom Risotto':  ['dairy', 'vegetarian,gluten_free'],
+    'Pasta Carbonara':   ['gluten, egg, dairy', ''],
+    'Crème Brûlée':      ['dairy, egg', 'vegetarian,gluten_free'],
+    'Lemonade':          ['', 'vegetarian,vegan,gluten_free'],
+  };
+  const setDiet = db.prepare(`UPDATE menu_items SET allergens=?, dietary=? WHERE name=?`);
+  Object.entries(dietMap).forEach(([name, [allerg, diet]]) => setDiet.run(allerg || null, diet || null, name));
+
   // ── Recipes (bill of materials) — drive auto-depletion & auto-86 ──
   // Map menu item name -> [[inventory item name, qty per serving], ...]. Seeded
   // for every location by resolving ids by (location, name) so demos show stock
