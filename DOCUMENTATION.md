@@ -399,6 +399,8 @@ SQLite database with 29 tables. Core entities and relationships:
 - **loyalty_transactions** — points ledger (earned per paid order, or redeemed for a discount) per customer.
 - **announcements** — broadcast notices from owner/manager to staff (location-scoped or global).
 - **permissions** — configurable capability×role grants (refund/void/discount) the owner manages.
+- **feedback** — post-visit guest ratings (1–5) + comments, tied to a receipt.
+- **menu_items** also carry `image_url`, `allergens`, and `dietary` tags.
 - **employee_messages** carries `parent_id` for threaded replies; **payments** carries
   `discount` (loyalty), `manual_discount` + `discount_reason` (comps); **orders** carries
   `voided` + `void_reason`; **customers** carry `referral_code` + `referred_by`.
