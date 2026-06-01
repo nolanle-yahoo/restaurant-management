@@ -665,18 +665,19 @@ The full, role-by-role enhancement backlog lives in **`RECOMMENDATIONS.md`**, or
 ascending by impact (Tier 1 smallest → Tier 5 transformational) with effort estimates. The
 highlights below are grouped the same way.
 
-**Tier 1 — Quick wins / polish:** refund UI button (endpoint exists); low-stock alerts to the
-stockroom role; configurable tax/service-charge; stronger password policy & broader rate
-limiting; allergen filters + photos on the public menu; structured allergen flags on tickets;
-post-visit feedback link on receipts.
+**Delivered in 1.9.0 (from the backlog):** refund UI; low-stock alerts to stockroom & chef;
+configurable tax/service-charge; stronger password policy & broader rate limiting; chef "86"
+with live availability; inventory auto-depletion (recipes/BOM).
+
+**Tier 1 — Quick wins / polish:** allergen filters + photos on the public menu; structured
+allergen flags on tickets; post-visit feedback link on receipts.
 
 **Tier 2–3 — Operational depth:** course firing and table transfer/merge; two-way and
 broadcast staff messaging; consolidated approvals dashboard; certification tracking; cycle
-counts / barcode receiving; split the bill; order edit/void with approval; chef "86" → live
-availability; vendor master records; waste/expiry (FIFO) tracking; per-employee performance;
-discounts/comps/voids; shift swapping; self-service staff portal; reservation reminders +
-waitlist; regional-manager role & cross-location staff lending; central menu with overrides;
-2FA; inventory valuation & COGS.
+counts / barcode receiving; split the bill; order edit/void with approval; vendor master
+records; waste/expiry (FIFO) tracking; per-employee performance; discounts/comps/voids; shift
+swapping; self-service staff portal; reservation reminders + waitlist; regional-manager role &
+cross-location staff lending; central menu with overrides; 2FA; inventory valuation & COGS.
 
 **Tier 4 — High impact:** QR-code table ordering; par levels + auto-reorder; customer accounts
 + loyalty + referrals; email marketing/promotions (with consent); configurable
