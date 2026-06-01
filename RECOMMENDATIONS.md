@@ -13,6 +13,8 @@
 > (points accrual) · #38 Email marketing with opt-in/unsubscribe.
 > ✅ **Delivered in v1.12.0:** loyalty **redemption** (points → discount) · two-way **threaded
 > replies** + **broadcast announcements** (#12 staff messaging).
+> ✅ **Delivered in v1.13.0:** configurable **permissions** (refund/void/discount × role) ·
+> **discounts/comps/voids** · loyalty **tiers + referrals**.
 
 Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
 from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
