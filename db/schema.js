@@ -265,6 +265,29 @@ function createSchema() {
       quantity REAL NOT NULL DEFAULT 0,
       UNIQUE(menu_item_id, inventory_id)
     );
+
+    -- Customer accounts (separate from staff users): loyalty points + marketing opt-in.
+    CREATE TABLE IF NOT EXISTS customers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      phone TEXT,
+      password_hash TEXT NOT NULL,
+      points INTEGER NOT NULL DEFAULT 0,
+      marketing_opt_in INTEGER NOT NULL DEFAULT 0,
+      unsubscribe_token TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    -- Loyalty ledger: points earned/redeemed, linked to the order that earned them.
+    CREATE TABLE IF NOT EXISTS loyalty_transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL REFERENCES customers(id),
+      order_id INTEGER REFERENCES orders(id),
+      points INTEGER NOT NULL,
+      reason TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
   `);
 
   // Column migrations
