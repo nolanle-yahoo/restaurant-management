@@ -894,7 +894,8 @@ data-deletion workflows.
 | 1.12.0 | Loyalty redemption (points → discount at settlement, 20 pts = $1); two-way threaded message replies (owner/manager ↔ staff); broadcast announcements (owner/manager → staff) delivered as live toasts. |
 | 1.13.0 | Configurable staff permissions (refund/void/discount per role, owner-managed); manual discounts/comps at settlement; order voids with inventory restock + audit; loyalty tiers (Bronze/Silver/Gold) and referral bonuses. |
 | 1.14.0 | Split-the-bill via partial payments (proportional tax/service, settle once fully covered); menu photos + allergens + dietary tags with a public dietary filter and kitchen allergen flags; post-visit guest feedback (ratings/comments) with an owner dashboard. |
-| 1.15.0 | **Table transfer (move an order) & merge (combine a table's open orders); waste/spoilage logging with reasons (deducts stock + audit); consolidated pending-approvals dashboard for owners & managers.** |
+| 1.15.0 | Table transfer (move an order) & merge (combine a table's open orders); waste/spoilage logging with reasons (deducts stock + audit); consolidated pending-approvals dashboard for owners & managers. |
+| 1.16.0 | **Vendor master records (linked to supply orders); self-service "My Pay & Tips" for all staff (hours/gross/net/tips, last 7 days); course tagging with kitchen-ticket grouping (Appetizers/Mains/Desserts/Drinks).** |
 
 ---
 
