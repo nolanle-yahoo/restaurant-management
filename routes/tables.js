@@ -68,6 +68,10 @@ router.put('/:id', requireRole('owner','manager','frontdesk','waiter','chef','em
   if (metaChange && !['owner','manager'].includes(req.user.role)) {
     return res.status(403).json({ error: 'Only owner or manager can update table structure' });
   }
+  // Changing a table's live status is a floor operation: non-owner staff must be on the clock.
+  if (status !== undefined && req.user.role !== 'owner' && !isOnDuty(req.user.id)) {
+    return res.status(403).json({ error: 'You must be clocked in to update table status. Please clock in first.' });
+  }
   const fields = [], vals = [];
   if (status !== undefined) {
     if (!VALID_STATUSES.includes(status)) return res.status(400).json({ error: 'Invalid status' });
