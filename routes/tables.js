@@ -88,6 +88,9 @@ router.put('/:id', requireRole('owner','manager','frontdesk','waiter','chef','em
     FROM tables t LEFT JOIN areas a ON t.area_id = a.id WHERE t.id=?
   `).get(req.params.id);
   broadcast('table_update', { table_id: updated.id, status: updated.status, location_id: updated.location_id }, updated.location_id);
+  if (updated.status === 'need_help') {
+    notify(`Table ${updated.table_number} needs assistance`, { locId: updated.location_id, roles: ['manager','waiter','employee','frontdesk'], kind: 'help' });
+  }
   res.json(updated);
 });
 
