@@ -87,7 +87,14 @@ function initClockWidget(user) {
          <button class="btn btn-sm btn-success" id="clockToggle">Clock In</button>`;
     document.getElementById('clockToggle').onclick = async () => {
       try {
-        if (clockedIn) await API.clockOut(); else await API.clockIn();
+        if (clockedIn) {
+          const r = await API.clockOut();
+          const h = r && r.handoff;
+          if (h && h.reassigned)        alert(`Clocked out. Your ${h.orders} open order(s) were handed to ${h.to}.`);
+          else if (h && h.notifiedOwner) alert(`Clocked out. No other staff are on duty, so the owner was notified to arrange coverage for your ${h.orders} open order(s).`);
+        } else {
+          await API.clockIn();
+        }
         render();
       } catch(e) { alert(e.message); }
     };
