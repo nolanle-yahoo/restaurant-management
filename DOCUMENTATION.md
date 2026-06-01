@@ -566,7 +566,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/config` | Any staff | Returns Stripe status/key, sales-tax & service-charge rates, and the caller's capabilities (`can_discount/refund/void`). |
 | GET | `/order/:orderId` | Order-handling staff | Itemized bill (items, subtotal, service charge, tax) + any existing payment. |
 | GET | `/` | Owner, Manager | Payment history for a location. |
-| POST | `/` | Order-handling staff | Record a cash/mobile (or simulated card) payment; settles the order. Accepts `redeem_points` to apply a loyalty discount. |
+| POST | `/` | Order-handling staff | Record a cash/mobile (or simulated card) payment. Accepts `amount` (subtotal portion) for split bills, and `redeem_points`/`manual_discount` (single full payment only). Settles + earns loyalty once fully covered. |
 | POST | `/intent` | Order-handling staff | Create a Stripe PaymentIntent for card payment. |
 | POST | `/:id/confirm` | Order-handling staff | Confirm a card payment after the client completes the Stripe flow. |
 | POST | `/:id/refund` | Staff with `refund` permission | Refund a paid payment. |
