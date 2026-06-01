@@ -290,6 +290,7 @@ async function submitOrder() {
 
 // ── My Orders ──────────────────────────────────────────────
 async function loadMyOrders() {
+  const caps = await getCaps();
   const orders = await API.orders(user.location_id);
   const mine = orders.filter(o => o.waiter_id === user.id);
   document.getElementById('myOrders').innerHTML = mine.length
