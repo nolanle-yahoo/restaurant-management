@@ -1211,6 +1211,27 @@ async function loadMgrFloorPlan() {
   const areaOpts = areasData.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
   document.getElementById('mgrTableArea').innerHTML = '<option value="">— Unassigned —</option>' + areaOpts;
   renderMgrFloorPlan(areasData, byAreaData, locId);
+  loadQrCodes();
+}
+
+// Printable per-table QR codes that deep-link guests into table ordering.
+async function loadQrCodes() {
+  const el = document.getElementById('qrCodes');
+  if (!el) return;
+  let tables = [];
+  try { tables = await API.tables(user.location_id); } catch(e) { return; }
+  const origin = location.origin;
+  const seen = new Set();
+  el.innerHTML = tables.filter(t => { if (seen.has(t.id)) return false; seen.add(t.id); return true; })
+    .sort((a,b) => a.table_number - b.table_number).map(t => {
+    const url = `${origin}/order.html?location_id=${user.location_id}&table=${t.id}`;
+    const img = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(url)}`;
+    return `<div style="text-align:center;border:1px solid var(--border);border-radius:10px;padding:12px;width:172px">
+      <div style="font-weight:800;margin-bottom:6px">Table ${t.table_number}</div>
+      <img src="${img}" alt="QR table ${t.table_number}" width="140" height="140" style="background:#fff" loading="lazy">
+      <div style="font-size:9.5px;color:var(--muted);word-break:break-all;margin-top:6px">${url}</div>
+    </div>`;
+  }).join('') || '<p style="color:var(--muted)">No tables yet.</p>';
 }
 
 function renderMgrFloorPlan(areasData, byAreaData, locId) {
