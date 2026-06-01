@@ -9,6 +9,8 @@
 > #20 Chef "86" with live availability · #43 Inventory auto-depletion (recipes/BOM) + auto-86.
 > ✅ **Delivered in v1.10.0:** #44 Operational + real-time notifications · #45 Online ordering
 > (pickup/delivery, pay-on-collection).
+> ✅ **Delivered in v1.11.0:** #35 QR-code table ordering · #37 Customer accounts + loyalty
+> (points accrual) · #38 Email marketing with opt-in/unsubscribe.
 
 Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
 from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
