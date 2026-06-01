@@ -83,10 +83,11 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 43. ✅ **DONE (v1.9.0)** — **Inventory auto-depletion**: recipes/BOM link menu items → ingredients;
     orders decrement stock (logged, clamped at 0) and auto-86 items when ingredients run short.
     (Defining richer recipes, par levels, and COGS reporting remain follow-ups.)
-44. **Operational + real-time notifications** — order-ready→waiter, "needs-help"→manager,
-    reservation reminders, low-stock pushes; extend the existing WebSocket bus (R4). *M–L*
-45. **Online ordering (pickup/delivery)** — the largest missing revenue channel; menu, pricing,
-    and payment plumbing already exist. *L*
+44. ✅ **DONE (v1.10.0)** — **Operational + real-time notifications**: role-targeted toasts for
+    order-ready, needs-help, low-stock, new online orders, plus reservation reminders.
+45. ✅ **DONE (v1.10.0)** — **Online ordering (pickup/delivery)**: public order page with cart +
+    tracking, server-priced, kitchen-integrated, manager fulfillment panel. Pay-on-collection;
+    online prepayment + delivery dispatch remain follow-ups.
 
 ---
 
