@@ -373,9 +373,26 @@ async function openPaymentModal(orderId, onPaid) {
   try {
     const [bill, cfg] = await Promise.all([API.bill(orderId), API.paymentConfig()]);
     _payState.bill = bill; _payState.cfg = cfg;
-    if (bill.payment && bill.payment.status === 'paid') {
+    const alreadyPaid = bill.payment && bill.payment.status === 'paid';
+    // Inputs and the charge action are only meaningful for an unpaid order.
+    ['tipBtns','payTip','payMethods','payCardWrap'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.closest('div[style]')?.style && (el.style.display = '');
+    });
+    const chargeBtn = document.getElementById('payChargeBtn');
+    if (alreadyPaid) {
+      document.getElementById('payTitle').textContent = `Settle Bill — Table ${bill.order.table_number}`;
       document.getElementById('payBill').innerHTML = '<div class="alert alert-success">This order has already been paid.</div>';
+      chargeBtn.disabled = true;
+      chargeBtn.textContent = 'Paid ✓';
+      // Hide the tip / method / card inputs — nothing left to charge.
+      ['payTip','payMethods','payCardWrap'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+      const tipBtns = document.getElementById('tipBtns'); if (tipBtns) tipBtns.style.display = 'none';
     } else {
+      chargeBtn.disabled = false;
+      chargeBtn.textContent = 'Charge';
+      document.getElementById('payTip').style.display = '';
+      document.getElementById('payMethods').style.display = 'flex';
+      const tipBtns = document.getElementById('tipBtns'); if (tipBtns) tipBtns.style.display = 'flex';
       document.getElementById('payTitle').textContent = `Settle Bill — Table ${bill.order.table_number}`;
       const lines = bill.items.map(i => `<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${i.item_name} ×${i.quantity}</span><span>$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('');
       document.getElementById('payBill').innerHTML = lines +
