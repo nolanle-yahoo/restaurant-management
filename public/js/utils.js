@@ -375,9 +375,9 @@ async function openPaymentModal(orderId, onPaid) {
     _payState.bill = bill; _payState.cfg = cfg;
     const alreadyPaid = bill.payment && bill.payment.status === 'paid';
     const chargeBtn = document.getElementById('payChargeBtn');
-    // The tip, payment-method, card, and total controls only apply to an unpaid
-    // order. Toggle them together so the modal is reusable for both states.
-    const inputIds = ['tipBtns', 'payTip', 'payMethods', 'payCardWrap'];
+    // Tip, method, card, and total controls only apply to an unpaid order.
+    // (payCardWrap visibility is owned by setPayMethod, so it's toggled there.)
+    const inputIds = ['tipBtns', 'payTip', 'payMethods'];
     const totalRow = document.getElementById('payTotal').parentElement;
     document.getElementById('payTitle').textContent = `Settle Bill — Table ${bill.order.table_number}`;
 
@@ -386,12 +386,14 @@ async function openPaymentModal(orderId, onPaid) {
       chargeBtn.disabled = true;
       chargeBtn.textContent = 'Paid ✓';
       inputIds.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+      document.getElementById('payCardWrap').style.display = 'none';
       totalRow.style.display = 'none';
     } else {
       chargeBtn.disabled = false;
       chargeBtn.textContent = 'Charge';
       inputIds.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; });
       totalRow.style.display = '';
+      setPayMethod(_payState.method);   // restores card-field visibility per Stripe config
       const lines = bill.items.map(i => `<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${i.item_name} ×${i.quantity}</span><span>$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('');
       document.getElementById('payBill').innerHTML = lines +
         `<div style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px;display:flex;justify-content:space-between"><span>Subtotal</span><span>$${bill.subtotal.toFixed(2)}</span></div>` +
