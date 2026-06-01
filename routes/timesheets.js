@@ -4,9 +4,34 @@ const { verifyToken, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(verifyToken);
-router.use(requireRole('owner', 'manager'));
 
-router.get('/', (req, res) => {
+// Self-service: the signed-in staff member's own hours, pay, and tips for a
+// date range (defaults to the last 7 days). Available to any staff role.
+router.get('/me', (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const weekAgo = new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10);
+  const start = req.query.start || weekAgo;
+  const end = req.query.end || today;
+  const w = db.prepare(`
+    SELECT u.hourly_rate,
+           round(COALESCE(SUM(c.hours_worked),0), 2) as total_hours,
+           round(COALESCE(SUM(c.hours_worked * u.hourly_rate),0), 2) as gross_pay,
+           round(COALESCE(SUM(c.hours_worked * u.hourly_rate * 0.85),0), 2) as net_pay
+    FROM users u LEFT JOIN clock_records c
+      ON c.user_id=u.id AND c.check_out IS NOT NULL
+      AND date(c.check_in) >= ? AND date(c.check_in) <= ?
+    WHERE u.id=?
+  `).get(start, end, req.user.id) || {};
+  const tips = (db.prepare(`
+    SELECT round(COALESCE(SUM(tip),0), 2) as t FROM payments
+    WHERE status='paid' AND waiter_id=? AND date(created_at) >= ? AND date(created_at) <= ?
+  `).get(req.user.id, start, end) || {}).t || 0;
+  const net = w.net_pay || 0;
+  res.json({ start, end, hourly_rate: w.hourly_rate || 0, total_hours: w.total_hours || 0,
+             gross_pay: w.gross_pay || 0, net_pay: net, tips, take_home: Math.round((net + tips) * 100) / 100 });
+});
+
+router.get('/', requireRole('owner', 'manager'), (req, res) => {
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
   const start = req.query.start;
   const end   = req.query.end;
