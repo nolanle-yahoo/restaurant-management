@@ -227,7 +227,7 @@ async function placeOrder() {
         <h2 style="color:var(--burgundy);margin:10px 0">Order placed!</h2>
         <p style="font-size:15px">Your tracking code is</p>
         <p style="font-size:26px;font-weight:800;letter-spacing:1px;color:var(--burgundy);margin:6px 0">${r.tracking_code}</p>
-        <p style="color:var(--muted)">Estimated total (pay on ${orderType==='delivery'?'delivery':'collection'}): <b>${money(r.estimated_total)}</b></p>
+        <p style="color:var(--muted)">Estimated total (${tableMode ? 'a server will bring your bill' : 'pay on '+(orderType==='delivery'?'delivery':'collection')}): <b>${money(r.estimated_total)}</b></p>
         <p style="font-size:13px;color:var(--muted);margin-top:14px">Save your code — track your order anytime at<br><b>${location.origin}/order.html?code=${r.tracking_code}</b></p>
         <a class="btn btn-primary" style="margin-top:16px" href="/order.html?code=${r.tracking_code}">Track this order</a>
       </div>`;
