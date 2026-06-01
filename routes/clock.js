@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db/database');
 const { verifyToken } = require('../middleware/auth');
+const { handoffOnClockOut } = require('../lib/handoff');
 
 const router = express.Router();
 router.use(verifyToken);
