@@ -350,6 +350,19 @@ function _injectPaymentModal() {
       <div id="payCardWrap" style="display:none;margin-bottom:12px">
         <div id="payCardElement" style="padding:11px;border:1.5px solid var(--border);border-radius:8px"></div>
       </div>
+      <div id="paySplit" style="display:none;margin-bottom:12px;background:var(--cream);border-radius:8px;padding:10px 12px">
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Split / Partial Payment</label>
+        <div id="paySplitBalance" style="font-size:12.5px;color:var(--muted);margin-bottom:6px"></div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:13px">Pay subtotal $</span>
+          <input type="number" id="paySplitSub" min="0" step="0.01" oninput="renderPayTotal()"
+            style="width:90px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+          <button class="btn btn-sm btn-ghost" type="button" onclick="splitWay(2)">½</button>
+          <button class="btn btn-sm btn-ghost" type="button" onclick="splitWay(3)">⅓</button>
+          <button class="btn btn-sm btn-ghost" type="button" onclick="splitWay(4)">¼</button>
+          <button class="btn btn-sm btn-ghost" type="button" onclick="splitWay(1)">Full</button>
+        </div>
+      </div>
       <div id="payLoyalty" style="display:none;margin-bottom:12px;background:var(--cream);border-radius:8px;padding:10px 12px">
         <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Loyalty Points</label>
         <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px" id="payLoyaltyInfo"></div>
