@@ -132,6 +132,8 @@ const API = {
 
   settings()             { return this.get('/settings'); },
   updateSettings(data)   { return this.put('/settings', data); },
+  permissions()          { return this.get('/settings/permissions'); },
+  setPermission(data)    { return this.put('/settings/permissions', data); },
 
   marketingAudience()    { return this.get('/marketing/audience'); },
   marketingHistory()     { return this.get('/marketing/history'); },
