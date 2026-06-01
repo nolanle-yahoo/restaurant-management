@@ -429,6 +429,11 @@ async function openPaymentModal(orderId, onPaid) {
       } else {
         loyEl.style.display = 'none';
       }
+      // Manual discount / comp — only for staff permitted to discount.
+      const discEl = document.getElementById('payDiscount');
+      document.getElementById('payManualDiscount').value = 0;
+      document.getElementById('payDiscountReason').value = '';
+      discEl.style.display = (cfg.caps && cfg.caps.can_discount) ? 'block' : 'none';
       setPayMethod(_payState.method);   // restores card-field visibility per Stripe config
       const lines = bill.items.map(i => `<div style="display:flex;justify-content:space-between;padding:3px 0"><span>${i.item_name} ×${i.quantity}</span><span>$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('');
       const svc = (bill.service_charge || 0) > 0
