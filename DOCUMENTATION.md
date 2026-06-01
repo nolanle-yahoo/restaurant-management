@@ -364,6 +364,9 @@ SQLite database with 26 tables. Core entities and relationships:
 - **settings** — global key/value configuration (e.g., sales-tax and service-charge rates).
 - **recipes** — bill-of-materials mapping `menu_items` → `inventory` with per-serving
   quantities; drives auto-depletion and auto-86.
+- **customers** — customer accounts (separate from staff `users`): email/password, loyalty
+  points, marketing opt-in, and an unsubscribe token. Orders may reference `customer_id`.
+- **loyalty_transactions** — points ledger (earned per paid order) per customer.
 
 Referential integrity is enforced with foreign keys; status fields use CHECK constraints;
 emails are unique. Schema creation and lightweight column migrations run automatically on
