@@ -768,6 +768,13 @@ points + order history; owner email-marketing campaigns with opt-in/unsubscribe.
 **Delivered in 1.12.0:** loyalty **redemption** (points → discount at settlement); two-way
 **threaded message replies**; **broadcast announcements** (owner/manager → staff, live toasts).
 
+**Delivered in 1.13.0:** configurable **permissions** (refund/void/discount × role); **manual
+discounts/comps** and order **voids** (with inventory restock + audit); loyalty **tiers**
+(Bronze/Silver/Gold) and **referrals**.
+
+**Deferred (next):** **split-the-bill** (partial-payment accumulation — isolated money-path
+change), and the menu **allergen/photo + dietary-filter** polish.
+
 **Tier 1 — Quick wins / polish:** allergen filters + photos on the public menu; structured
 allergen flags on tickets; post-visit feedback link on receipts.
 
