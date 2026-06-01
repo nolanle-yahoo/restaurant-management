@@ -43,8 +43,12 @@ router.post('/', requireRole('waiter','manager','employee','chef','frontdesk','s
 
   const r = db.prepare(`INSERT INTO orders (table_id, location_id, waiter_id, status, notes) VALUES (?,?,?,'pending',?)`).run(table_id, table.location_id, req.user.id, notes||null);
   const orderId = r.lastInsertRowid;
-  const insertItem = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, notes) VALUES (?,?,?,?,?)`);
-  items.forEach(i => insertItem.run(orderId, i.name, i.quantity || 1, i.price || 0, i.notes||null));
+  const catFor = db.prepare(`SELECT c.name FROM menu_items mi JOIN menu_categories c ON mi.category_id=c.id WHERE mi.location_id=? AND mi.name=?`);
+  const insertItem = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, notes, course) VALUES (?,?,?,?,?,?)`);
+  items.forEach(i => {
+    const cat = (catFor.get(table.location_id, i.name) || {}).name || '';
+    insertItem.run(orderId, i.name, i.quantity || 1, i.price || 0, i.notes||null, courseFromCategory(cat));
+  });
   db.prepare(`UPDATE tables SET status='ordered' WHERE id=?`).run(table_id);
   // Consume recipe ingredients from inventory and auto-86 anything now short.
   depleteForOrder(req, orderId, table.location_id);
