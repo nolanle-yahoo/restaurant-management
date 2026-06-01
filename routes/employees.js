@@ -102,8 +102,9 @@ router.delete('/:id', requireRole('owner'), (req, res) => {
     const activeOwners = db.prepare(`SELECT COUNT(*) as n FROM users WHERE role='owner' AND is_active=1`).get();
     if (activeOwners.n <= 1) return res.status(403).json({ error: 'Cannot deactivate the last active owner account' });
   }
-  // Soft-delete: deactivate and anonymise instead of hard delete to preserve clock records
-  db.prepare(`UPDATE users SET is_active=0, email=email||'_deleted_'||id WHERE id=?`).run(req.params.id);
+  // Soft-delete: deactivate and anonymise instead of hard delete to preserve clock records.
+  // Bumping token_version also revokes any active sessions for this account.
+  db.prepare(`UPDATE users SET is_active=0, token_version=token_version+1, email=email||'_deleted_'||id WHERE id=?`).run(req.params.id);
   res.json({ success: true });
 });
 
