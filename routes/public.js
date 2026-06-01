@@ -13,6 +13,16 @@ const { getRates } = require('../lib/settings');
 const { signCustomer, customerIdFromReq, requireCustomer } = require('../lib/customerAuth');
 const round2 = n => Math.round(n * 100) / 100;
 
+// Loyalty tiers by lifetime point balance, and referral bonus.
+const TIERS = [{ name: 'Gold', min: 500 }, { name: 'Silver', min: 200 }, { name: 'Bronze', min: 0 }];
+const tierFor = pts => (TIERS.find(t => (pts || 0) >= t.min) || TIERS[TIERS.length - 1]).name;
+const REFERRAL_BONUS = 50;
+const makeReferralCode = () => 'REF-' + crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
+function awardCustomerPoints(customerId, pts, reason) {
+  db.prepare(`UPDATE customers SET points=points+? WHERE id=?`).run(pts, customerId);
+  db.prepare(`INSERT INTO loyalty_transactions (customer_id, points, reason) VALUES (?,?,?)`).run(customerId, pts, reason);
+}
+
 const router = express.Router();
 
 // Short, human-friendly confirmation/receipt code (e.g. "RSV-7K3Q2H")
