@@ -244,6 +244,44 @@ function seed() {
     });
   });
 
+  // ── Recipes (bill of materials) — drive auto-depletion & auto-86 ──
+  // Map menu item name -> [[inventory item name, qty per serving], ...]. Seeded
+  // for every location by resolving ids by (location, name) so demos show stock
+  // moving as orders are placed.
+  const recipeTemplate = {
+    'Caesar Salad':       [['Mixed Greens', 0.3], ['Parmesan', 0.05], ['Olive Oil', 0.02]],
+    'Bruschetta':         [['Roma Tomatoes', 0.25], ['Garlic', 0.02], ['Olive Oil', 0.02]],
+    'Calamari':           [['Olive Oil', 0.05], ['Flour', 0.1]],
+    'Grilled Salmon':     [['Atlantic Salmon', 0.5], ['Butter', 0.05], ['Sea Salt', 0.01]],
+    'Beef Tenderloin':    [['Beef Tenderloin', 0.5], ['Butter', 0.05], ['Black Pepper', 0.01]],
+    'Chicken Marsala':    [['Chicken Breast', 0.5], ['Butter', 0.05], ['Red Wine', 0.1]],
+    'Shrimp Scampi':      [['Shrimp', 0.4], ['Garlic', 0.03], ['White Wine', 0.1], ['Butter', 0.05]],
+    'Mushroom Risotto':   [['Parmesan', 0.1], ['Butter', 0.05], ['Heavy Cream', 0.1]],
+    'Pasta Carbonara':    [['Flour', 0.2], ['Parmesan', 0.08]],
+    'Chocolate Lava Cake':[['Flour', 0.15], ['Sugar', 0.1], ['Butter', 0.08]],
+    'Tiramisu':           [['Heavy Cream', 0.15], ['Sugar', 0.08], ['Coffee Beans', 0.03]],
+    'Crème Brûlée':       [['Heavy Cream', 0.2], ['Sugar', 0.1]],
+    'Cheesecake':         [['Heavy Cream', 0.15], ['Sugar', 0.1], ['Flour', 0.05]],
+    'House Red Wine':     [['Red Wine', 0.2]],
+    'House White Wine':   [['White Wine', 0.2]],
+    'Sparkling Water':    [['Sparkling Water', 0.1]],
+    'Espresso':           [['Coffee Beans', 0.02]],
+    'Cappuccino':         [['Coffee Beans', 0.02], ['Heavy Cream', 0.05]],
+  };
+  const findMenuItem = db.prepare(`SELECT id FROM menu_items WHERE location_id=? AND name=?`);
+  const findInvItem  = db.prepare(`SELECT id FROM inventory  WHERE location_id=? AND item_name=?`);
+  const insertRecipe = db.prepare(`INSERT INTO recipes (menu_item_id, inventory_id, quantity) VALUES (?,?,?)`);
+  [1,2,3,4,5].forEach(locId => {
+    Object.entries(recipeTemplate).forEach(([itemName, ingredients]) => {
+      const mi = findMenuItem.get(locId, itemName);
+      if (!mi) return;
+      ingredients.forEach(([invName, qty]) => {
+        const inv = findInvItem.get(locId, invName);
+        if (inv) insertRecipe.run(mi.id, inv.id, qty);
+      });
+    });
+  });
+
   // ── Reservations ────────────────────────────────────────────────
   const insertRes = db.prepare(`
     INSERT INTO reservations (location_id, guest_name, guest_phone, party_size, reservation_date, reservation_time, status, notes, created_by)
