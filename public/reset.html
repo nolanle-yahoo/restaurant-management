@@ -35,7 +35,7 @@
   if (!token) showErr('Missing or invalid reset link. Please request a new one.');
   async function submitReset() {
     const pw1 = document.getElementById('pw1').value, pw2 = document.getElementById('pw2').value;
-    if (!pw1 || pw1.length < 6) return showErr('Password must be at least 6 characters.');
+    if (!pw1 || pw1.length < 8) return showErr('Password must be at least 8 characters.');
     if (pw1 !== pw2) return showErr('Passwords do not match.');
     try {
       await API.resetPassword({ token, new_password: pw1 });
