@@ -552,6 +552,13 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/` | Owner, Manager | Current sales-tax and service-charge rates. |
 | PUT | `/` | Owner | Update sales-tax and/or service-charge rates (fractions, 0–1). |
 
+### Marketing — `/api/marketing`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/audience` | Owner | Counts of total and opted-in customers. |
+| GET | `/history` | Owner | Recent campaigns (from the email log). |
+| POST | `/send` | Owner | Send a campaign to all opted-in customers (adds an unsubscribe footer). |
+
 ### Real-Time Events (WebSocket)
 Clients connect to the server's WebSocket endpoint and send `{ type: "auth", location_id }`
 to scope their subscription. The server broadcasts:
