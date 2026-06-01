@@ -816,7 +816,8 @@ data-deletion workflows.
 | 1.8.0 | Enforced clock-in for non-owner floor actions; automatic task hand-off on clock-out (reassign open orders/areas to the least-loaded on-duty colleague, or alert the owner when nobody is available); paid orders disable charging and show a "Paid" state. |
 | 1.9.0 | Inventory auto-depletion via recipes/BOM with auto-86; chef can "86" items; low-stock alerts for stockroom & chef; owner-configurable sales-tax & service-charge; payments & refunds UI; stronger password policy (min 8) and broader rate limiting. |
 | 1.10.0 | Real-time operational notifications (order-ready, needs-help, low-stock, new online order) as role-targeted toasts + reservation reminders; customer online ordering (pickup/delivery, server-priced, pay-on-collection) with tracking codes, kitchen integration, and a manager fulfillment panel. |
-| 1.11.0 | **QR-code table ordering (dine-in straight to the kitchen, printable per-table codes); customer accounts with loyalty points (1/$1) + order history; owner email-marketing campaigns to opted-in customers with one-click unsubscribe.** |
+| 1.11.0 | QR-code table ordering (dine-in straight to the kitchen, printable per-table codes); customer accounts with loyalty points (1/$1) + order history; owner email-marketing campaigns to opted-in customers with one-click unsubscribe. |
+| 1.12.0 | **Loyalty redemption (points → discount at settlement, 20 pts = $1); two-way threaded message replies (owner/manager ↔ staff); broadcast announcements (owner/manager → staff) delivered as live toasts.** |
 
 ---
 
