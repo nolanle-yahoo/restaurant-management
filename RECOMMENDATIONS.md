@@ -1,0 +1,99 @@
+# Restaurant Management System — Enhancement Recommendations
+
+**Companion to:** `DOCUMENTATION.md` (functional & technical reference)
+**Status:** Advisory backlog
+**Organization:** Ordered **ascending by impact** — Tier 1 (smallest) → Tier 5 (highest / transformational).
+
+Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
+from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
+(customer, owner/admin, manager, chef, waiter, front desk, employee, stockroom/warehouse) plus
+cross-cutting concerns: staff communication, multi-location operations, and advertising/marketing.
+
+---
+
+## Highest-value gaps at a glance
+
+| Priority | Gap | Who benefits | Tier |
+|---|---|---|---|
+| 🔴 1 | Inventory auto-depletion (sell an item → decrement ingredients) | Stockroom, Manager, Owner | 5 |
+| 🔴 2 | Operational + real-time notifications | Waiter, Chef, Front Desk, Customer | 5 |
+| 🔴 3 | Online ordering (pickup/delivery) + QR table ordering | Customer, Owner | 5 / 4 |
+| 🟠 4 | Two-way / broadcast staff messaging | All staff | 2–3 |
+| 🟠 5 | Customer accounts + loyalty + marketing email | Customer, Owner | 4 |
+| 🟠 6 | Configurable roles/permissions + discounts/comps/voids | Owner, Manager | 3–4 |
+
+---
+
+## Tier 1 — Smallest impact (polish / hygiene, mostly tiny effort)
+1. **Refund UI button** — endpoint already exists; just wire a button (R6). *XS* — quick win
+2. **Low-stock alerts to the stockroom role** (today only managers see the banner). *XS*
+3. **Configurable tax/service-charge** (move from env var to admin UI). *S*
+4. **Raise password minimum / broaden rate-limiting** beyond login — security hygiene. *XS*
+5. **Allergen/dietary filters + photos** on the public menu. *S*
+6. **Structured allergen flags** on kitchen tickets (vs. free-text). *S*
+7. **Post-visit feedback link on the receipt**. *S*
+8. **Shift-handover notes log**. *S*
+9. **SEO-friendly public pages**. *S*
+
+## Tier 2 — Low-to-moderate
+10. **Course firing** (hold/fire appetizers vs. mains). *S–M*
+11. **Table transfer / merge** orders. *M*
+12. **Two-way threaded message replies** (messaging is one-directional today). *M*
+13. **Per-location message channels**. *M*
+14. **Consolidated approvals dashboard** (time-off + transfers + supply). *M*
+15. **Certification/training tracking** with expiry alerts. *M*
+16. **Cycle counts / barcode (SKU) scanning** for receiving & counts. *M*
+17. **Prep-time estimates / bump-bar** kitchen workflow. *M*
+18. **Promo codes & time-based pricing** (happy hour). *M*
+19. **Gift cards**. *M*
+
+## Tier 3 — Moderate
+20. **Chef "86" items → live availability** (kitchen flips menu availability instantly). *S–M* — small effort, high daily value
+21. **Split the bill** (by guest or item) (R5). *M*
+22. **Order edit/void after sending** with manager approval + audit. *M*
+23. **Vendor master records** (lead time, pricing, history). *M*
+24. **Waste/spoilage logging + expiry/lot (FIFO) tracking**. *M*
+25. **Per-employee performance metrics** (sales/waiter, table-turn, tips). *M*
+26. **Discounts / comps / voids** with approval + audit. *M*
+27. **Shift swapping & availability** (R8). *M*
+28. **Self-service staff portal** (view tips/pay, schedule, swaps). *M*
+29. **Broadcast announcements** (manager/owner → staff). *M*
+30. **Reservation reminders** + real-time availability + **waitlist** (R9). *M*
+31. **Regional grouping + regional-manager role**; **cross-location staff lending**. *M*
+32. **Central menu with per-location overrides**. *M*
+33. **2FA for owner/manager** (R7). *M* — security-critical
+34. **Inventory valuation & COGS** reporting. *M*
+
+## Tier 4 — High impact
+35. **QR-code table ordering** (R2). *M–L*
+36. **Par levels + auto-reorder suggestions** (draft POs below threshold). *M–L*
+37. **Customer accounts + loyalty + referrals** (R3). *L*
+38. **Email marketing / promotions** (reuse email layer; **must add consent + unsubscribe**). *M–L*
+39. **Configurable roles & permissions** (RBAC is hard-coded to 7 roles today). *L*
+40. **Executive multi-location dashboard + benchmarking**. *M–L*
+41. **Demand-based / labor-cost scheduling**. *L*
+42. **Finance/accounting export & integration** (QuickBooks/Xero), scheduled reports, payroll export. *M–L*
+
+## Tier 5 — Highest impact (transformational / strategic)
+43. **Inventory auto-depletion** — link menu items → ingredients (recipes/BOM) so sales decrement
+    stock (R1). Unlocks accurate COGS, par levels, and chef 86-ing. *L*
+44. **Operational + real-time notifications** — order-ready→waiter, "needs-help"→manager,
+    reservation reminders, low-stock pushes; extend the existing WebSocket bus (R4). *M–L*
+45. **Online ordering (pickup/delivery)** — the largest missing revenue channel; menu, pricing,
+    and payment plumbing already exist. *L*
+
+---
+
+## Conditional (impact depends on scale — defer until you outgrow a single server)
+- **PostgreSQL migration** (SQLite → Postgres) and **Redis pub/sub** for the WebSocket bus across
+  multiple instances.
+- **Accessibility (WCAG)**, **i18n / multi-currency**, **GDPR data-deletion** workflows — high
+  impact *if* you expand to regulated or international markets.
+
+---
+
+## Suggested starting sequence
+1. Knock out the Tier-1 quick wins (#1–#4) for immediate polish.
+2. Pair **#20 (chef 86-ing)** with **#43 (auto-depletion)** — complementary, and they close the
+   single biggest operational gap.
+3. Then tackle Tier-5 #44 (notifications) and #45 (online ordering) as the major revenue/efficiency bets.
