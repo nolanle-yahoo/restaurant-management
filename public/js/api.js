@@ -86,6 +86,8 @@ const API = {
   updateSupplyOrder(id, data) { return this.put(`/inventory/order/${id}`, typeof data === 'string' ? { status: data } : data); },
   transfer(data)     { return this.post('/inventory/transfer', data); },
   transactions(locId){ return this.get('/inventory/transactions' + (locId ? `?location_id=${locId}` : '')); },
+  logWaste(data)     { return this.post('/inventory/waste', data); },
+  wasteLog(locId)    { return this.get('/inventory/waste' + (locId ? `?location_id=${locId}` : '')); },
   supplyOrders(locId){ return this.get('/inventory/supply-orders' + (locId ? `?location_id=${locId}` : '')); },
   transferRequests(locId) { return this.get('/inventory/transfer-requests' + (locId ? `?location_id=${locId}` : '')); },
   createTransferRequest(data)    { return this.post('/inventory/transfer-request', data); },
