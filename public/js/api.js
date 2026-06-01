@@ -121,6 +121,11 @@ const API = {
   menuItemCreate(data)         { return this.post('/menu/items', data); },
   menuItemUpdate(id, data)     { return this.put(`/menu/items/${id}`, data); },
   menuItemDelete(id)           { return this.delete(`/menu/items/${id}`); },
+  itemRecipe(id)               { return this.get(`/menu/items/${id}/recipe`); },
+  itemRecipeUpdate(id, ingredients) { return this.put(`/menu/items/${id}/recipe`, { ingredients }); },
+
+  settings()             { return this.get('/settings'); },
+  updateSettings(data)   { return this.put('/settings', data); },
 
   auditLog(params = {}) {
     const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
