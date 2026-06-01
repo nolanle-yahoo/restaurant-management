@@ -61,7 +61,8 @@ function computeBill(orderId) {
 router.get('/config', (req, res) => {
   const { sales_tax_rate, service_charge_rate } = getRates();
   res.json({ stripe_enabled: stripeLib.enabled, publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || null,
-             sales_tax_rate, service_charge_rate });
+             sales_tax_rate, service_charge_rate,
+             caps: { can_discount: can(req, 'discount'), can_refund: can(req, 'refund'), can_void: can(req, 'void') } });
 });
 
 // Itemized bill + any existing payment for an order
