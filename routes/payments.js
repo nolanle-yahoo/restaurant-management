@@ -7,6 +7,7 @@ const { broadcast } = require('../lib/ws');
 const { auditLog } = require('../lib/audit');
 const { sendEmail } = require('../lib/email');
 const { getRates } = require('../lib/settings');
+const { can, requireCan } = require('../lib/permissions');
 
 const router = express.Router();
 router.use(verifyToken);
