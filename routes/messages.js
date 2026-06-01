@@ -64,6 +64,21 @@ router.post('/', (req, res) => {
   res.json({ success: true, id: r.lastInsertRowid });
 });
 
+// Owner/manager reply to a message (threaded). The reply is visible to the
+// original sender on their "my messages" view.
+router.post('/:id/reply', requireRole('owner','manager'), (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: 'message required' });
+  const parent = db.prepare(`SELECT * FROM employee_messages WHERE id=? AND parent_id IS NULL`).get(req.params.id);
+  if (!parent) return res.status(404).json({ error: 'Message not found' });
+  const r = db.prepare(`
+    INSERT INTO employee_messages (user_id, location_id, recipient_type, subject, message, parent_id, is_read)
+    VALUES (?,?,?,?,?,?,1)
+  `).run(req.user.id, parent.location_id, parent.recipient_type, 'Re: ' + parent.subject, message, parent.id);
+  db.prepare(`UPDATE employee_messages SET is_read=1 WHERE id=?`).run(parent.id);
+  res.json({ success: true, id: r.lastInsertRowid });
+});
+
 // Mark as read
 router.put('/:id/read', requireRole('owner','manager'), (req, res) => {
   db.prepare(`UPDATE employee_messages SET is_read=1 WHERE id=?`).run(req.params.id);
