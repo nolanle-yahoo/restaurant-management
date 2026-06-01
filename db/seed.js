@@ -60,6 +60,11 @@ function seed() {
   insertUser.run('Lucas Silva',    'emp@westside.com',     h('emp123'),  'employee',  4, 13.50);
   insertUser.run('Aisha Diallo',   'emp@harbor.com',       h('emp123'),  'employee',  5, 14.00);
 
+  // ── Demo customer account (loyalty + marketing) ─────────────────
+  const crypto = require('crypto');
+  db.prepare(`INSERT INTO customers (name, email, phone, password_hash, points, marketing_opt_in, unsubscribe_token) VALUES (?,?,?,?,?,?,?)`)
+    .run('Demo Diner', 'diner@example.com', '(555) 300-0001', h('diner123'), 120, 1, crypto.randomBytes(16).toString('hex'));
+
   // ── Areas (4 per location) ───────────────────────────────────────
   const insertArea = db.prepare(`INSERT INTO areas (location_id, name, color, sort_order) VALUES (?,?,?,?)`);
   const areaColors = ['#6B1A1A', '#4A7C59', '#C9A84C', '#4C86C9'];
