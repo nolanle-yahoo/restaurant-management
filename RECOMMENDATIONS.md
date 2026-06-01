@@ -75,10 +75,13 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 34. **Inventory valuation & COGS** reporting. *M*
 
 ## Tier 4 — High impact
-35. **QR-code table ordering** (R2). *M–L*
+35. ✅ **DONE (v1.11.0)** — **QR-code table ordering**: printable per-table QR codes open the
+    menu in table mode; guests order dine-in straight to the kitchen.
 36. **Par levels + auto-reorder suggestions** (draft POs below threshold). *M–L*
-37. **Customer accounts + loyalty + referrals** (R3). *L*
-38. **Email marketing / promotions** (reuse email layer; **must add consent + unsubscribe**). *M–L*
+37. ✅ **DONE (v1.11.0)** — **Customer accounts + loyalty**: register/sign-in, order history,
+    1 point per $1 on paid orders. (Redemption + referrals remain follow-ups.)
+38. ✅ **DONE (v1.11.0)** — **Email marketing**: owner campaign composer to opted-in customers
+    with one-click unsubscribe and consent capture.
 39. **Configurable roles & permissions** (RBAC is hard-coded to 7 roles today). *L*
 40. **Executive multi-location dashboard + benchmarking**. *M–L*
 41. **Demand-based / labor-cost scheduling**. *L*
