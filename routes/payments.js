@@ -121,14 +121,14 @@ router.post('/intent', requireRole(...STAFF), requireOnDuty, async (req, res) =>
   if (existing) return res.status(409).json({ error: 'This order is already paid' });
 
   const tipAmt = round2(Math.max(0, parseFloat(tip) || 0));
-  const total = round2(bill.subtotal + bill.tax + tipAmt);
+  const total = round2(bill.subtotal + bill.service_charge + bill.tax + tipAmt);
 
   try {
     const intent = await stripeLib.createIntent(Math.round(total * 100), { order_id: String(order_id), location_id: String(bill.order.location_id) });
     const r = db.prepare(`
-      INSERT INTO payments (order_id, location_id, waiter_id, subtotal, tax, tip, total, method, status, stripe_payment_intent_id, processed_by, receipt_code, receipt_email)
-      VALUES (?,?,?,?,?,?,?,'card','pending',?,?,?,?)
-    `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.tax, tipAmt, total, intent.id, req.user.id, makeReceiptCode(), (email||'').trim() || null);
+      INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, tip, total, method, status, stripe_payment_intent_id, processed_by, receipt_code, receipt_email)
+      VALUES (?,?,?,?,?,?,?,?,'card','pending',?,?,?,?)
+    `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.service_charge, bill.tax, tipAmt, total, intent.id, req.user.id, makeReceiptCode(), (email||'').trim() || null);
     res.json({ payment_id: r.lastInsertRowid, client_secret: intent.client_secret, simulated: !!intent.simulated, total,
                publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || null });
   } catch (e) {
