@@ -35,14 +35,18 @@ function computeBill(orderId) {
   const order = db.prepare(`SELECT o.*, t.table_number FROM orders o JOIN tables t ON o.table_id=t.id WHERE o.id=?`).get(orderId);
   if (!order) return null;
   const items = db.prepare(`SELECT * FROM order_items WHERE order_id=?`).all(orderId);
+  const { sales_tax_rate, service_charge_rate } = getRates();
   const subtotal = round2(items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0));
-  const tax = round2(subtotal * SALES_TAX);
-  return { order, items, subtotal, tax, tax_rate: SALES_TAX };
+  const service_charge = round2(subtotal * service_charge_rate);
+  const tax = round2((subtotal + service_charge) * sales_tax_rate);
+  return { order, items, subtotal, service_charge, tax, tax_rate: sales_tax_rate, service_rate: service_charge_rate };
 }
 
 // Frontend asks which payment flow to use
 router.get('/config', (req, res) => {
-  res.json({ stripe_enabled: stripeLib.enabled, publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || null, sales_tax_rate: SALES_TAX });
+  const { sales_tax_rate, service_charge_rate } = getRates();
+  res.json({ stripe_enabled: stripeLib.enabled, publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || null,
+             sales_tax_rate, service_charge_rate });
 });
 
 // Itemized bill + any existing payment for an order
