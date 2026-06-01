@@ -601,6 +601,11 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/permissions` | Owner | Capability×role permission matrix (refund/void/discount). |
 | PUT | `/permissions` | Owner | Grant/revoke a capability for a role. |
 
+### Feedback — `/api/feedback`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/` | Owner, Manager | Guest feedback (count + average + items), location-scoped for managers. |
+
 ### Marketing — `/api/marketing`
 | Method | Path | Access | Description |
 |---|---|---|---|
