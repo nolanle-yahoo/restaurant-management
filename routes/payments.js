@@ -207,7 +207,7 @@ router.post('/:id/confirm', requireRole(...STAFF), requireOnDuty, async (req, re
 });
 
 // Refund a paid payment
-router.post('/:id/refund', requireRole('owner','manager'), async (req, res) => {
+router.post('/:id/refund', requireCan('refund'), async (req, res) => {
   const payment = db.prepare(`SELECT * FROM payments WHERE id=?`).get(req.params.id);
   if (!payment) return res.status(404).json({ error: 'Payment not found' });
   if (payment.status !== 'paid') return res.status(400).json({ error: 'Only paid payments can be refunded' });
