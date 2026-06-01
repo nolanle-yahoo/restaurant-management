@@ -1053,6 +1053,7 @@ async function loadSupply() {
   const [orders, txs] = await Promise.all([API.supplyOrders(user.location_id), API.transactions(user.location_id)]);
   supplyData = orders;
   renderSupply();
+  loadVendors();
   document.getElementById('txBody').innerHTML = txs.map(t => `
     <tr>
       <td class="fw-700">${t.item_name}</td>
