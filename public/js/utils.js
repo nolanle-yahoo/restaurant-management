@@ -472,15 +472,10 @@ function setPayMethod(m) {
   _payState.method = m;
   document.querySelectorAll('#payMethods [data-m]').forEach(b => b.className = 'btn btn-sm ' + (b.dataset.m === m ? 'btn-primary' : 'btn-ghost'));
   const stripeCard = m === 'card' && _payState.cfg && _payState.cfg.stripe_enabled && _payState.cfg.publishable_key;
+  _payState.stripeCard = stripeCard;
   document.getElementById('payCardWrap').style.display = stripeCard ? 'block' : 'none';
-  // Redemption is only wired for the direct-payment path; hide it for the real
-  // Stripe card flow.
-  const loyEl = document.getElementById('payLoyalty');
-  if (loyEl && _payState.maxRedeem > 0) {
-    loyEl.style.display = stripeCard ? 'none' : 'block';
-    if (stripeCard) { document.getElementById('payRedeem').value = 0; renderPayTotal(); }
-  }
   if (stripeCard) _mountStripeCard();
+  renderPayTotal();   // recompute totals + section visibility
 }
 
 function redeemMax() {
