@@ -43,6 +43,7 @@ app.use('/api/analytics',    require('./routes/analytics'));
 app.use('/api/settings',     require('./routes/settings'));
 app.use('/api/marketing',    require('./routes/marketing'));
 app.use('/api/announcements',require('./routes/announcements'));
+app.use('/api/feedback',     require('./routes/feedback'));
 app.use('/api/public',       require('./routes/public'));
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
