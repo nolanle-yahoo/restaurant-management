@@ -1516,6 +1516,11 @@ onModalOverlayClick('mgrResModal'); onModalOverlayClick('mgrMenuItemModal'); onM
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div class="card"><div class="card-header"><div class="card-title">Top Sellers</div></div><div id="manTopItems"></div></div>
       <div class="card"><div class="card-header"><div class="card-title">Payment Methods</div></div><div id="manMethods"></div></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-header"><div class="card-title">Payments &amp; Refunds</div></div>
+      <div id="mgrPayAlert" class="alert hidden" style="margin-bottom:10px"></div>
+      <div id="mgrPayments" style="overflow:auto"></div>
     </div>`;
   body.appendChild(div);
 })();
