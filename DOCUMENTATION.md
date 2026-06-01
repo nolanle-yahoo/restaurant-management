@@ -373,7 +373,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | Method | Path | Access | Description |
 |---|---|---|---|
 | POST | `/in` | Any | Clock in. |
-| POST | `/out` | Any | Clock out (computes hours). |
+| POST | `/out` | Any | Clock out (computes hours); hands off open orders/areas to an on-duty colleague or alerts the owner. |
 | GET | `/status` | Any | Current clock status. |
 | GET | `/hours` | Any | Weekly hours (self or queried user). |
 | GET | `/recent` | Any | Last 20 clock events. |
