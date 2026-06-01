@@ -147,8 +147,9 @@ router.post('/:id/confirm', requireRole(...STAFF), async (req, res) => {
     }
     db.prepare(`UPDATE payments SET status='paid', updated_at=datetime('now') WHERE id=?`).run(payment.id);
     settleOrder(req, payment.order_id);
+    emailReceipt(payment.id);
     auditLog(req, 'payment_recorded', 'payment', payment.id, { method: 'card', total: payment.total, tip: payment.tip });
-    res.json({ success: true, total: payment.total });
+    res.json({ success: true, total: payment.total, receipt_code: payment.receipt_code });
   } catch (e) {
     console.error('Stripe confirm error:', e.message);
     res.status(502).json({ error: 'Payment processor error' });
