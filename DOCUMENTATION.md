@@ -489,7 +489,10 @@ to scope their subscription. The server broadcasts:
 |---|---|---|
 | `index.html` | All | Login, theme toggle, links to public menu / reservation, mobile entry. |
 | `menu.html` | Public (customers) | Browse any location's priced menu; no login. |
-| `reserve.html` | Public (customers) | Submit an online reservation request; no login. |
+| `reserve.html` | Public (customers) | Submit an online reservation request (returns a confirmation code); no login. |
+| `reserve-lookup.html` | Public (customers) | Look up or cancel a reservation by code + contact; no login. |
+| `receipt.html` | Public (customers) | View/print an itemized receipt by receipt code; no login. |
+| `reset.html` | Public | Set a new password from an emailed reset link. |
 | `owner.html` | Owner | Overview, Staff & Locations, Timesheets, Warehouse, Supply, Transfers, Floor Plan, Admin Panel, Reservations, Menu, Sales Analytics, Audit Log, Time Off, Messages. |
 | `manager.html` | Manager / Stockroom | Staff, Schedule, Timesheets, Inventory, Warehouse, Supply, Transfers, Floor Plan, Reservations, Menu, Sales Analytics, Time Off, Messages; low-stock banner. |
 | `waiter.html` | Waiter | My Area, Full Floor, My Orders; take/serve with menu picker + special request; Settle Bill. |
