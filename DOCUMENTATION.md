@@ -227,6 +227,11 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-12.2** Managers see messages for their location; owners see all messages across
   locations; messages can be marked read.
 - **FR-12.3** A topbar notification bell shows the unread message count and links to the inbox.
+- **FR-12.4** **Threaded replies** — owners/managers can reply to an employee's message; the
+  sender sees the reply thread on their own messages view (two-way conversation).
+- **FR-12.5** **Broadcast announcements** — owners/managers post announcements to staff (own
+  location, or all locations for owners). They appear in staff message views and are pushed
+  live as real-time toasts (FR-14.2).
 
 ### 5.13 Audit Log
 - **FR-13.1** Sensitive operations (e.g., reservation create/update, menu changes, order
