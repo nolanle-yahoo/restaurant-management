@@ -672,6 +672,9 @@ locations and all roles):
 Additional managers, chefs, waiters, front-desk, and employees exist for the other locations
 (Uptown Grille, Airport Terminal, Westside Kitchen, Harbor View).
 
+A demo **customer** account (for online ordering, loyalty, and marketing) is also seeded:
+`diner@example.com` / `diner123` (starts with 120 loyalty points, marketing opt-in on).
+
 **Locations:** Downtown Bistro · Uptown Grille · Airport Terminal · Westside Kitchen ·
 Harbor View.
 
