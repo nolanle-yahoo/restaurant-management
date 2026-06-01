@@ -62,7 +62,7 @@ Express app  ──────────────  HTTP server + ws server
    │
    ├─ Middleware: CORS, JSON parser, static file server
    ├─ Auth middleware: verifyToken, requireRole
-   ├─ 19 route modules under /api/*
+   ├─ 20 route modules under /api/*
    ├─ lib/ws.js     → real-time broadcast bus
    ├─ lib/audit.js  → audit logging helper
    └─ SPA fallback + global error handler
