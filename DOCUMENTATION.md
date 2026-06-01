@@ -409,6 +409,7 @@ SQLite database with 30 tables. Core entities and relationships:
 - **announcements** — broadcast notices from owner/manager to staff (location-scoped or global).
 - **permissions** — configurable capability×role grants (refund/void/discount) the owner manages.
 - **feedback** — post-visit guest ratings (1–5) + comments, tied to a receipt.
+- **waste_log** — stock written off (quantity + reason + actor) for spoilage/loss tracking.
 - **menu_items** also carry `image_url`, `allergens`, and `dietary` tags.
 - **employee_messages** carries `parent_id` for threaded replies; **payments** carries
   `discount` (loyalty), `manual_discount` + `discount_reason` (comps); **orders** carries
