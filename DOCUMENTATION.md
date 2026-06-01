@@ -233,6 +233,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-11.2** Managers approve/deny requests for their location; owners across all locations;
   reviewers may attach a note.
 - **FR-11.3** Employees can cancel their own pending requests and track status.
+- **FR-11.4** **Consolidated approvals** — owners and managers see a dashboard card summarizing
+  everything awaiting action (pending time-off, transfer requests, and supply orders) with
+  one-click links to the relevant review screens.
 
 ### 5.12 Internal Messaging & Feedback
 - **FR-12.1** Employees send messages/feedback addressed to their manager, the owner, or both.
