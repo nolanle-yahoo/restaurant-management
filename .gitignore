@@ -4,3 +4,8 @@ node_modules/
 *.db-wal
 .env
 screenshots/
+
+# Scratch / temporary files (anything prefixed with "_" is throwaway)
+_*
+*.tmp
+*.log
