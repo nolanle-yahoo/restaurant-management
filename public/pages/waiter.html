@@ -305,7 +305,9 @@ async function loadMyOrders() {
           <div class="order-time">Placed ${timeAgo(o.created_at)}</div>
           <div class="order-actions">
             ${o.status === 'ready' ? `<button class="btn btn-success btn-sm" onclick="markServed(${o.id})">Mark Served</button>` : ''}
-            <button class="btn btn-gold btn-sm" onclick="openPaymentModal(${o.id}, loadMyOrders)">💳 Settle Bill</button>
+            ${o.paid
+              ? `<button class="btn btn-sm" disabled style="opacity:.65">✓ Paid</button>`
+              : `<button class="btn btn-gold btn-sm" onclick="openPaymentModal(${o.id}, loadMyOrders)">💳 Settle Bill</button>`}
           </div>
         </div>
       `).join('')
