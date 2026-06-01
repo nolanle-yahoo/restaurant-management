@@ -47,8 +47,9 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 | ✅ done | Menu allergens/photos + dietary filter; ticket flags; receipt feedback — *shipped v1.14.0* | Customer, Chef | 1 |
 | ✅ done | Table transfer/merge · waste tracking · approvals dashboard — *shipped v1.15.0* | Floor, Stockroom, Mgr | 2–3 |
 | ✅ done | Vendor records · self-service pay · course grouping — *shipped v1.16.0* | Stockroom, Staff, Chef | 2–3 |
-| 🔴 1 | Order edit (add/remove items, re-deplete + audit) | Waiter, Chef | 3 |
-| 🟠 2 | Central menu w/ per-location overrides; 2FA; cycle counts/barcode; shift swapping | Owner, Stockroom, Staff | 2–4 |
+| ✅ done | Order edit (add/remove items, re-deplete + audit) — *shipped v1.17.0* | Waiter, Chef | 3 |
+| 🔴 1 | Central menu w/ per-location overrides; 2FA | Owner | 3–4 |
+| 🟠 2 | Cycle counts/barcode; shift swapping; certification tracking; per-employee performance | Stockroom, Staff, Mgr | 2–3 |
 
 ---
 
