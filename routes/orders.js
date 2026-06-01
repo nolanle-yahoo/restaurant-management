@@ -56,13 +56,19 @@ router.put('/:id', requireRole('owner','manager','waiter','chef','employee','fro
   const order = db.prepare(`SELECT * FROM orders WHERE id=?`).get(req.params.id);
   if (!order) return res.status(404).json({ error: 'Order not found' });
   db.prepare(`UPDATE orders SET status=?, updated_at=datetime('now') WHERE id=?`).run(status, req.params.id);
-  if (status === 'served') {
+  if (status === 'served' && order.table_id) {
     db.prepare(`UPDATE tables SET status='ready_clean' WHERE id=?`).run(order.table_id);
   }
   auditLog(req, 'order_status_change', 'order', req.params.id, { from: order.status, to: status });
   broadcast('order_update', { type: 'status', order_id: Number(req.params.id), status, location_id: order.location_id }, order.location_id);
-  if (status === 'served') {
+  if (status === 'served' && order.table_id) {
     broadcast('table_update', { table_id: order.table_id, status: 'ready_clean', location_id: order.location_id }, order.location_id);
+  }
+  // Notify front-of-house when the kitchen finishes an order.
+  if (status === 'ready') {
+    const t = order.table_id ? db.prepare(`SELECT table_number FROM tables WHERE id=?`).get(order.table_id) : null;
+    const where = t ? `Table ${t.table_number}` : 'an online order';
+    notify(`Order ready — ${where}`, { locId: order.location_id, roles: ['waiter','employee','manager','frontdesk'], kind: 'order_ready' });
   }
   res.json({ success: true });
 });
