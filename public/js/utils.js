@@ -406,17 +406,18 @@ async function submitPayment() {
   const b = _payState.bill;
   if (!b || (b.payment && b.payment.status === 'paid')) return hideModal('paymentModal');
   const tip = Math.max(0, parseFloat(document.getElementById('payTip').value) || 0);
+  const email = (document.getElementById('payEmail') || {}).value || '';
   const btn = document.getElementById('payChargeBtn');
   btn.disabled = true; btn.textContent = 'Processing…';
   try {
     const useStripe = _payState.method === 'card' && _payState.cfg && _payState.cfg.stripe_enabled && _payState.cfg.publishable_key;
     if (useStripe) {
-      const intent = await API.paymentIntent({ order_id: _payState.orderId, tip });
+      const intent = await API.paymentIntent({ order_id: _payState.orderId, tip, email });
       const result = await _payState.stripe.confirmCardPayment(intent.client_secret, { payment_method: { card: _payState.card } });
       if (result.error) throw new Error(result.error.message);
       await API.confirmPayment(intent.payment_id);
     } else {
-      await API.recordPayment({ order_id: _payState.orderId, tip, method: _payState.method });
+      await API.recordPayment({ order_id: _payState.orderId, tip, method: _payState.method, email });
     }
     hideModal('paymentModal');
     showAlert('alertBox', 'Payment received — bill settled.', 'success');
