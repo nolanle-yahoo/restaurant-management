@@ -375,7 +375,10 @@ SQLite database with 27 tables. Core entities and relationships:
   quantities; drives auto-depletion and auto-86.
 - **customers** — customer accounts (separate from staff `users`): email/password, loyalty
   points, marketing opt-in, and an unsubscribe token. Orders may reference `customer_id`.
-- **loyalty_transactions** — points ledger (earned per paid order) per customer.
+- **loyalty_transactions** — points ledger (earned per paid order, or redeemed for a discount) per customer.
+- **announcements** — broadcast notices from owner/manager to staff (location-scoped or global).
+- **employee_messages** also carries `parent_id` for threaded replies; **payments** carries a
+  `discount` column for redeemed loyalty points.
 
 Referential integrity is enforced with foreign keys; status fields use CHECK constraints;
 emails are unique. Schema creation and lightweight column migrations run automatically on
