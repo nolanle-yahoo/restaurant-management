@@ -286,6 +286,17 @@
 
       <!-- ── Messages ───────────────────────────────────── -->
       <section id="sec-messages" class="hidden">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">📣 Post Announcement</div></div>
+          <div id="annAlert" class="alert hidden" style="margin-bottom:10px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+            <input id="annTitle" placeholder="Title" style="flex:1;min-width:200px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+            <select id="annLoc" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px"><option value="">All locations</option></select>
+          </div>
+          <textarea id="annBody" rows="2" placeholder="Message to staff…" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical;margin-bottom:8px"></textarea>
+          <button class="btn btn-primary btn-sm" onclick="postAnnouncement()">Post &amp; Notify Staff</button>
+          <div id="ownerAnnList" style="margin-top:14px"></div>
+        </div>
         <div class="card">
           <div class="card-header">
             <div class="card-title">Employee Messages & Feedback — All Locations</div>
