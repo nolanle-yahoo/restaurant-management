@@ -1275,6 +1275,22 @@ async function loadMgrFloorPlan() {
 }
 
 // Printable per-table QR codes that deep-link guests into table ordering.
+async function mergeTablesPrompt() {
+  const from = prompt('Merge OPEN orders FROM which table number?');
+  if (from === null) return;
+  const into = prompt('…INTO which table number?');
+  if (into === null) return;
+  try {
+    const tables = await API.tables(user.location_id);
+    const f = tables.find(t => String(t.table_number) === String(from).trim());
+    const t = tables.find(x => String(x.table_number) === String(into).trim());
+    if (!f || !t) return alert('One of those table numbers was not found.');
+    const r = await API.mergeTables(f.id, t.id);
+    showToast(`Merged ${r.moved} order(s) into Table ${t.table_number}`, 'info');
+    loadMgrFloorPlan();
+  } catch(e) { alert(e.message); }
+}
+
 async function loadQrCodes() {
   const el = document.getElementById('qrCodes');
   if (!el) return;
