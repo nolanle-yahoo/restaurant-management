@@ -26,7 +26,9 @@ function emailReceipt(paymentId) {
   sendEmail(p.receipt_email,
     `Your receipt from ${loc} — ${p.receipt_code}`,
     `Thank you for dining with us at ${loc}!\n\n${lines}\n\n` +
-    `Subtotal: $${p.subtotal.toFixed(2)}\nTax: $${p.tax.toFixed(2)}\nTip: $${p.tip.toFixed(2)}\nTotal: $${p.total.toFixed(2)}\n` +
+    `Subtotal: $${p.subtotal.toFixed(2)}\n` +
+    ((p.service_charge || 0) > 0 ? `Service charge: $${p.service_charge.toFixed(2)}\n` : '') +
+    `Tax: $${p.tax.toFixed(2)}\nTip: $${p.tip.toFixed(2)}\nTotal: $${p.total.toFixed(2)}\n` +
     `Paid by: ${p.method}\n\nReceipt code: ${p.receipt_code}\nView online: ${base}/receipt.html?code=${p.receipt_code}\n`,
     'receipt');
 }
