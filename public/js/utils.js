@@ -408,6 +408,7 @@ async function openPaymentModal(orderId, onPaid) {
       inputIds.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
       document.getElementById('payCardWrap').style.display = 'none';
       document.getElementById('payLoyalty').style.display = 'none';
+      document.getElementById('payDiscount').style.display = 'none';
       totalRow.style.display = 'none';
     } else {
       chargeBtn.disabled = false;
