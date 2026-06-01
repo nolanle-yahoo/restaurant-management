@@ -733,10 +733,10 @@ records; waste/expiry (FIFO) tracking; per-employee performance; discounts/comps
 swapping; self-service staff portal; reservation reminders + waitlist; regional-manager role &
 cross-location staff lending; central menu with overrides; 2FA; inventory valuation & COGS.
 
-**Tier 4 — High impact:** QR-code table ordering; par levels + auto-reorder; customer accounts
-+ loyalty + referrals; email marketing/promotions (with consent); configurable
-roles/permissions; executive multi-location dashboard & benchmarking; demand-based scheduling;
-finance/accounting integration.
+**Tier 4 — High impact:** par levels + auto-reorder; configurable roles/permissions; executive
+multi-location dashboard & benchmarking; demand-based scheduling; finance/accounting
+integration; loyalty **redemption** + referrals (accrual shipped in 1.11.0). *(QR-code table
+ordering, customer accounts/loyalty, and email marketing shipped in 1.11.0.)*
 
 **Tier 5 — Transformational:** *(All three shipped — inventory auto-depletion in 1.9.0;
 real-time notifications and online ordering in 1.10.0.)* Remaining extensions: online
