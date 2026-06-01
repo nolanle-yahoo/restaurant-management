@@ -349,6 +349,7 @@ function createSchema() {
           status TEXT DEFAULT 'pending' CHECK(status IN ('pending','preparing','ready','served')),
           notes TEXT,
           order_type TEXT NOT NULL DEFAULT 'dine_in',
+          customer_id INTEGER REFERENCES customers(id),
           customer_name TEXT,
           customer_phone TEXT,
           customer_email TEXT,
@@ -359,8 +360,8 @@ function createSchema() {
         )
       `);
       db.exec(`INSERT INTO orders_new
-        (id,table_id,location_id,waiter_id,status,notes,order_type,customer_name,customer_phone,customer_email,delivery_address,tracking_code,created_at,updated_at)
-        SELECT id,table_id,location_id,waiter_id,status,notes,order_type,customer_name,customer_phone,customer_email,delivery_address,tracking_code,created_at,updated_at FROM orders`);
+        (id,table_id,location_id,waiter_id,status,notes,order_type,customer_id,customer_name,customer_phone,customer_email,delivery_address,tracking_code,created_at,updated_at)
+        SELECT id,table_id,location_id,waiter_id,status,notes,order_type,customer_id,customer_name,customer_phone,customer_email,delivery_address,tracking_code,created_at,updated_at FROM orders`);
       db.exec(`DROP TABLE orders`);
       db.exec(`ALTER TABLE orders_new RENAME TO orders`);
       db.exec(`PRAGMA foreign_keys = ON`);
