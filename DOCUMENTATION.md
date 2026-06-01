@@ -508,6 +508,9 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | PUT | `/:id/void` | On-duty staff with `void` permission | Void an unpaid order (reason); restores inventory; audited. |
 | PUT | `/:id/move` | On-duty floor staff | Move an order to another table (transfer). |
 | PUT | `/merge` | On-duty floor staff | Merge a table's open orders into another table. |
+| POST | `/:id/items` | On-duty staff | Add an item to an unpaid order (re-depletes inventory). |
+| PUT | `/:id/items/:itemId` | On-duty staff | Change a line's quantity (adjusts inventory by the delta). |
+| DELETE | `/:id/items/:itemId` | On-duty staff | Remove a line (restocks inventory). |
 
 ### Inventory — `/api/inventory`
 | Method | Path | Access | Description |
