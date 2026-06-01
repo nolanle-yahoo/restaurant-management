@@ -15,6 +15,8 @@
 > replies** + **broadcast announcements** (#12 staff messaging).
 > ✅ **Delivered in v1.13.0:** configurable **permissions** (refund/void/discount × role) ·
 > **discounts/comps/voids** · loyalty **tiers + referrals**.
+> ✅ **Delivered in v1.14.0:** **split-the-bill** · menu **allergens/photos + dietary filter** ·
+> **post-visit receipt feedback**.
 
 Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
 from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
