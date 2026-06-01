@@ -39,6 +39,34 @@ router.get('/waste', requireRole('owner','manager','stockroom','chef'), (req, re
   res.json(rows);
 });
 
+// ── Vendors (master records) ───────────────────────────────
+router.get('/vendors', requireRole('owner','manager','stockroom','chef'), (req, res) => {
+  res.json(db.prepare(`SELECT * FROM vendors WHERE is_active=1 ORDER BY name`).all());
+});
+router.post('/vendors', requireRole('owner','manager'), (req, res) => {
+  const { name, contact_name, phone, email, lead_time_days, notes } = req.body;
+  if (!name || !String(name).trim()) return res.status(400).json({ error: 'Vendor name required' });
+  const r = db.prepare(`INSERT INTO vendors (name, contact_name, phone, email, lead_time_days, notes) VALUES (?,?,?,?,?,?)`)
+    .run(String(name).slice(0,120), contact_name||null, phone||null, email||null, parseInt(lead_time_days)||0, notes||null);
+  auditLog(req, 'vendor_create', 'vendor', r.lastInsertRowid, { name });
+  res.json({ success: true, id: r.lastInsertRowid });
+});
+router.put('/vendors/:id', requireRole('owner','manager'), (req, res) => {
+  const v = db.prepare(`SELECT * FROM vendors WHERE id=?`).get(req.params.id);
+  if (!v) return res.status(404).json({ error: 'Vendor not found' });
+  const fields = [], vals = [];
+  ['name','contact_name','phone','email','notes'].forEach(k => { if (req.body[k] !== undefined) { fields.push(`${k}=?`); vals.push(req.body[k] || null); } });
+  if (req.body.lead_time_days !== undefined) { fields.push('lead_time_days=?'); vals.push(parseInt(req.body.lead_time_days)||0); }
+  if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
+  vals.push(req.params.id);
+  db.prepare(`UPDATE vendors SET ${fields.join(',')} WHERE id=?`).run(...vals);
+  res.json({ success: true });
+});
+router.delete('/vendors/:id', requireRole('owner','manager'), (req, res) => {
+  db.prepare(`UPDATE vendors SET is_active=0 WHERE id=?`).run(req.params.id);  // soft-delete to keep order history
+  res.json({ success: true });
+});
+
 // ── Inventory levels ───────────────────────────────────────
 router.get('/', requireRole('owner','manager','chef','stockroom'), (req, res) => {
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
