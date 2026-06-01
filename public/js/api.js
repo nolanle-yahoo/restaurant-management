@@ -42,6 +42,10 @@ const API = {
   updateEmployee(id, data) { return this.put(`/employees/${id}`, data); },
   deleteEmployee(id)       { return this.delete(`/employees/${id}`); },
 
+  myPay(start, end) {
+    const qs = [start && `start=${start}`, end && `end=${end}`].filter(Boolean).join('&');
+    return this.get('/timesheets/me' + (qs ? '?' + qs : ''));
+  },
   timesheets(start, end, locId) {
     let qs = `?start=${start}&end=${end}`;
     if (locId) qs += `&location_id=${locId}`;
