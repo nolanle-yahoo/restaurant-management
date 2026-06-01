@@ -1437,6 +1437,12 @@ async function loadOwnerMessages() {
   renderOwnerMessages();
   const unread = ownerMsgData.filter(m => !m.is_read).length;
   document.getElementById('navMessages').innerHTML = `<span class="nav-icon">💬</span>Messages${unread ? ` <span style="background:var(--burgundy);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">${unread}</span>` : ''}`;
+  // Announcements composer + list
+  const annLoc = document.getElementById('annLoc');
+  if (annLoc && locations.length && annLoc.options.length <= 1) {
+    annLoc.innerHTML = '<option value="">All locations</option>' + locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  }
+  loadAnnouncementsOwner();
 }
 
 function renderOwnerMessages() {
