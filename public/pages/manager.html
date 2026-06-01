@@ -922,6 +922,7 @@ function renderInv(items) {
       <td>
         <button class="btn btn-sm btn-ghost" onclick="openOrderFromInv(${i.id},'${i.item_name.replace(/'/g,"\\'")}')">Order</button>
         <button class="btn btn-sm btn-ghost" onclick="openTransferFromInv('${i.item_name.replace(/'/g,"\\'")}')">Transfer</button>
+        <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="logWasteFor(${i.id},'${i.item_name.replace(/'/g,"\\'")}',${i.quantity})">Waste</button>
       </td>
     </tr>`;
   }).join('');
