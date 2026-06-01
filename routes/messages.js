@@ -93,6 +93,7 @@ router.delete('/:id', (req, res) => {
   if (role !== 'owner' && role !== 'manager' && msg.user_id !== userId) {
     return res.status(403).json({ error: 'Not authorized' });
   }
+  db.prepare(`DELETE FROM employee_messages WHERE parent_id=?`).run(req.params.id); // remove thread replies first (FK)
   db.prepare(`DELETE FROM employee_messages WHERE id=?`).run(req.params.id);
   res.json({ success: true });
 });
