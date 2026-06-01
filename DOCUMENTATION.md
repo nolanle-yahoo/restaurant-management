@@ -240,6 +240,16 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   rate-limited to deter abuse.
 - **FR-17.3** The public pages are linked from the staff login screen and require no account.
 
+### 5.19 Notifications & Self-Service (Email)
+- **FR-19.1** A shared email layer sends transactional messages via SMTP when configured, or
+  records them to an email log in simulated mode otherwise — so all flows work without setup.
+- **FR-19.2** Guests who provide an email receive a **reservation confirmation** with a code,
+  and can **look up or cancel** their reservation using that code plus their email/phone.
+- **FR-19.3** A **digital receipt** is generated for every settled bill, emailable to the guest
+  and viewable/printable at a public receipt page via its receipt code.
+- **FR-19.4** Users can request a **password reset**; a one-time, expiring link is emailed and
+  consumed on the reset page. Requests never reveal whether an email is registered.
+
 ### 5.18 Sales & Revenue Analytics
 - **FR-18.1** Owners and managers view a sales analytics dashboard over a selectable date
   range (with 7/30/90-day quick ranges).
