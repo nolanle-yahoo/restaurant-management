@@ -134,6 +134,7 @@ const API = {
   updateSettings(data)   { return this.put('/settings', data); },
   permissions()          { return this.get('/settings/permissions'); },
   setPermission(data)    { return this.put('/settings/permissions', data); },
+  feedback(locId)        { return this.get('/feedback' + (locId ? `?location_id=${locId}` : '')); },
 
   marketingAudience()    { return this.get('/marketing/audience'); },
   marketingHistory()     { return this.get('/marketing/history'); },
