@@ -53,8 +53,15 @@ function computeBill(orderId) {
     const c = db.prepare(`SELECT id, name, points FROM customers WHERE id=?`).get(order.customer_id);
     if (c) customer = { id: c.id, name: c.name, points: c.points };
   }
+  // Split-the-bill: how much of the food subtotal is already covered by prior
+  // (partial) payments, and what remains.
+  const cov = db.prepare(`SELECT COALESCE(SUM(subtotal),0) s, COALESCE(SUM(total),0) t FROM payments WHERE order_id=? AND status='paid'`).get(orderId);
+  const covered_subtotal = round2(cov.s);
+  const balance_subtotal = round2(Math.max(0, subtotal - covered_subtotal));
   return { order, items, subtotal, service_charge, tax, tax_rate: sales_tax_rate,
-           service_rate: service_charge_rate, customer, point_value: POINT_VALUE };
+           service_rate: service_charge_rate, customer, point_value: POINT_VALUE,
+           covered_subtotal, balance_subtotal, amount_paid: round2(cov.t),
+           fully_paid: balance_subtotal <= 0.005 && covered_subtotal > 0 };
 }
 
 // Frontend asks which payment flow to use
