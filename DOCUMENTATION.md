@@ -521,6 +521,8 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/transactions` | Owner, Manager, Stockroom | Last 100 transactions. |
 | POST | `/waste` | Owner, Manager, Stockroom, Chef | Write off stock (quantity + reason); deducts inventory + logs. |
 | GET | `/waste` | Owner, Manager, Stockroom, Chef | Recent waste entries (location-scoped). |
+| GET | `/vendors` | Owner, Manager, Stockroom, Chef | Active vendor list. |
+| POST · PUT · DELETE | `/vendors[/:id]` | Owner, Manager | Create / edit / deactivate a vendor. |
 
 ### Locations — `/api/locations`
 | Method | Path | Access | Description |
