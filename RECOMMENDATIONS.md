@@ -7,6 +7,8 @@
 > ✅ **Delivered in v1.9.0:** #1 Refund UI · #2 Low-stock alerts (stockroom + chef) ·
 > #3 Configurable tax/service-charge · #4 Stronger password policy + broader rate limiting ·
 > #20 Chef "86" with live availability · #43 Inventory auto-depletion (recipes/BOM) + auto-86.
+> ✅ **Delivered in v1.10.0:** #44 Operational + real-time notifications · #45 Online ordering
+> (pickup/delivery, pay-on-collection).
 
 Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
 from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
