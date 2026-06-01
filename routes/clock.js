@@ -22,7 +22,10 @@ router.post('/out', (req, res) => {
     WHERE id=?
   `).run(record.id);
   const updated = db.prepare(`SELECT * FROM clock_records WHERE id=?`).get(record.id);
-  res.json({ success: true, hours_worked: updated.hours_worked });
+  // Now that the user is off the clock, hand any unfinished work to a colleague
+  // (or alert the owner if nobody else is on duty).
+  const handoff = handoffOnClockOut(req, req.user.id, req.user.location_id);
+  res.json({ success: true, hours_worked: updated.hours_worked, handoff });
 });
 
 router.get('/status', (req, res) => {
