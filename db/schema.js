@@ -279,6 +279,14 @@ function createSchema() {
   try { db.exec(`ALTER TABLE supply_orders ADD COLUMN tracking_number TEXT`); } catch {}
   try { db.exec(`ALTER TABLE supply_orders ADD COLUMN expected_date TEXT`); } catch {}
   try { db.exec(`ALTER TABLE payments ADD COLUMN service_charge REAL NOT NULL DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE reservations ADD COLUMN reminded INTEGER DEFAULT 0`); } catch {}
+  // Online ordering: orders can be customer pickup/delivery (no table/waiter).
+  try { db.exec(`ALTER TABLE orders ADD COLUMN order_type TEXT NOT NULL DEFAULT 'dine_in'`); } catch {}
+  try { db.exec(`ALTER TABLE orders ADD COLUMN customer_name TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE orders ADD COLUMN customer_phone TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE orders ADD COLUMN customer_email TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE orders ADD COLUMN delivery_address TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE orders ADD COLUMN tracking_code TEXT`); } catch {}
 
   // Migrate tables table: remove old CHECK constraint, add area_id
   try {
