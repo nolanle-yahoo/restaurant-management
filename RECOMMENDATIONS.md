@@ -17,6 +17,8 @@
 > **discounts/comps/voids** · loyalty **tiers + referrals**.
 > ✅ **Delivered in v1.14.0:** **split-the-bill** · menu **allergens/photos + dietary filter** ·
 > **post-visit receipt feedback**.
+> ✅ **Delivered in v1.15.0:** **table transfer/merge** · **waste/spoilage tracking** ·
+> **consolidated approvals dashboard**.
 
 Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
 from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
