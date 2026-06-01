@@ -473,6 +473,44 @@ async function submitPayment() {
   }
 }
 
+// ── Toast notifications ──────────────────────────────────────
+const TOAST_STYLE = {
+  order_ready:  { icon: '✅', bg: '#2E7D46' },
+  help:         { icon: '🔔', bg: '#C4762A' },
+  low_stock:    { icon: '⚠️', bg: '#B0472A' },
+  online_order: { icon: '🛍️', bg: '#6B1A1A' },
+  reservation:  { icon: '📅', bg: '#4C86C9' },
+  info:         { icon: 'ℹ️', bg: '#333' },
+};
+function showToast(message, kind = 'info') {
+  let wrap = document.getElementById('toastWrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'toastWrap';
+    wrap.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:340px';
+    document.body.appendChild(wrap);
+  }
+  const s = TOAST_STYLE[kind] || TOAST_STYLE.info;
+  const t = document.createElement('div');
+  t.style.cssText = `background:${s.bg};color:#fff;padding:12px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:13.5px;display:flex;gap:8px;align-items:flex-start;animation:slideIn .25s ease;cursor:pointer`;
+  t.innerHTML = `<span style="font-size:16px;line-height:1">${s.icon}</span><span>${message}</span>`;
+  t.onclick = () => t.remove();
+  wrap.appendChild(t);
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(message); } catch {}
+  }
+  setTimeout(() => t.remove(), 8000);
+}
+// Show a toast only if the current user's role is targeted (or no roles set).
+function _maybeToast(data) {
+  if (!data || !data.message) return;
+  try {
+    const u = JSON.parse(localStorage.getItem('user') || '{}');
+    if (data.roles && Array.isArray(data.roles) && !data.roles.includes(u.role)) return;
+  } catch {}
+  showToast(data.message, data.kind);
+}
+
 // ── WebSocket client ─────────────────────────────────────────
 function connectWebSocket(locationId, handlers) {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -486,6 +524,7 @@ function connectWebSocket(locationId, handlers) {
       ws.onmessage = e => {
         try {
           const { event, data } = JSON.parse(e.data);
+          if (event === 'notify') _maybeToast(data);   // built-in operational toasts
           if (handlers[event]) handlers[event](data);
         } catch {}
       };
