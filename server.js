@@ -40,6 +40,7 @@ app.use('/api/menu',         require('./routes/menu'));
 app.use('/api/audit',        require('./routes/audit'));
 app.use('/api/payments',     require('./routes/payments'));
 app.use('/api/analytics',    require('./routes/analytics'));
+app.use('/api/settings',     require('./routes/settings'));
 app.use('/api/public',       require('./routes/public'));
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
