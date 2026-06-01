@@ -151,6 +151,18 @@ async function loadQueue() {
   document.getElementById('orderQueue').innerHTML = activeHtml + readyHtml;
 }
 
+const COURSE_ORDER = ['Appetizers', 'Mains', 'Desserts', 'Drinks'];
+function renderCourses(items) {
+  const itemRow = i => `<div class="order-item-row">• ${i.item_name} <span style="color:var(--muted)">×${i.quantity}</span>${allergenMap[i.item_name]?` <span class="badge badge-danger" style="font-size:10px">⚠ ${allergenMap[i.item_name]}</span>`:''}</div>`;
+  const groups = {};
+  items.forEach(i => { const c = i.course || 'Mains'; (groups[c] = groups[c] || []).push(i); });
+  const order = [...COURSE_ORDER, ...Object.keys(groups).filter(c => !COURSE_ORDER.includes(c))];
+  // If everything is one course, don't bother with headings.
+  const used = order.filter(c => groups[c] && groups[c].length);
+  if (used.length <= 1) return items.map(itemRow).join('');
+  return used.map(c => `<div style="font-size:10.5px;font-weight:800;color:var(--burgundy);text-transform:uppercase;letter-spacing:.4px;margin:6px 0 2px">${c}</div>${groups[c].map(itemRow).join('')}`).join('');
+}
+
 function orderLabel(o) {
   if (o.table_id) return 'Table ' + o.table_number;
   const t = o.order_type === 'delivery' ? '🚗 Delivery' : '🥡 Pickup';
