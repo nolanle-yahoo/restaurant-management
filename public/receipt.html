@@ -52,8 +52,40 @@
         <div class="row tot"><span>Total</span><span>$${d.total.toFixed(2)}</span></div>
         <div class="row" style="color:var(--muted);font-size:13px"><span>Paid by</span><span>${d.method} · ${d.status}</span></div>
         <div class="code">Receipt ${d.receipt_code}</div>
-        <button class="btn btn-ghost noprint" style="width:100%;margin-top:16px" onclick="window.print()">🖨 Print</button>`;
+        <button class="btn btn-ghost noprint" style="width:100%;margin-top:16px" onclick="window.print()">🖨 Print</button>
+        <div class="noprint" id="fbBox" style="border-top:1px dashed var(--border);margin-top:18px;padding-top:16px;text-align:center">
+          <div style="font-weight:700;margin-bottom:8px">How was your visit?</div>
+          <div id="stars" style="font-size:28px;cursor:pointer;letter-spacing:4px">☆☆☆☆☆</div>
+          <textarea id="fbComment" rows="2" placeholder="Tell us more (optional)" style="width:100%;margin-top:10px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical"></textarea>
+          <div id="fbAlert" class="alert hidden" style="margin-top:8px"></div>
+          <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitFeedback('${d.receipt_code}')">Submit Feedback</button>
+        </div>`;
+      _rating = 0; renderStars();
     } catch { showErr('Network error. Please try again.'); }
+  }
+  let _rating = 0;
+  function renderStars() {
+    const el = document.getElementById('stars'); if (!el) return;
+    el.textContent = '★★★★★☆☆☆☆☆'.slice(5 - _rating, 10 - _rating);
+    [...el.childNodes];
+  }
+  function setupStars() {
+    const el = document.getElementById('stars'); if (!el) return;
+    el.onclick = (e) => {
+      const rect = el.getBoundingClientRect();
+      _rating = Math.max(1, Math.min(5, Math.ceil((e.clientX - rect.left) / (rect.width / 5))));
+      renderStars();
+    };
+  }
+  async function submitFeedback(code) {
+    if (!_rating) { const a=document.getElementById('fbAlert'); a.className='alert alert-danger'; a.textContent='Please pick a star rating.'; a.classList.remove('hidden'); return; }
+    try {
+      const r = await fetch('/api/public/feedback', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ receipt_code: code, rating: _rating, comment: document.getElementById('fbComment').value.trim() }) });
+      const d = await r.json().catch(()=>({}));
+      const a = document.getElementById('fbAlert'); a.classList.remove('hidden');
+      if (!r.ok) { a.className='alert alert-danger'; a.textContent = d.error || 'Could not submit.'; return; }
+      document.getElementById('fbBox').innerHTML = '<div style="color:var(--success);font-weight:700;padding:8px">✅ ' + (d.message||'Thank you!') + '</div>';
+    } catch { const a=document.getElementById('fbAlert'); a.className='alert alert-danger'; a.textContent='Network error.'; a.classList.remove('hidden'); }
   }
   const qp = new URLSearchParams(location.search).get('code');
   if (qp) { document.getElementById('code').value = qp; load(qp); }
