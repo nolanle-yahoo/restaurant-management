@@ -164,11 +164,22 @@ async function savePassword() {
   if (newPw !== confirm)  return showAlert('pwAlert', 'New passwords do not match');
   if (newPw.length < 6)   return showAlert('pwAlert', 'Password must be at least 6 characters');
   try {
-    await API.changePassword({ current_password: current, new_password: newPw });
-    showAlert('pwAlert', 'Password changed!', 'success');
+    const r = await API.changePassword({ current_password: current, new_password: newPw });
+    // Server rotated the session; keep this device signed in with the fresh token.
+    if (r && r.token) localStorage.setItem('token', r.token);
+    showAlert('pwAlert', 'Password changed. Other devices have been signed out.', 'success');
     document.getElementById('currentPw').value = '';
     document.getElementById('newPw').value = '';
     document.getElementById('confirmPw').value = '';
+  } catch(e) { showAlert('pwAlert', e.message); }
+}
+
+async function logoutEverywhere() {
+  if (!confirm('Sign out of all other devices? This session will stay signed in.')) return;
+  try {
+    const r = await API.logoutAll();
+    if (r && r.token) localStorage.setItem('token', r.token);
+    showAlert('pwAlert', r.message || 'All other sessions have been signed out.', 'success');
   } catch(e) { showAlert('pwAlert', e.message); }
 }
 
