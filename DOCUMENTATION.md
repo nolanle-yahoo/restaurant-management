@@ -596,8 +596,11 @@ Harbor View.
 - **Real-time fan-out** — the WebSocket bus is in-process; running multiple server instances would require a shared pub/sub (e.g., Redis) for cross-instance broadcasts.
 - **Payments** — card processing requires a configured Stripe key; without it the system runs in a simulated record-only mode (see §11).
 - **Inventory vs. menu** — selling a menu item does not yet auto-decrement ingredient inventory; stock is adjusted via supply orders/transfers only.
-- **Notifications** — limited to the in-app message bell; no email/SMS/push for order-ready, table-help, or reservation reminders yet.
-- **No password self-reset** — a forgotten password currently requires an administrator to reset it.
+- **Notifications** — email is supported for reservation confirmations, receipts, and password
+  resets (real via SMTP, or simulated/logged without it). No SMS/push, and no operational
+  alerts (order-ready, table-help, reservation reminders) yet.
+- **Refunds** — refunds are available via the API to owners/managers; a dedicated refund button
+  in the payment-history UI is not yet wired.
 
 ## 15. Roadmap / Future Enhancements
 
