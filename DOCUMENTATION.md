@@ -720,6 +720,9 @@ availability; inventory auto-depletion (recipes/BOM).
 reminders; online ordering (pickup/delivery, pay-on-collection) with customer tracking and
 staff fulfillment.
 
+**Delivered in 1.11.0:** QR-code table ordering (dine-in); customer accounts with loyalty
+points + order history; owner email-marketing campaigns with opt-in/unsubscribe.
+
 **Tier 1 — Quick wins / polish:** allergen filters + photos on the public menu; structured
 allergen flags on tickets; post-visit feedback link on receipts.
 
