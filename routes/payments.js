@@ -202,18 +202,28 @@ router.post('/intent', requireRole(...STAFF), requireOnDuty, async (req, res) =>
   const bill = computeBill(order_id);
   if (!bill) return res.status(404).json({ error: 'Order not found' });
 
-  const existing = db.prepare(`SELECT id FROM payments WHERE order_id=? AND status='paid'`).get(order_id);
-  if (existing) return res.status(409).json({ error: 'This order is already paid' });
+  if (bill.order.voided) return res.status(409).json({ error: 'This order was voided and cannot be paid.' });
+  if (bill.balance_subtotal <= 0.005 && bill.covered_subtotal > 0) {
+    return res.status(409).json({ error: 'This order is already fully paid' });
+  }
 
   const tipAmt = round2(Math.max(0, parseFloat(tip) || 0));
-  const total = round2(bill.subtotal + bill.service_charge + bill.tax + tipAmt);
+  // Card pays the remaining balance (proportional tax/service); supports paying
+  // off a split that began with cash.
+  const fullSubtotal = bill.subtotal, remaining = bill.balance_subtotal;
+  const wantAmt = parseFloat(req.body.amount);
+  const thisSubtotal = round2(Math.min(Number.isFinite(wantAmt) && wantAmt > 0 ? wantAmt : remaining, remaining));
+  const proportion = fullSubtotal > 0 ? thisSubtotal / fullSubtotal : 1;
+  const thisService = round2(bill.service_charge * proportion);
+  const thisTax = round2(bill.tax * proportion);
+  const total = round2(thisSubtotal + thisService + thisTax + tipAmt);
 
   try {
     const intent = await stripeLib.createIntent(Math.round(total * 100), { order_id: String(order_id), location_id: String(bill.order.location_id) });
     const r = db.prepare(`
       INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, tip, total, method, status, stripe_payment_intent_id, processed_by, receipt_code, receipt_email)
       VALUES (?,?,?,?,?,?,?,?,'card','pending',?,?,?,?)
-    `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.service_charge, bill.tax, tipAmt, total, intent.id, req.user.id, makeReceiptCode(), (email||'').trim() || null);
+    `).run(order_id, bill.order.location_id, bill.order.waiter_id, thisSubtotal, thisService, thisTax, tipAmt, total, intent.id, req.user.id, makeReceiptCode(), (email||'').trim() || null);
     res.json({ payment_id: r.lastInsertRowid, client_secret: intent.client_secret, simulated: !!intent.simulated, total,
                publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || null });
   } catch (e) {
