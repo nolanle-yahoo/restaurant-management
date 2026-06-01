@@ -115,6 +115,24 @@
       errEl.classList.remove('hidden');
     }
   });
+
+  function showForgot() {
+    document.getElementById('forgotBox').classList.toggle('hidden');
+  }
+  async function submitForgot() {
+    const email = document.getElementById('forgotEmail').value.trim();
+    const a = document.getElementById('forgotAlert');
+    if (!email) { a.className='alert alert-danger'; a.textContent='Enter your account email.'; a.classList.remove('hidden'); return; }
+    try {
+      const r = await fetch('/api/auth/forgot-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email }) });
+      const d = await r.json();
+      a.className='alert alert-success';
+      a.textContent = d.message || 'If that email is registered, a reset link has been sent.';
+      a.classList.remove('hidden');
+    } catch {
+      a.className='alert alert-danger'; a.textContent='Network error. Please try again.'; a.classList.remove('hidden');
+    }
+  }
 </script>
 </body>
 </html>
