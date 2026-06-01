@@ -59,7 +59,11 @@
         <div style="font-size:13px;color:var(--muted)">Welcome back,</div>
         <div style="font-size:20px;font-weight:800" id="dName"></div>
         <div style="margin-top:10px" class="points-badge"><span id="dPoints">0</span> pts</div>
-        <div style="font-size:12px;color:var(--muted)">Earn 1 point per $1 spent</div>
+        <div style="margin:4px 0"><span class="badge" id="dTier" style="background:var(--gold);color:#3a2a00">Bronze</span> <span id="dNextTier" style="font-size:12px;color:var(--muted)"></span></div>
+        <div style="font-size:12px;color:var(--muted)">Earn 1 point per $1 spent · 20 pts = $1 off</div>
+        <div style="margin-top:10px;font-size:12.5px;background:var(--cream);border-radius:8px;padding:8px">
+          🎁 Refer friends: <b id="dReferral">—</b><br><span style="color:var(--muted)">They enter your code at sign-up — you both get 50 pts.</span>
+        </div>
         <div style="margin-top:14px">
           <label style="display:inline-flex;gap:8px;align-items:center;font-size:13px">
             <input type="checkbox" id="dOptIn" onchange="savePrefs()"> Receive marketing emails
