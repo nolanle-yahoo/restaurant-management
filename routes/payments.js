@@ -32,6 +32,7 @@ function emailReceipt(paymentId) {
     ((p.service_charge || 0) > 0 ? `Service charge: $${p.service_charge.toFixed(2)}\n` : '') +
     `Tax: $${p.tax.toFixed(2)}\n` +
     ((p.discount || 0) > 0 ? `Loyalty discount: -$${p.discount.toFixed(2)}\n` : '') +
+    ((p.manual_discount || 0) > 0 ? `Discount${p.discount_reason ? ' ('+p.discount_reason+')' : ''}: -$${p.manual_discount.toFixed(2)}\n` : '') +
     `Tip: $${p.tip.toFixed(2)}\nTotal: $${p.total.toFixed(2)}\n` +
     `Paid by: ${p.method}\n\nReceipt code: ${p.receipt_code}\nView online: ${base}/receipt.html?code=${p.receipt_code}\n`,
     'receipt');
