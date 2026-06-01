@@ -96,7 +96,8 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 
 **Cross-cutting rules**
 
-- Every role **except Owner** must clock in/out.
+- Every role **except Owner** must clock in/out. Clock-in is **enforced**: non-owner staff
+  cannot take orders, change table status, or settle bills while off the clock.
 - All non-owner staff can act as a waiter (view all tables at their location, take orders,
   update table status).
 - The Owner is the only role with multi-location visibility; all other roles are constrained
