@@ -111,6 +111,7 @@ function _injectAccountSettingsModal() {
       <div class="tabs" id="settingsTabs" style="margin-bottom:18px">
         <button class="tab-btn active" data-tab="tabProfile">Profile</button>
         <button class="tab-btn" data-tab="tabPassword">Change Password</button>
+        <button class="tab-btn" data-tab="tabPay">My Pay</button>
       </div>
       <div id="tabProfile" class="tab-pane active">
         <div id="profileAlert" class="alert hidden"></div>
