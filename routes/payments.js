@@ -120,13 +120,30 @@ router.post('/', requireRole(...STAFF), requireOnDuty, (req, res) => {
   if (existing) return res.status(409).json({ error: 'This order is already paid' });
 
   const tipAmt = round2(Math.max(0, parseFloat(tip) || 0));
-  const total = round2(bill.subtotal + bill.service_charge + bill.tax + tipAmt);
+
+  // Loyalty redemption: redeem the customer's points for a discount, capped at
+  // their balance and at the pre-tip bill amount.
+  let discount = 0, redeemPts = 0;
+  const wantPts = Math.max(0, parseInt(req.body.redeem_points) || 0);
+  if (wantPts > 0 && bill.customer) {
+    const billAmt = round2(bill.subtotal + bill.service_charge + bill.tax);
+    const maxByBill = Math.floor(billAmt / POINT_VALUE);
+    redeemPts = Math.min(wantPts, bill.customer.points, maxByBill);
+    discount = round2(redeemPts * POINT_VALUE);
+  }
+  const total = round2(bill.subtotal + bill.service_charge + bill.tax - discount + tipAmt);
   const receipt = makeReceiptCode();
 
   const r = db.prepare(`
-    INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, tip, total, method, status, processed_by, receipt_code, receipt_email)
-    VALUES (?,?,?,?,?,?,?,?,?,'paid',?,?,?)
-  `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.service_charge, bill.tax, tipAmt, total, m, req.user.id, receipt, (email||'').trim() || null);
+    INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, discount, tip, total, method, status, processed_by, receipt_code, receipt_email)
+    VALUES (?,?,?,?,?,?,?,?,?,?,'paid',?,?,?)
+  `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.service_charge, bill.tax, discount, tipAmt, total, m, req.user.id, receipt, (email||'').trim() || null);
+
+  if (redeemPts > 0 && bill.customer) {
+    db.prepare(`UPDATE customers SET points=points-? WHERE id=?`).run(redeemPts, bill.customer.id);
+    db.prepare(`INSERT INTO loyalty_transactions (customer_id, order_id, points, reason) VALUES (?,?,?,?)`)
+      .run(bill.customer.id, order_id, -redeemPts, 'Redeemed for discount');
+  }
 
   settleOrder(req, order_id);
   emailReceipt(r.lastInsertRowid);
