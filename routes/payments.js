@@ -81,7 +81,7 @@ function settleOrder(req, orderId) {
 }
 
 // Direct payment (cash / mobile / simulated card). Records as paid immediately.
-router.post('/', requireRole(...STAFF), (req, res) => {
+router.post('/', requireRole(...STAFF), requireOnDuty, (req, res) => {
   const { order_id, tip, method, email } = req.body;
   if (!order_id) return res.status(400).json({ error: 'order_id required' });
   const m = ['card','cash','mobile'].includes(method) ? method : 'cash';
