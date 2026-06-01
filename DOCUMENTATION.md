@@ -283,6 +283,10 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-16.8** **Configurable permissions** — the owner controls which roles may refund, void,
   and discount (Sales Analytics → Staff Permissions). Enforced server-side; the owner is always
   permitted. The UI shows these controls only to permitted staff.
+- **FR-16.9** **Split the bill** — a bill can be settled by multiple partial payments (by
+  subtotal portion, with proportional tax/service and per-payment tips); the order settles and
+  loyalty is earned only once the full subtotal is covered. The payment dialog offers ½/⅓/¼/Full
+  splits. (Discounts/redemption apply only to a single full payment.)
 
 ### 5.17 Customer-Facing Site (Public)
 - **FR-17.1** Anyone can browse a location's menu (categories and available, priced items)
