@@ -1,7 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const db = require('../db/database');
-const { verifyToken, requireRole } = require('../middleware/auth');
+const { verifyToken, requireRole, requireOnDuty } = require('../middleware/auth');
 const stripeLib = require('../lib/stripe');
 const { broadcast } = require('../lib/ws');
 const { auditLog } = require('../lib/audit');
