@@ -3,7 +3,7 @@ const db = require('../db/database');
 const { verifyToken, requireRole, requireOnDuty } = require('../middleware/auth');
 const { broadcast, notify } = require('../lib/ws');
 const { auditLog } = require('../lib/audit');
-const { depleteForOrder } = require('../lib/recipes');
+const { depleteForOrder, adjustForLine } = require('../lib/recipes');
 const { requireCan } = require('../lib/permissions');
 
 const router = express.Router();
