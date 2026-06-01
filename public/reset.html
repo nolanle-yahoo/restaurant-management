@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reset Password — Restaurant Management</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--burgundy); display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .reset-card { background: #fff; border-radius: 16px; padding: 36px; width: 380px; box-shadow: 0 16px 48px rgba(0,0,0,.28); }
+    .reset-card h1 { font-size: 20px; font-weight: 800; color: var(--burgundy); margin-bottom: 6px; }
+    .reset-card p.sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+  </style>
+</head>
+<body>
+  <div class="reset-card">
+    <h1>Reset Password</h1>
+    <p class="sub">Choose a new password for your account.</p>
+    <div id="alert" class="alert hidden"></div>
+    <div id="form">
+      <div class="form-group"><label>New Password</label><input type="password" id="pw1" placeholder="Min 6 characters"></div>
+      <div class="form-group"><label>Confirm New Password</label><input type="password" id="pw2" placeholder="Repeat password"></div>
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="submitReset()">Update Password</button>
+    </div>
+    <div id="done" class="hidden" style="text-align:center;padding:10px 0">
+      <div style="font-size:42px">✅</div>
+      <p style="font-weight:700;color:var(--burgundy);margin:8px 0">Password updated</p>
+      <a class="btn btn-ghost" href="/">Back to Sign In</a>
+    </div>
+  </div>
+<script src="/js/api.js"></script>
+<script>
+  const token = new URLSearchParams(location.search).get('token');
+  function showErr(m){ const e=document.getElementById('alert'); e.className='alert alert-danger'; e.textContent=m; e.classList.remove('hidden'); }
+  if (!token) showErr('Missing or invalid reset link. Please request a new one.');
+  async function submitReset() {
+    const pw1 = document.getElementById('pw1').value, pw2 = document.getElementById('pw2').value;
+    if (!pw1 || pw1.length < 6) return showErr('Password must be at least 6 characters.');
+    if (pw1 !== pw2) return showErr('Passwords do not match.');
+    try {
+      await API.resetPassword({ token, new_password: pw1 });
+      document.getElementById('form').classList.add('hidden');
+      document.getElementById('alert').classList.add('hidden');
+      document.getElementById('done').classList.remove('hidden');
+    } catch (e) { showErr(e.message); }
+  }
+</script>
+</body>
+</html>
