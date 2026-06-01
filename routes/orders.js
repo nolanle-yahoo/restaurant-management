@@ -42,6 +42,8 @@ router.post('/', requireRole('waiter','manager','employee','chef','frontdesk','s
   const insertItem = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, notes) VALUES (?,?,?,?,?)`);
   items.forEach(i => insertItem.run(orderId, i.name, i.quantity || 1, i.price || 0, i.notes||null));
   db.prepare(`UPDATE tables SET status='ordered' WHERE id=?`).run(table_id);
+  // Consume recipe ingredients from inventory and auto-86 anything now short.
+  depleteForOrder(req, orderId, table.location_id);
   auditLog(req, 'order_create', 'order', orderId, { table_id, item_count: items.length });
   broadcast('order_update', { type: 'new', order_id: orderId, location_id: table.location_id }, table.location_id);
   res.json({ success: true, order_id: orderId });
