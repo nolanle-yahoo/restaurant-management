@@ -843,7 +843,8 @@ data-deletion workflows.
 | 1.9.0 | Inventory auto-depletion via recipes/BOM with auto-86; chef can "86" items; low-stock alerts for stockroom & chef; owner-configurable sales-tax & service-charge; payments & refunds UI; stronger password policy (min 8) and broader rate limiting. |
 | 1.10.0 | Real-time operational notifications (order-ready, needs-help, low-stock, new online order) as role-targeted toasts + reservation reminders; customer online ordering (pickup/delivery, server-priced, pay-on-collection) with tracking codes, kitchen integration, and a manager fulfillment panel. |
 | 1.11.0 | QR-code table ordering (dine-in straight to the kitchen, printable per-table codes); customer accounts with loyalty points (1/$1) + order history; owner email-marketing campaigns to opted-in customers with one-click unsubscribe. |
-| 1.12.0 | **Loyalty redemption (points → discount at settlement, 20 pts = $1); two-way threaded message replies (owner/manager ↔ staff); broadcast announcements (owner/manager → staff) delivered as live toasts.** |
+| 1.12.0 | Loyalty redemption (points → discount at settlement, 20 pts = $1); two-way threaded message replies (owner/manager ↔ staff); broadcast announcements (owner/manager → staff) delivered as live toasts. |
+| 1.13.0 | **Configurable staff permissions (refund/void/discount per role, owner-managed); manual discounts/comps at settlement; order voids with inventory restock + audit; loyalty tiers (Bronze/Silver/Gold) and referral bonuses.** |
 
 ---
 
