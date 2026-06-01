@@ -289,6 +289,14 @@ function createSchema() {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
+    -- Configurable permissions: which staff roles may perform sensitive actions.
+    CREATE TABLE IF NOT EXISTS permissions (
+      capability TEXT NOT NULL,
+      role TEXT NOT NULL,
+      allowed INTEGER NOT NULL DEFAULT 0,
+      UNIQUE(capability, role)
+    );
+
     -- Broadcast announcements from owner/manager to staff (location-scoped or global).
     CREATE TABLE IF NOT EXISTS announcements (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
