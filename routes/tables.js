@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db/database');
 const { verifyToken, requireRole, isOnDuty } = require('../middleware/auth');
-const { broadcast } = require('../lib/ws');
+const { broadcast, notify } = require('../lib/ws');
 
 const router = express.Router();
 router.use(verifyToken);
