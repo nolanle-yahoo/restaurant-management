@@ -528,6 +528,7 @@ const TOAST_STYLE = {
   low_stock:    { icon: '⚠️', bg: '#B0472A' },
   online_order: { icon: '🛍️', bg: '#6B1A1A' },
   reservation:  { icon: '📅', bg: '#4C86C9' },
+  announcement: { icon: '📣', bg: '#6B1A1A' },
   info:         { icon: 'ℹ️', bg: '#333' },
 };
 function showToast(message, kind = 'info') {
