@@ -7,6 +7,7 @@ createSchema();
 function seed() {
   db.exec(`
     DELETE FROM audit_log;
+    DELETE FROM feedback;
     DELETE FROM announcements;
     DELETE FROM employee_messages; DELETE FROM time_off_requests;
     DELETE FROM reservations;
