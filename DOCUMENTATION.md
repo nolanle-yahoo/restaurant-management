@@ -683,9 +683,13 @@ The full, role-by-role enhancement backlog lives in **`RECOMMENDATIONS.md`**, or
 ascending by impact (Tier 1 smallest → Tier 5 transformational) with effort estimates. The
 highlights below are grouped the same way.
 
-**Delivered in 1.9.0 (from the backlog):** refund UI; low-stock alerts to stockroom & chef;
-configurable tax/service-charge; stronger password policy & broader rate limiting; chef "86"
-with live availability; inventory auto-depletion (recipes/BOM).
+**Delivered in 1.9.0:** refund UI; low-stock alerts to stockroom & chef; configurable
+tax/service-charge; stronger password policy & broader rate limiting; chef "86" with live
+availability; inventory auto-depletion (recipes/BOM).
+
+**Delivered in 1.10.0:** operational + real-time notifications (toasts) and reservation
+reminders; online ordering (pickup/delivery, pay-on-collection) with customer tracking and
+staff fulfillment.
 
 **Tier 1 — Quick wins / polish:** allergen filters + photos on the public menu; structured
 allergen flags on tickets; post-visit feedback link on receipts.
