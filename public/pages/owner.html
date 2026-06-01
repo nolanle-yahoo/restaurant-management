@@ -399,6 +399,24 @@
         </div>
       </section>
 
+      <!-- ── Marketing ─────────────────────────────────── -->
+      <section id="sec-marketing" class="hidden">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">Email Campaign</div>
+            <span class="badge badge-muted" id="audienceBadge">—</span>
+          </div>
+          <div id="mktAlert" class="alert hidden" style="margin-bottom:10px"></div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Sends to customers who opted in to marketing. Each email includes a one-click unsubscribe link (CAN-SPAM/GDPR friendly).</div>
+          <input id="mktSubject" placeholder="Subject" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:10px">
+          <textarea id="mktBody" rows="6" placeholder="Message…" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical;margin-bottom:10px"></textarea>
+          <button class="btn btn-primary" onclick="sendCampaign()" id="mktSendBtn">Send Campaign</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Recent Campaigns</div></div>
+          <div id="mktHistory"></div>
+        </div>
+      </section>
+
       <!-- ── Audit Log ─────────────────────────────────── -->
       <section id="sec-auditlog" class="hidden">
         <div class="card">
