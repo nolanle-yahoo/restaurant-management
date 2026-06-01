@@ -136,6 +136,15 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-3.2** The system prevents double clock-in and computes hours worked automatically on
   clock-out.
 - **FR-3.3** Employees view their weekly hours with week-by-week navigation.
+- **FR-3.4** Floor operations require an active clock-in: non-owner staff are blocked
+  (HTTP 403) from creating/advancing orders, changing table status, or settling bills unless
+  they are on the clock. The Owner is exempt. Structural/admin actions (floor-plan edits,
+  staff management, menu, etc.) are not gated.
+- **FR-3.5** **Task hand-off on clock-out.** When a staff member clocks out, their unfinished
+  work (open, unpaid orders and area assignments) is automatically reassigned to the
+  least-loaded on-duty colleague at the same location. If no colleague is on duty, the orders
+  stay assigned (preserving tip/payroll attribution) and the Owner is notified — both an
+  in-app message and an email — to arrange coverage.
 
 ### 5.4 Floor, Areas & Tables
 - **FR-4.1** Each location is divided into areas (e.g., Main Hall, Patio, Bar, Private
