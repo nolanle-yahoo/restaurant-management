@@ -119,28 +119,39 @@ router.post('/', requireRole(...STAFF), requireOnDuty, (req, res) => {
   const bill = computeBill(order_id);
   if (!bill) return res.status(404).json({ error: 'Order not found' });
 
+  if (bill.order.voided) return res.status(409).json({ error: 'This order was voided and cannot be paid.' });
   const existing = db.prepare(`SELECT id FROM payments WHERE order_id=? AND status='paid'`).get(order_id);
   if (existing) return res.status(409).json({ error: 'This order is already paid' });
 
   const tipAmt = round2(Math.max(0, parseFloat(tip) || 0));
+  const billAmt = round2(bill.subtotal + bill.service_charge + bill.tax);
 
   // Loyalty redemption: redeem the customer's points for a discount, capped at
   // their balance and at the pre-tip bill amount.
   let discount = 0, redeemPts = 0;
   const wantPts = Math.max(0, parseInt(req.body.redeem_points) || 0);
   if (wantPts > 0 && bill.customer) {
-    const billAmt = round2(bill.subtotal + bill.service_charge + bill.tax);
     const maxByBill = Math.floor(billAmt / POINT_VALUE);
     redeemPts = Math.min(wantPts, bill.customer.points, maxByBill);
     discount = round2(redeemPts * POINT_VALUE);
   }
-  const total = round2(bill.subtotal + bill.service_charge + bill.tax - discount + tipAmt);
+
+  // Manual discount / comp (permission-gated). Capped at the bill less any
+  // loyalty discount. A "comp" is simply a 100% manual discount.
+  let manualDiscount = round2(Math.max(0, parseFloat(req.body.manual_discount) || 0));
+  const discountReason = (req.body.discount_reason || '').trim() || null;
+  if (manualDiscount > 0) {
+    if (!can(req, 'discount')) return res.status(403).json({ error: 'Your role is not permitted to apply discounts.' });
+    manualDiscount = Math.min(manualDiscount, round2(billAmt - discount));
+  }
+
+  const total = round2(billAmt - discount - manualDiscount + tipAmt);
   const receipt = makeReceiptCode();
 
   const r = db.prepare(`
-    INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, discount, tip, total, method, status, processed_by, receipt_code, receipt_email)
-    VALUES (?,?,?,?,?,?,?,?,?,?,'paid',?,?,?)
-  `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.service_charge, bill.tax, discount, tipAmt, total, m, req.user.id, receipt, (email||'').trim() || null);
+    INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, discount, manual_discount, discount_reason, tip, total, method, status, processed_by, receipt_code, receipt_email)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'paid',?,?,?)
+  `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.service_charge, bill.tax, discount, manualDiscount, discountReason, tipAmt, total, m, req.user.id, receipt, (email||'').trim() || null);
 
   if (redeemPts > 0 && bill.customer) {
     db.prepare(`UPDATE customers SET points=points-? WHERE id=?`).run(redeemPts, bill.customer.id);
