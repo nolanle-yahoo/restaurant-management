@@ -123,19 +123,28 @@ const orderLimiter = rateLimit({
   message: { error: 'Too many order attempts. Please try again later.' },
 });
 
-// Place an online order. Prices are taken from the server (never trusted from
-// the client). Created as a 'pending' kitchen order with no table/waiter.
+// Place a customer order. Prices are taken from the server (never trusted from
+// the client). Three types: dine_in (QR at a table), pickup, delivery.
+//   - dine_in: requires a valid table_id; enters the floor like a normal order.
+//   - pickup/delivery: no table; requires name + phone (+ address for delivery).
+// If a customer is signed in (customer JWT), the order is linked for loyalty.
 router.post('/order', orderLimiter, (req, res) => {
-  const { location_id, order_type, items, customer_name, customer_phone, customer_email, delivery_address, notes } = req.body;
-  const type = order_type === 'delivery' ? 'delivery' : 'pickup';
-  if (!location_id || !customer_name || !customer_phone || !Array.isArray(items) || !items.length) {
-    return res.status(400).json({ error: 'Location, name, phone and at least one item are required.' });
-  }
-  if (type === 'delivery' && !delivery_address) {
-    return res.status(400).json({ error: 'A delivery address is required for delivery orders.' });
+  const { location_id, order_type, items, customer_name, customer_phone, customer_email, delivery_address, notes, table_id } = req.body;
+  const type = ['dine_in', 'delivery', 'pickup'].includes(order_type) ? order_type : 'pickup';
+  if (!location_id || !Array.isArray(items) || !items.length) {
+    return res.status(400).json({ error: 'Location and at least one item are required.' });
   }
   const loc = db.prepare(`SELECT id FROM locations WHERE id=? AND status='active'`).get(location_id);
   if (!loc) return res.status(404).json({ error: 'Location not found' });
+
+  let tableRow = null;
+  if (type === 'dine_in') {
+    tableRow = db.prepare(`SELECT id, table_number FROM tables WHERE id=? AND location_id=?`).get(table_id, location_id);
+    if (!tableRow) return res.status(400).json({ error: 'This QR code is no longer valid for this location.' });
+  } else {
+    if (!customer_name || !customer_phone) return res.status(400).json({ error: 'Your name and phone are required.' });
+    if (type === 'delivery' && !delivery_address) return res.status(400).json({ error: 'A delivery address is required for delivery orders.' });
+  }
 
   // Resolve each requested item to a real, available menu item at this location.
   const lookup = db.prepare(`SELECT id, name, price FROM menu_items WHERE id=? AND location_id=? AND is_available=1`);
@@ -147,15 +156,16 @@ router.post('/order', orderLimiter, (req, res) => {
     resolved.push({ name: mi.name, price: mi.price, quantity: qty });
   }
 
+  const customerId = customerIdFromReq(req); // null unless signed in as a customer
   const code = makeCode('ORD');
   let orderId;
   db.exec('BEGIN');
   try {
     const r = db.prepare(`
-      INSERT INTO orders (table_id, location_id, waiter_id, status, notes, order_type, customer_name, customer_phone, customer_email, delivery_address, tracking_code)
-      VALUES (NULL, ?, NULL, 'pending', ?, ?, ?, ?, ?, ?, ?)
-    `).run(location_id, notes ? String(notes).slice(0, 500) : null, type,
-           String(customer_name).slice(0, 120), String(customer_phone).slice(0, 40),
+      INSERT INTO orders (table_id, location_id, waiter_id, status, notes, order_type, customer_id, customer_name, customer_phone, customer_email, delivery_address, tracking_code)
+      VALUES (?, ?, NULL, 'pending', ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(tableRow ? tableRow.id : null, location_id, notes ? String(notes).slice(0, 500) : null, type, customerId,
+           customer_name ? String(customer_name).slice(0, 120) : null, customer_phone ? String(customer_phone).slice(0, 40) : null,
            (customer_email || '').trim() || null, type === 'delivery' ? String(delivery_address).slice(0, 300) : null, code);
     orderId = r.lastInsertRowid;
     const ins = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price) VALUES (?,?,?,?)`);
@@ -168,6 +178,10 @@ router.post('/order', orderLimiter, (req, res) => {
 
   // Deplete inventory (no req.user → logged with null actor) and alert staff.
   depleteForOrder({}, orderId, Number(location_id));
+  if (tableRow) {
+    db.prepare(`UPDATE tables SET status='ordered' WHERE id=?`).run(tableRow.id);
+    broadcast('table_update', { table_id: tableRow.id, status: 'ordered', location_id: Number(location_id) }, location_id);
+  }
 
   const subtotal = round2(resolved.reduce((s, i) => s + i.price * i.quantity, 0));
   const { sales_tax_rate, service_charge_rate } = getRates();
@@ -175,7 +189,8 @@ router.post('/order', orderLimiter, (req, res) => {
   const tax = round2((subtotal + service) * sales_tax_rate);
   const estimated_total = round2(subtotal + service + tax);
 
-  notify(`New ${type} order — ${customer_name} (${code})`, { locId: Number(location_id), roles: ['chef', 'manager', 'owner'], kind: 'online_order' });
+  const who = type === 'dine_in' ? `Table ${tableRow.table_number}` : (customer_name || 'Online');
+  notify(`New ${type === 'dine_in' ? 'table' : type} order — ${who} (${code})`, { locId: Number(location_id), roles: ['chef', 'manager', 'owner'], kind: 'online_order' });
   broadcast('order_update', { type: 'new', order_id: orderId, location_id: Number(location_id) }, location_id);
 
   const locName = (db.prepare(`SELECT name FROM locations WHERE id=?`).get(location_id) || {}).name || 'our restaurant';
