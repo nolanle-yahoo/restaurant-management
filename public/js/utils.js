@@ -529,7 +529,7 @@ function renderPayTotal() {
   const portionTax = Math.round(b.tax * prop * 100) / 100;
   const partial = _isPartial();
   // Loyalty + manual discount only apply to a single full payment.
-  if (document.getElementById('payLoyalty')) document.getElementById('payLoyalty').style.display = (!partial && _payState.hasLoyalty && _payState.method !== 'card_stripe') ? 'block' : 'none';
+  if (document.getElementById('payLoyalty')) document.getElementById('payLoyalty').style.display = (!partial && _payState.hasLoyalty && !_payState.stripeCard) ? 'block' : 'none';
   if (document.getElementById('payDiscount')) document.getElementById('payDiscount').style.display = (!partial && _payState.canDiscount) ? 'block' : 'none';
   const tip = parseFloat(document.getElementById('payTip').value) || 0;
   const pts = partial ? 0 : _redeemPts();
