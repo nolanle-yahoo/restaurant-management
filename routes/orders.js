@@ -110,4 +110,57 @@ router.put('/:id/void', requireOnDuty, requireCan('void'), (req, res) => {
   res.json({ success: true });
 });
 
+// Free a table if it has no remaining active (non-voided, unsettled) orders.
+function refreshTableStatus(tableId, locationId) {
+  if (!tableId) return;
+  const active = db.prepare(`
+    SELECT COUNT(*) n FROM orders o WHERE o.table_id=? AND o.voided=0
+      AND NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id=o.id AND p.status='paid')
+  `).get(tableId).n;
+  const status = active > 0 ? 'ordered' : 'empty';
+  db.prepare(`UPDATE tables SET status=? WHERE id=?`).run(status, tableId);
+  broadcast('table_update', { table_id: tableId, status, location_id: locationId }, locationId);
+}
+
+// Move an order to another table (transfer).
+router.put('/:id/move', requireRole('owner','manager','waiter','employee','frontdesk'), requireOnDuty, (req, res) => {
+  const order = db.prepare(`SELECT * FROM orders WHERE id=?`).get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  if (order.voided) return res.status(400).json({ error: 'Cannot move a voided order.' });
+  const toId = parseInt(req.body.to_table_id);
+  const dest = db.prepare(`SELECT id, location_id FROM tables WHERE id=?`).get(toId);
+  if (!dest) return res.status(404).json({ error: 'Target table not found' });
+  if (dest.location_id !== order.location_id) return res.status(400).json({ error: 'Target table is at a different location.' });
+  if (toId === order.table_id) return res.status(400).json({ error: 'Order is already at that table.' });
+  const fromTable = order.table_id;
+  db.prepare(`UPDATE orders SET table_id=?, updated_at=datetime('now') WHERE id=?`).run(toId, order.id);
+  refreshTableStatus(fromTable, order.location_id);
+  refreshTableStatus(toId, order.location_id);
+  broadcast('order_update', { type: 'moved', order_id: order.id, location_id: order.location_id }, order.location_id);
+  auditLog(req, 'order_move', 'order', order.id, { from_table: fromTable, to_table: toId });
+  res.json({ success: true });
+});
+
+// Merge a table's open orders into another table.
+router.put('/merge', requireRole('owner','manager','waiter','employee','frontdesk'), requireOnDuty, (req, res) => {
+  const fromTable = parseInt(req.body.from_table_id), toTable = parseInt(req.body.to_table_id);
+  if (!fromTable || !toTable || fromTable === toTable) return res.status(400).json({ error: 'Pick two different tables.' });
+  const src = db.prepare(`SELECT id, location_id FROM tables WHERE id=?`).get(fromTable);
+  const dst = db.prepare(`SELECT id, location_id FROM tables WHERE id=?`).get(toTable);
+  if (!src || !dst) return res.status(404).json({ error: 'Table not found' });
+  if (src.location_id !== dst.location_id) return res.status(400).json({ error: 'Tables are at different locations.' });
+  const open = db.prepare(`
+    SELECT o.id FROM orders o WHERE o.table_id=? AND o.voided=0
+      AND NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id=o.id AND p.status='paid')
+  `).all(fromTable);
+  if (!open.length) return res.status(400).json({ error: 'No open orders to merge from that table.' });
+  const upd = db.prepare(`UPDATE orders SET table_id=?, updated_at=datetime('now') WHERE id=?`);
+  open.forEach(o => upd.run(toTable, o.id));
+  refreshTableStatus(fromTable, src.location_id);
+  refreshTableStatus(toTable, dst.location_id);
+  broadcast('order_update', { type: 'merged', location_id: src.location_id }, src.location_id);
+  auditLog(req, 'table_merge', 'table', fromTable, { into: toTable, orders: open.length });
+  res.json({ success: true, moved: open.length });
+});
+
 module.exports = router;
