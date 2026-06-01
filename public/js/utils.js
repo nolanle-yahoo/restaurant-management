@@ -481,6 +481,22 @@ function _redeemPts() {
   return Math.max(0, Math.min(v, _payState.maxRedeem || 0));
 }
 
+function _manualDiscount() {
+  const billAmt = _payState.bill ? _payState.bill.subtotal + (_payState.bill.service_charge || 0) + _payState.bill.tax : 0;
+  const loyalty = Math.round(_redeemPts() * (_payState.pointValue || 0.05) * 100) / 100;
+  const v = Math.max(0, parseFloat(document.getElementById('payManualDiscount').value) || 0);
+  return Math.min(v, Math.max(0, Math.round((billAmt - loyalty) * 100) / 100));
+}
+
+function compBill() {
+  const b = _payState.bill; if (!b) return;
+  const loyalty = Math.round(_redeemPts() * (_payState.pointValue || 0.05) * 100) / 100;
+  const billAmt = b.subtotal + (b.service_charge || 0) + b.tax;
+  document.getElementById('payManualDiscount').value = Math.max(0, Math.round((billAmt - loyalty) * 100) / 100).toFixed(2);
+  if (!document.getElementById('payDiscountReason').value) document.getElementById('payDiscountReason').value = 'comp';
+  renderPayTotal();
+}
+
 function renderPayTotal() {
   const b = _payState.bill; if (!b) return;
   const tip = parseFloat(document.getElementById('payTip').value) || 0;
@@ -488,7 +504,8 @@ function renderPayTotal() {
   const discount = Math.round(pts * (_payState.pointValue || 0.05) * 100) / 100;
   const line = document.getElementById('payDiscountLine');
   if (line) line.textContent = discount > 0 ? `−$${discount.toFixed(2)} loyalty discount (${pts} pts)` : '';
-  const total = b.subtotal + (b.service_charge || 0) + b.tax - discount + Math.max(0, tip);
+  const manual = _manualDiscount();
+  const total = b.subtotal + (b.service_charge || 0) + b.tax - discount - manual + Math.max(0, tip);
   document.getElementById('payTotal').textContent = Math.max(0, total).toFixed(2);
 }
 
