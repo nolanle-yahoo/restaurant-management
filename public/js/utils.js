@@ -122,6 +122,10 @@ function _injectAccountSettingsModal() {
           <button class="btn btn-ghost" onclick="hideModal('accountSettingsModal')">Cancel</button>
         </div>
       </div>
+      <div id="tabPay" class="tab-pane">
+        <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Your hours, pay, and tips for the last 7 days.</div>
+        <div id="myPayInfo" style="font-size:14px">Loading…</div>
+      </div>
       <div id="tabPassword" class="tab-pane">
         <div id="pwAlert" class="alert hidden"></div>
         <div class="form-group"><label>Current Password</label><input id="currentPw" type="password" placeholder="••••••••"></div>
