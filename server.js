@@ -53,4 +53,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 const server = http.createServer(app);
 ws.init(server);
+require('./lib/reminders').start();
 server.listen(PORT, () => console.log(`Restaurant server running on http://localhost:${PORT}`));
