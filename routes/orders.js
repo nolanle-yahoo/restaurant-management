@@ -14,7 +14,10 @@ router.get('/', requireRole('owner','manager','waiter','chef','employee','frontd
   const status = req.query.status;
   let sql = `
     SELECT o.*, t.table_number, u.name as waiter_name,
-           EXISTS(SELECT 1 FROM payments p WHERE p.order_id=o.id AND p.status='paid') as paid
+           (EXISTS(SELECT 1 FROM payments p WHERE p.order_id=o.id AND p.status='paid')
+            AND (SELECT COALESCE(SUM(pp.subtotal),0) FROM payments pp WHERE pp.order_id=o.id AND pp.status='paid')
+                >= (SELECT COALESCE(SUM(oi.price*oi.quantity),0) FROM order_items oi WHERE oi.order_id=o.id)) as paid,
+           (SELECT COALESCE(SUM(pp.subtotal),0) FROM payments pp WHERE pp.order_id=o.id AND pp.status='paid') as paid_subtotal
     FROM orders o
     LEFT JOIN tables t ON o.table_id=t.id
     LEFT JOIN users u ON o.waiter_id=u.id
