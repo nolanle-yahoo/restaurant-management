@@ -49,10 +49,19 @@
       </div>
       <button type="submit" class="btn btn-primary login-btn">Sign In</button>
     </form>
-    <div class="mobile-hint"><a href="/pages/mobile.html">📱 Open Mobile Version</a></div>
-    <div class="mobile-hint" style="margin-top:8px;display:flex;gap:14px;justify-content:center">
+    <div class="mobile-hint" style="margin-top:10px"><a href="#" onclick="showForgot();return false;">Forgot password?</a></div>
+
+    <div id="forgotBox" class="hidden" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+      <div id="forgotAlert" class="alert hidden"></div>
+      <div class="form-group"><label>Account Email</label><input type="email" id="forgotEmail" placeholder="you@example.com"></div>
+      <button class="btn btn-ghost" style="width:100%" onclick="submitForgot()">Send Reset Link</button>
+    </div>
+
+    <div class="mobile-hint" style="margin-top:14px"><a href="/pages/mobile.html">📱 Open Mobile Version</a></div>
+    <div class="mobile-hint" style="margin-top:8px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
       <a href="/menu.html">🍽️ View Menu</a>
       <a href="/reserve.html">📅 Book a Table</a>
+      <a href="/reserve-lookup.html">🔎 Find Reservation</a>
     </div>
   </div>
   <div class="login-footer">© 2025 Restaurant Management System</div>
