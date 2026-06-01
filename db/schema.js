@@ -349,6 +349,9 @@ function createSchema() {
   try { db.exec(`ALTER TABLE orders ADD COLUMN void_reason TEXT`); } catch {}
   try { db.exec(`ALTER TABLE customers ADD COLUMN referral_code TEXT`); } catch {}
   try { db.exec(`ALTER TABLE customers ADD COLUMN referred_by INTEGER REFERENCES customers(id)`); } catch {}
+  try { db.exec(`ALTER TABLE menu_items ADD COLUMN image_url TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE menu_items ADD COLUMN allergens TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE menu_items ADD COLUMN dietary TEXT`); } catch {}
 
   // Seed default permissions (idempotent): managers may refund/void/discount;
   // owner is always allowed in code. Other roles default to not allowed.
