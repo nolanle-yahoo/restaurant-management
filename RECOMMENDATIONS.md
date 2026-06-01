@@ -30,9 +30,10 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 | ✅ done | Online ordering (pickup/delivery) — *shipped v1.10.0* | Customer, Owner | 5 |
 | ✅ done | QR-code table ordering — *shipped v1.11.0* | Customer, Owner | 4 |
 | ✅ done | Customer accounts + loyalty + marketing email — *shipped v1.11.0* | Customer, Owner | 4 |
-| 🔴 1 | Two-way / broadcast staff messaging | All staff | 2–3 |
-| 🟠 2 | Loyalty redemption + configurable roles/permissions | Owner, Manager | 3–4 |
-| 🟠 4 | Configurable roles/permissions + discounts/comps/voids | Owner, Manager | 3–4 |
+| ✅ done | Two-way / broadcast staff messaging — *shipped v1.12.0* | All staff | 2–3 |
+| ✅ done | Loyalty redemption — *shipped v1.12.0* | Customer, Owner | 4 |
+| 🔴 1 | Configurable roles/permissions + discounts/comps/voids | Owner, Manager | 3–4 |
+| 🟠 2 | Split the bill; order edit/void with approval | Waiter, Manager | 3 |
 
 ---
 
