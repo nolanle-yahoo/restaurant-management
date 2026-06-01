@@ -97,12 +97,25 @@ function refreshAccountLink() {
 }
 
 async function init() {
+  refreshAccountLink();
   try {
     const locs = await api('/locations');
     const sel = document.getElementById('locSelect');
     sel.innerHTML = locs.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
     const qp = new URLSearchParams(location.search);
     if (qp.get('location_id') && locs.some(l => String(l.id) === qp.get('location_id'))) sel.value = qp.get('location_id');
+    // QR "table mode": ordering directly to a table (dine-in), no pickup/delivery.
+    if (qp.get('table')) {
+      tableMode = true; tableId = qp.get('table'); orderType = 'dine_in';
+      sel.disabled = true;
+      document.getElementById('btnPickup').parentElement.style.display = 'none';
+      document.getElementById('cName').placeholder = 'Your name (optional)';
+      document.getElementById('cPhone').style.display = 'none';
+      document.getElementById('cEmail').style.display = 'none';
+      document.getElementById('cAddr').style.display = 'none';
+      document.querySelector('.pub-header h1').textContent = `Order to Table ${tableId}`;
+      document.getElementById('locLabel').textContent = 'Your order goes straight to the kitchen';
+    }
     loadMenu();
     if (qp.get('code')) { document.getElementById('trackCode').value = qp.get('code'); trackOrder(); }
   } catch (e) {
