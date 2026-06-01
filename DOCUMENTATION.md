@@ -752,17 +752,17 @@ points + order history; owner email-marketing campaigns with opt-in/unsubscribe.
 **Tier 1 — Quick wins / polish:** allergen filters + photos on the public menu; structured
 allergen flags on tickets; post-visit feedback link on receipts.
 
-**Tier 2–3 — Operational depth:** course firing and table transfer/merge; two-way and
-broadcast staff messaging; consolidated approvals dashboard; certification tracking; cycle
-counts / barcode receiving; split the bill; order edit/void with approval; vendor master
-records; waste/expiry (FIFO) tracking; per-employee performance; discounts/comps/voids; shift
-swapping; self-service staff portal; reservation reminders + waitlist; regional-manager role &
-cross-location staff lending; central menu with overrides; 2FA; inventory valuation & COGS.
+**Tier 2–3 — Operational depth:** course firing and table transfer/merge; consolidated
+approvals dashboard; certification tracking; cycle counts / barcode receiving; split the bill;
+order edit/void with approval; vendor master records; waste/expiry (FIFO) tracking;
+per-employee performance; discounts/comps/voids; shift swapping; self-service staff portal;
+waitlist; regional-manager role & cross-location staff lending; central menu with overrides;
+2FA; inventory valuation & COGS. *(Two-way + broadcast staff messaging shipped in 1.12.0.)*
 
 **Tier 4 — High impact:** par levels + auto-reorder; configurable roles/permissions; executive
 multi-location dashboard & benchmarking; demand-based scheduling; finance/accounting
-integration; loyalty **redemption** + referrals (accrual shipped in 1.11.0). *(QR-code table
-ordering, customer accounts/loyalty, and email marketing shipped in 1.11.0.)*
+integration; loyalty **referrals/tiers** (accrual + redemption shipped in 1.11.0–1.12.0).
+*(QR-code table ordering, customer accounts/loyalty, and email marketing shipped in 1.11.0.)*
 
 **Tier 5 — Transformational:** *(All three shipped — inventory auto-depletion in 1.9.0;
 real-time notifications and online ordering in 1.10.0.)* Remaining extensions: online
