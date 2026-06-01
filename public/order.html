@@ -213,8 +213,12 @@ async function placeOrder() {
     delivery_address: document.getElementById('cAddr').value.trim(),
     notes: document.getElementById('cNotes').value.trim(),
   };
-  if (!body.customer_name || !body.customer_phone) return showOAlert('Please enter your name and phone.');
-  if (orderType === 'delivery' && !body.delivery_address) return showOAlert('Please enter a delivery address.');
+  if (tableMode) {
+    body.table_id = Number(tableId);
+  } else {
+    if (!body.customer_name || !body.customer_phone) return showOAlert('Please enter your name and phone.');
+    if (orderType === 'delivery' && !body.delivery_address) return showOAlert('Please enter a delivery address.');
+  }
   try {
     const r = await api('/order', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
     document.querySelector('.order-wrap').innerHTML = `
