@@ -82,7 +82,7 @@ function settleOrder(req, orderId) {
 
 // Direct payment (cash / mobile / simulated card). Records as paid immediately.
 router.post('/', requireRole(...STAFF), (req, res) => {
-  const { order_id, tip, method } = req.body;
+  const { order_id, tip, method, email } = req.body;
   if (!order_id) return res.status(400).json({ error: 'order_id required' });
   const m = ['card','cash','mobile'].includes(method) ? method : 'cash';
   const bill = computeBill(order_id);
@@ -93,15 +93,17 @@ router.post('/', requireRole(...STAFF), (req, res) => {
 
   const tipAmt = round2(Math.max(0, parseFloat(tip) || 0));
   const total = round2(bill.subtotal + bill.tax + tipAmt);
+  const receipt = makeReceiptCode();
 
   const r = db.prepare(`
-    INSERT INTO payments (order_id, location_id, waiter_id, subtotal, tax, tip, total, method, status, processed_by)
-    VALUES (?,?,?,?,?,?,?,?,'paid',?)
-  `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.tax, tipAmt, total, m, req.user.id);
+    INSERT INTO payments (order_id, location_id, waiter_id, subtotal, tax, tip, total, method, status, processed_by, receipt_code, receipt_email)
+    VALUES (?,?,?,?,?,?,?,?,'paid',?,?,?)
+  `).run(order_id, bill.order.location_id, bill.order.waiter_id, bill.subtotal, bill.tax, tipAmt, total, m, req.user.id, receipt, (email||'').trim() || null);
 
   settleOrder(req, order_id);
+  emailReceipt(r.lastInsertRowid);
   auditLog(req, 'payment_recorded', 'payment', r.lastInsertRowid, { method: m, total, tip: tipAmt });
-  res.json({ success: true, payment_id: r.lastInsertRowid, total });
+  res.json({ success: true, payment_id: r.lastInsertRowid, total, receipt_code: receipt });
 });
 
 // Create a Stripe PaymentIntent for card payment (real gateway flow)
