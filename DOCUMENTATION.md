@@ -789,18 +789,20 @@ points + order history; owner email-marketing campaigns with opt-in/unsubscribe.
 discounts/comps** and order **voids** (with inventory restock + audit); loyalty **tiers**
 (Bronze/Silver/Gold) and **referrals**.
 
-**Deferred (next):** **split-the-bill** (partial-payment accumulation — isolated money-path
-change), and the menu **allergen/photo + dietary-filter** polish.
+**Delivered in 1.14.0:** **split-the-bill** (partial payments); menu **photos, allergens &
+dietary tags** with a public dietary filter + kitchen allergen flags; **post-visit guest
+feedback** (ratings/comments) with an owner view.
 
-**Tier 1 — Quick wins / polish:** allergen filters + photos on the public menu; structured
-allergen flags on tickets; post-visit feedback link on receipts.
+**Tier 1 — Quick wins / polish:** *(menu allergen/photo + dietary filter, allergen flags on
+tickets, and the receipt feedback link all shipped in 1.14.0.)* Remaining: richer item photos
+/ image upload (vs. URL).
 
 **Tier 2–3 — Operational depth:** course firing and table transfer/merge; consolidated
-approvals dashboard; certification tracking; cycle counts / barcode receiving; **split the
-bill**; order edit; vendor master records; waste/expiry (FIFO) tracking; per-employee
-performance; shift swapping; self-service staff portal; waitlist; regional-manager role &
-cross-location staff lending; central menu with overrides; 2FA; inventory valuation & COGS.
-*(Two-way + broadcast messaging shipped in 1.12.0; discounts/comps/voids in 1.13.0.)*
+approvals dashboard; certification tracking; cycle counts / barcode receiving; order edit;
+vendor master records; waste/expiry (FIFO) tracking; per-employee performance; shift swapping;
+self-service staff portal; waitlist; regional-manager role & cross-location staff lending;
+central menu with overrides; 2FA; inventory valuation & COGS. *(Two-way + broadcast messaging
+shipped in 1.12.0; discounts/comps/voids in 1.13.0; split-the-bill in 1.14.0.)*
 
 **Tier 4 — High impact:** par levels + auto-reorder; executive multi-location dashboard &
 benchmarking; demand-based scheduling; finance/accounting integration. *(Configurable
