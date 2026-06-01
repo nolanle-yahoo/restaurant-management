@@ -323,6 +323,19 @@ async function markServed(id) {
   loadAll();
 }
 
+async function moveOrderTo(id) {
+  const num = prompt('Move this order to which table number?');
+  if (num === null) return;
+  try {
+    const tables = await API.tables(user.location_id);
+    const t = tables.find(x => String(x.table_number) === String(num).trim());
+    if (!t) return alert('No table with that number at this location.');
+    await API.moveOrder(id, t.id);
+    showToast('Order moved to Table ' + t.table_number, 'info');
+    loadAll();
+  } catch(e) { alert(e.message); }
+}
+
 loadAll();
 setInterval(loadAll, 5000);
 
