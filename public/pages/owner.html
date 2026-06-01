@@ -1446,14 +1446,57 @@ function renderOwnerMessages() {
         ${m.location_name ? ` · <span style="color:var(--burgundy)">${m.location_name}</span>` : ''}
       </div>
       <div style="font-size:14px;line-height:1.6;margin-bottom:10px">${m.message}</div>
-      ${!m.is_read ? `<button class="btn btn-sm btn-ghost" onclick="markOwnerMsgRead(${m.id})">Mark as Read</button>` : '<span class="text-sm text-muted">✓ Read</span>'}
+      ${(m.replies||[]).map(rp => `<div style="margin:6px 0 6px 16px;padding:8px 10px;background:var(--cream);border-radius:8px;font-size:13px"><b>${rp.sender_name}</b> <span style="color:var(--muted)">(${rp.sender_role})</span>: ${rp.message}</div>`).join('')}
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input id="reply-${m.id}" placeholder="Reply…" style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+        <button class="btn btn-sm btn-primary" onclick="ownerReply(${m.id})">Reply</button>
+        ${!m.is_read ? `<button class="btn btn-sm btn-ghost" onclick="markOwnerMsgRead(${m.id})">Mark Read</button>` : ''}
+      </div>
     </div>`).join('');
+}
+
+async function ownerReply(id) {
+  const el = document.getElementById('reply-' + id);
+  const msg = el.value.trim();
+  if (!msg) return;
+  try { await API.messagesReply(id, msg); loadOwnerMessages(); } catch(e) { alert(e.message); }
 }
 
 async function markOwnerMsgRead(id) {
   await API.messagesRead(id);
   loadOwnerMessages();
   refreshBell();
+}
+
+// ── Announcements ─────────────────────────────────────────────
+async function loadAnnouncementsOwner() {
+  let list = [];
+  try { list = await API.announcements(); } catch(e) { return; }
+  const el = document.getElementById('ownerAnnList');
+  if (!el) return;
+  el.innerHTML = list.length ? list.map(a => `
+    <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between"><b>${a.title}</b>
+        <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="delAnnouncement(${a.id})">✕</button></div>
+      <div style="font-size:13px;margin:4px 0">${a.body}</div>
+      <div style="font-size:11.5px;color:var(--muted)">${a.author_name||''} · ${a.location_name||'All locations'} · ${fmtDateTime(a.created_at)}</div>
+    </div>`).join('') : '<p style="color:var(--muted);padding:10px">No announcements.</p>';
+}
+async function postAnnouncement() {
+  const title = document.getElementById('annTitle').value.trim();
+  const body = document.getElementById('annBody').value.trim();
+  const location_id = document.getElementById('annLoc').value || null;
+  if (!title || !body) return showAlert('annAlert', 'Title and message required');
+  try {
+    await API.announcementCreate({ title, body, location_id });
+    document.getElementById('annTitle').value = ''; document.getElementById('annBody').value = '';
+    showAlert('annAlert', 'Announcement posted — staff notified.', 'success');
+    loadAnnouncementsOwner();
+  } catch(e) { showAlert('annAlert', e.message); }
+}
+async function delAnnouncement(id) {
+  if (!confirm('Delete this announcement?')) return;
+  try { await API.announcementDelete(id); loadAnnouncementsOwner(); } catch(e) { alert(e.message); }
 }
 
 // ── Sales Analytics ───────────────────────────────────────────
