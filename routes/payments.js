@@ -245,11 +245,19 @@ router.post('/:id/confirm', requireRole(...STAFF), requireOnDuty, async (req, re
       return res.status(402).json({ error: 'Payment not completed (' + status + ')' });
     }
     db.prepare(`UPDATE payments SET status='paid', updated_at=datetime('now') WHERE id=?`).run(payment.id);
-    settleOrder(req, payment.order_id);
     emailReceipt(payment.id);
-    awardLoyalty(payment.order_id, payment.subtotal);
+    // Settle + earn loyalty only once the full bill is covered (this may be the
+    // last part of a split).
+    const bill = computeBill(payment.order_id);
+    const fullyPaid = bill && bill.balance_subtotal <= 0.005;
+    if (fullyPaid) {
+      settleOrder(req, payment.order_id);
+      awardLoyalty(payment.order_id, bill.subtotal);
+    } else {
+      broadcast('order_update', { type: 'partial_paid', order_id: payment.order_id, location_id: payment.location_id }, payment.location_id);
+    }
     auditLog(req, 'payment_recorded', 'payment', payment.id, { method: 'card', total: payment.total, tip: payment.tip });
-    res.json({ success: true, total: payment.total, receipt_code: payment.receipt_code });
+    res.json({ success: true, total: payment.total, receipt_code: payment.receipt_code, fully_paid: fullyPaid });
   } catch (e) {
     console.error('Stripe confirm error:', e.message);
     res.status(502).json({ error: 'Payment processor error' });
