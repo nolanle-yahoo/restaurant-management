@@ -188,6 +188,14 @@ function seed() {
     });
   });
 
+  // ── Vendors (master records) ─────────────────────────────────────
+  const insertVendor = db.prepare(`INSERT INTO vendors (name, contact_name, phone, email, lead_time_days, notes) VALUES (?,?,?,?,?,?)`);
+  [['Pacific Fresh Co.', 'Dana Lee', '(555) 410-0001', 'orders@pacificfresh.com', 2, 'Seafood & produce'],
+   ['Green Valley Farms', 'Marco Ruiz', '(555) 410-0002', 'sales@greenvalley.com', 3, 'Organic greens'],
+   ['Napa Valley Imports', 'Claire Dubois', '(555) 410-0003', 'wine@napaimports.com', 5, 'Wine & beverages'],
+   ['Prime Meats LLC', 'Hank Boyd', '(555) 410-0004', 'hank@primemeats.com', 1, 'Beef, poultry']]
+    .forEach(v => insertVendor.run(...v));
+
   // ── Supply Orders (item_ids from loc1 inventory: 1-20) ───────────
   const insertSO = db.prepare(`
     INSERT INTO supply_orders (item_id, item_name, location_id, quantity, status, ordered_by, vendor, shipping_address, tracking_number, expected_date, created_at)
