@@ -360,7 +360,7 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 
 ## 7. Data Model
 
-SQLite database with 28 tables. Core entities and relationships:
+SQLite database with 29 tables. Core entities and relationships:
 
 > **Entity-relationship overview.** `locations` is the hub: `users`, `areas`, `tables`,
 > `orders`, `inventory`, `reservations`, `menu_categories/items`, and `payments` all carry a
