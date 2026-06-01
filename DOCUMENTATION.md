@@ -807,16 +807,15 @@ discounts/comps** and order **voids** (with inventory restock + audit); loyalty 
 dietary tags** with a public dietary filter + kitchen allergen flags; **post-visit guest
 feedback** (ratings/comments) with an owner view.
 
-**Tier 1 — Quick wins / polish:** *(menu allergen/photo + dietary filter, allergen flags on
-tickets, and the receipt feedback link all shipped in 1.14.0.)* Remaining: richer item photos
-/ image upload (vs. URL).
+**Delivered in 1.15.0:** **table transfer & merge**; **waste/spoilage logging**; **consolidated
+approvals dashboard** (owner + manager).
 
-**Tier 2–3 — Operational depth:** course firing and table transfer/merge; consolidated
-approvals dashboard; certification tracking; cycle counts / barcode receiving; order edit;
-vendor master records; waste/expiry (FIFO) tracking; per-employee performance; shift swapping;
-self-service staff portal; waitlist; regional-manager role & cross-location staff lending;
-central menu with overrides; 2FA; inventory valuation & COGS. *(Two-way + broadcast messaging
-shipped in 1.12.0; discounts/comps/voids in 1.13.0; split-the-bill in 1.14.0.)*
+**Tier 2–3 — Operational depth (remaining):** course firing; certification tracking; cycle
+counts / barcode receiving; order edit; vendor master records; expiry/lot (FIFO) tracking;
+per-employee performance; shift swapping; self-service staff portal; waitlist; regional-manager
+role & cross-location staff lending; central menu with overrides; 2FA; inventory valuation &
+COGS. *(Messaging 1.12.0; discounts/comps/voids 1.13.0; split-the-bill 1.14.0; transfer/merge +
+waste + approvals dashboard 1.15.0.)*
 
 **Tier 4 — High impact:** par levels + auto-reorder; executive multi-location dashboard &
 benchmarking; demand-based scheduling; finance/accounting integration. *(Configurable
