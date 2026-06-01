@@ -195,8 +195,13 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   received); receiving increments stock and records a transaction.
 - **FR-8.4** Inter-location transfer requests and immediate transfers, with stock validation
   (insufficient stock is rejected) and full transaction logging.
-- **FR-8.5** Managers see a **low-stock alert** banner on login listing items below their
-  minimum threshold, with critical items highlighted.
+- **FR-8.5** Managers and stockroom staff see a **low-stock alert** banner listing items below
+  their minimum threshold, with critical items highlighted; the Chef Station shows the same
+  low-stock alert.
+- **FR-8.6** **Automatic inventory depletion.** When an order is placed, each item's recipe
+  ingredients are deducted from that location's inventory and logged as transactions (clamped
+  at zero). Any menu item whose ingredients can no longer cover one serving is automatically
+  marked unavailable ("auto-86").
 
 ### 5.9 Scheduling
 - **FR-9.1** Weekly staff schedules per location (work date, shift start/end).
