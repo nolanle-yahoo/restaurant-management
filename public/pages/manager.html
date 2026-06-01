@@ -1536,6 +1536,7 @@ async function loadMgrAnalytics() {
     document.getElementById('manStart').value = new Date(Date.now()-29*864e5).toISOString().slice(0,10);
     document.getElementById('manEnd').value = new Date().toISOString().slice(0,10);
   }
+  loadMgrPayments();
   let d;
   try { d = await API.analytics({ start: document.getElementById('manStart').value, end: document.getElementById('manEnd').value }); }
   catch(e) { document.getElementById('manKpis').innerHTML = `<div class="card" style="grid-column:1/-1;color:var(--danger);padding:16px">${e.message}</div>`; return; }
