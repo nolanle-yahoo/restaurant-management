@@ -471,6 +471,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/` | All non-owner staff + Owner | Orders for location (optional status filter). |
 | POST | `/` | Waiter, Manager, Employee, Chef, Front Desk, Stockroom | Create order with items + special request; broadcasts; audited. |
 | PUT | `/:id` | Same as POST + Owner | Advance status; broadcasts; audited. |
+| PUT | `/:id/void` | On-duty staff with `void` permission | Void an unpaid order (reason); restores inventory; audited. |
 
 ### Inventory — `/api/inventory`
 | Method | Path | Access | Description |
