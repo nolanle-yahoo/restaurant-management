@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Receipt — Restaurant</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--cream); }
+    .rc { max-width: 420px; margin: 30px auto; background:#fff; border:1px solid var(--border); border-radius:14px; padding:28px; box-shadow: var(--shadow); }
+    .rc h1 { font-size: 20px; font-weight: 800; color: var(--burgundy); text-align:center; }
+    .rc .loc { text-align:center; color:var(--muted); font-size:13px; margin-bottom:18px; }
+    .rc .row { display:flex; justify-content:space-between; padding:5px 0; font-size:14px; }
+    .rc .items { border-top:1px dashed var(--border); border-bottom:1px dashed var(--border); padding:10px 0; margin:10px 0; }
+    .rc .tot { font-weight:800; font-size:18px; color:var(--burgundy); border-top:2px solid var(--border); margin-top:8px; padding-top:8px; }
+    .rc .code { text-align:center; font-size:12px; color:var(--muted); margin-top:14px; }
+    .rc .lookup { text-align:center; padding:20px; }
+    @media print { .noprint { display:none } body { background:#fff } }
+  </style>
+</head>
+<body>
+  <div class="rc" id="card">
+    <div id="lookup" class="lookup">
+      <h1>🍷 Receipt</h1>
+      <p style="color:var(--muted);font-size:13px;margin:10px 0">Enter your receipt code to view it.</p>
+      <div id="alert" class="alert hidden"></div>
+      <div class="form-group"><input id="code" placeholder="RCT-XXXXXX" style="text-align:center"></div>
+      <button class="btn btn-primary" style="width:100%" onclick="load()">View Receipt</button>
+    </div>
+    <div id="view" class="hidden"></div>
+  </div>
+<script>
+  function showErr(m){ const e=document.getElementById('alert'); e.className='alert alert-danger'; e.textContent=m; e.classList.remove('hidden'); }
+  async function load(code) {
+    code = code || document.getElementById('code').value.trim();
+    if (!code) return showErr('Enter a receipt code.');
+    try {
+      const r = await fetch('/api/public/receipt?code=' + encodeURIComponent(code));
+      const d = await r.json();
+      if (!r.ok) return showErr(d.error || 'Receipt not found');
+      const items = (d.items||[]).map(i => `<div class="row"><span>${i.item_name} ×${i.quantity}</span><span>$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('');
+      document.getElementById('lookup').classList.add('hidden');
+      const v = document.getElementById('view');
+      v.classList.remove('hidden');
+      v.innerHTML = `
+        <h1>🍷 ${d.location_name || 'Receipt'}</h1>
+        <div class="loc">Table ${d.table_number||'—'} · ${new Date(d.created_at+'Z').toLocaleString()}</div>
+        <div class="items">${items || '<div class="row"><span>—</span></div>'}</div>
+        <div class="row"><span>Subtotal</span><span>$${d.subtotal.toFixed(2)}</span></div>
+        <div class="row" style="color:var(--muted)"><span>Tax</span><span>$${d.tax.toFixed(2)}</span></div>
+        <div class="row" style="color:var(--muted)"><span>Tip</span><span>$${d.tip.toFixed(2)}</span></div>
+        <div class="row tot"><span>Total</span><span>$${d.total.toFixed(2)}</span></div>
+        <div class="row" style="color:var(--muted);font-size:13px"><span>Paid by</span><span>${d.method} · ${d.status}</span></div>
+        <div class="code">Receipt ${d.receipt_code}</div>
+        <button class="btn btn-ghost noprint" style="width:100%;margin-top:16px" onclick="window.print()">🖨 Print</button>`;
+    } catch { showErr('Network error. Please try again.'); }
+  }
+  const qp = new URLSearchParams(location.search).get('code');
+  if (qp) { document.getElementById('code').value = qp; load(qp); }
+</script>
+</body>
+</html>
