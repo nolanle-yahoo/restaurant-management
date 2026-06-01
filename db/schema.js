@@ -289,6 +289,17 @@ function createSchema() {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
+    -- Waste / spoilage log: stock written off with a reason.
+    CREATE TABLE IF NOT EXISTS waste_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_id INTEGER NOT NULL REFERENCES inventory(id),
+      location_id INTEGER REFERENCES locations(id),
+      quantity REAL NOT NULL,
+      reason TEXT,
+      user_id INTEGER REFERENCES users(id),
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     -- Post-visit guest feedback, tied to a settled payment's receipt.
     CREATE TABLE IF NOT EXISTS feedback (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
