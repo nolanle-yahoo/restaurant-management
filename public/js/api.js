@@ -129,6 +129,8 @@ const API = {
 
   updateProfile(data)   { return this.put('/auth/profile', data); },
   changePassword(data)  { return this.put('/auth/password', data); },
+  forgotPassword(email) { return this.post('/auth/forgot-password', { email }); },
+  resetPassword(data)   { return this.post('/auth/reset-password', data); },
 
   paymentConfig()           { return this.get('/payments/config'); },
   bill(orderId)             { return this.get(`/payments/order/${orderId}`); },
