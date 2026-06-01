@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order Online — Restaurant</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--cream); }
+    .pub-header { background: var(--burgundy); color: #fff; padding: 22px 20px; text-align: center; }
+    .pub-header .logo { font-size: 34px; }
+    .pub-header h1 { font-size: 24px; font-weight: 800; margin-top: 6px; }
+    .pub-nav { display: flex; gap: 10px; justify-content: center; padding: 14px; flex-wrap: wrap; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    .loc-select { padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; }
+    .order-wrap { max-width: 920px; margin: 0 auto; padding: 24px 18px 60px; display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+    @media(max-width:780px){ .order-wrap { grid-template-columns: 1fr; } }
+    .menu-cat h2 { font-size: 18px; font-weight: 800; color: var(--burgundy); border-bottom: 2px solid var(--gold); padding-bottom: 8px; margin: 18px 0 10px; }
+    .menu-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: center; }
+    .mi-name { font-weight: 700; font-size: 14.5px; }
+    .mi-desc { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+    .mi-price { font-weight: 800; color: var(--success); white-space: nowrap; font-size: 14px; }
+    .cart { position: sticky; top: 76px; align-self: start; }
+    .cart-line { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; font-size: 13.5px; border-bottom: 1px solid var(--border); }
+    .qty-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-weight: 700; }
+    .field { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 8px; }
+    .pub-foot { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
+  </style>
+</head>
+<body>
+  <div class="pub-header">
+    <div class="logo">🍷</div>
+    <h1>Order Online</h1>
+    <p id="locLabel">Pickup &amp; delivery — pay when you collect</p>
+  </div>
+  <div class="pub-nav">
+    <select id="locSelect" class="loc-select" onchange="loadMenu()"></select>
+    <a class="btn btn-ghost" href="/menu.html">🍽️ Full Menu</a>
+    <a class="btn btn-ghost" href="/reserve.html">📅 Book a Table</a>
+    <a class="btn btn-ghost" href="/">Staff Login</a>
+  </div>
+
+  <div class="order-wrap">
+    <div>
+      <div id="menuContent"><p style="color:var(--muted);padding:40px;text-align:center">Loading…</p></div>
+    </div>
+
+    <div class="cart">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Your Order</div></div>
+        <div id="cartLines"><p style="color:var(--muted);font-size:13px;padding:8px 0">Your cart is empty.</p></div>
+        <div id="cartTotal" style="font-weight:800;text-align:right;margin:10px 0;font-size:15px"></div>
+
+        <div id="checkout" style="display:none">
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <button id="btnPickup"   class="btn btn-sm btn-primary" style="flex:1" onclick="setType('pickup')">🥡 Pickup</button>
+            <button id="btnDelivery" class="btn btn-sm btn-ghost"   style="flex:1" onclick="setType('delivery')">🚗 Delivery</button>
+          </div>
+          <input class="field" id="cName"  placeholder="Your name *">
+          <input class="field" id="cPhone" placeholder="Phone *">
+          <input class="field" id="cEmail" placeholder="Email (for confirmation)">
+          <input class="field" id="cAddr"  placeholder="Delivery address *" style="display:none">
+          <textarea class="field" id="cNotes" rows="2" placeholder="Notes (allergies, instructions)"></textarea>
+          <div id="orderAlert" class="alert hidden" style="margin-bottom:8px"></div>
+          <button class="btn btn-primary" style="width:100%" onclick="placeOrder()">Place Order</button>
+          <div style="font-size:11.5px;color:var(--muted);text-align:center;margin-top:6px">Estimated total shown; you pay on ${'collection'}.</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-header"><div class="card-title">Track an Order</div></div>
+        <input class="field" id="trackCode" placeholder="Tracking code (e.g. ORD-AB12CD)">
+        <button class="btn btn-ghost" style="width:100%" onclick="trackOrder()">Check Status</button>
+        <div id="trackResult" style="margin-top:10px;font-size:13.5px"></div>
+      </div>
+    </div>
+  </div>
+  <div class="pub-foot">© 2026 Restaurant Management System</div>
+
+<script>
+let cart = {}, orderType = 'pickup', menuData = [];
+async function api(path, opts) {
+  const r = await fetch('/api/public' + path, opts);
+  if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || 'Request failed');
+  return r.json();
+}
+const money = n => '$' + (Number(n)||0).toFixed(2);
+
+async function init() {
+  try {
+    const locs = await api('/locations');
+    const sel = document.getElementById('locSelect');
+    sel.innerHTML = locs.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+    const qp = new URLSearchParams(location.search);
+    if (qp.get('location_id') && locs.some(l => String(l.id) === qp.get('location_id'))) sel.value = qp.get('location_id');
+    loadMenu();
+    if (qp.get('code')) { document.getElementById('trackCode').value = qp.get('code'); trackOrder(); }
+  } catch (e) {
+    document.getElementById('menuContent').innerHTML = `<p style="color:var(--danger);padding:40px;text-align:center">${e.message}</p>`;
+  }
+}
+
+async function loadMenu() {
+  cart = {}; renderCart();
+  const locId = document.getElementById('locSelect').value;
+  const el = document.getElementById('menuContent');
+  el.innerHTML = '<p style="color:var(--muted);padding:40px;text-align:center">Loading…</p>';
+  try {
+    const { location, menu } = await api('/menu?location_id=' + locId);
+    menuData = menu;
+    document.getElementById('locLabel').textContent = 'Ordering from ' + location.name;
+    if (!menu.length) { el.innerHTML = '<p style="color:var(--muted);padding:40px;text-align:center">No items available right now.</p>'; return; }
+    el.innerHTML = menu.map(cat => `
+      <div class="menu-cat">
+        <h2>${cat.name}</h2>
+        ${cat.items.map(i => `
+          <div class="menu-row">
+            <div>
+              <div class="mi-name">${i.name}</div>
+              ${i.description ? `<div class="mi-desc">${i.description}</div>` : ''}
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="mi-price">${money(i.price)}</span>
+              <button class="btn btn-sm btn-primary" onclick="addToCart(${i.id})">Add</button>
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+  } catch (e) {
+    el.innerHTML = `<p style="color:var(--danger);padding:40px;text-align:center">${e.message}</p>`;
+  }
+}
+
+function findItem(id) {
+  for (const c of menuData) { const it = c.items.find(x => x.id === id); if (it) return it; }
+  return null;
+}
+function addToCart(id) {
+  const it = findItem(id); if (!it) return;
+  if (!cart[id]) cart[id] = { name: it.name, price: it.price, qty: 0 };
+  cart[id].qty++; renderCart();
+}
+function changeQty(id, d) {
+  if (!cart[id]) return;
+  cart[id].qty += d;
+  if (cart[id].qty <= 0) delete cart[id];
+  renderCart();
+}
+function renderCart() {
+  const ids = Object.keys(cart);
+  const lines = document.getElementById('cartLines');
+  const total = document.getElementById('cartTotal');
+  document.getElementById('checkout').style.display = ids.length ? 'block' : 'none';
+  if (!ids.length) { lines.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Your cart is empty.</p>'; total.textContent = ''; return; }
+  lines.innerHTML = ids.map(id => {
+    const c = cart[id];
+    return `<div class="cart-line">
+      <span style="flex:1">${c.name}</span>
+      <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
+      <span style="min-width:18px;text-align:center">${c.qty}</span>
+      <button class="qty-btn" onclick="changeQty(${id},1)">+</button>
+      <span style="min-width:54px;text-align:right;font-weight:700">${money(c.price*c.qty)}</span>
+    </div>`;
+  }).join('');
+  const sub = ids.reduce((s,id) => s + cart[id].price*cart[id].qty, 0);
+  total.textContent = 'Subtotal: ' + money(sub) + ' + tax';
+}
+
+function setType(t) {
+  orderType = t;
+  document.getElementById('btnPickup').className   = 'btn btn-sm ' + (t==='pickup'?'btn-primary':'btn-ghost');
+  document.getElementById('btnDelivery').className = 'btn btn-sm ' + (t==='delivery'?'btn-primary':'btn-ghost');
+  document.getElementById('cAddr').style.display = t==='delivery' ? 'block' : 'none';
+}
+
+function showOAlert(msg, type='danger') {
+  const e = document.getElementById('orderAlert');
+  e.className = 'alert alert-' + type; e.textContent = msg; e.classList.remove('hidden');
+}
+
+async function placeOrder() {
+  const items = Object.entries(cart).map(([id,c]) => ({ id: Number(id), quantity: c.qty }));
+  if (!items.length) return showOAlert('Your cart is empty.');
+  const body = {
+    location_id: Number(document.getElementById('locSelect').value),
+    order_type: orderType,
+    items,
+    customer_name: document.getElementById('cName').value.trim(),
+    customer_phone: document.getElementById('cPhone').value.trim(),
+    customer_email: document.getElementById('cEmail').value.trim(),
+    delivery_address: document.getElementById('cAddr').value.trim(),
+    notes: document.getElementById('cNotes').value.trim(),
+  };
+  if (!body.customer_name || !body.customer_phone) return showOAlert('Please enter your name and phone.');
+  if (orderType === 'delivery' && !body.delivery_address) return showOAlert('Please enter a delivery address.');
+  try {
+    const r = await api('/order', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    document.querySelector('.order-wrap').innerHTML = `
+      <div class="card" style="grid-column:1/-1;max-width:520px;margin:0 auto;text-align:center;padding:30px">
+        <div style="font-size:46px">✅</div>
+        <h2 style="color:var(--burgundy);margin:10px 0">Order placed!</h2>
+        <p style="font-size:15px">Your tracking code is</p>
+        <p style="font-size:26px;font-weight:800;letter-spacing:1px;color:var(--burgundy);margin:6px 0">${r.tracking_code}</p>
+        <p style="color:var(--muted)">Estimated total (pay on ${orderType==='delivery'?'delivery':'collection'}): <b>${money(r.estimated_total)}</b></p>
+        <p style="font-size:13px;color:var(--muted);margin-top:14px">Save your code — track your order anytime at<br><b>${location.origin}/order.html?code=${r.tracking_code}</b></p>
+        <a class="btn btn-primary" style="margin-top:16px" href="/order.html?code=${r.tracking_code}">Track this order</a>
+      </div>`;
+  } catch (e) { showOAlert(e.message); }
+}
+
+async function trackOrder() {
+  const code = document.getElementById('trackCode').value.trim();
+  const out = document.getElementById('trackResult');
+  if (!code) { out.innerHTML = ''; return; }
+  try {
+    const o = await api('/order?code=' + encodeURIComponent(code));
+    const steps = ['pending','preparing','ready','served'];
+    const labels = { pending:'Received', preparing:'Preparing', ready:'Ready', served:'Completed' };
+    const idx = steps.indexOf(o.status);
+    out.innerHTML = `
+      <div style="font-weight:700">${o.order_type === 'delivery' ? '🚗 Delivery' : '🥡 Pickup'} — ${o.location_name}</div>
+      <div style="margin:8px 0">${steps.map((s,n) => `<span style="color:${n<=idx?'var(--success)':'var(--muted)'};font-weight:${n===idx?'800':'400'}">${labels[s]}${n<steps.length-1?' → ':''}</span>`).join('')}</div>
+      <div style="font-size:12.5px;color:var(--muted)">${(o.items||[]).map(i=>`${i.item_name} ×${i.quantity}`).join(', ')}</div>`;
+  } catch (e) { out.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`; }
+}
+init();
+</script>
+</body>
+</html>
