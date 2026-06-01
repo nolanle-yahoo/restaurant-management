@@ -520,6 +520,8 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/reservations` | Public (rate-limited) | Submit an online reservation request; created as **pending**, returns a confirmation code, emails the guest. |
 | GET | `/reservations/lookup` | Public | Look up a reservation by confirmation code + matching email/phone. |
 | POST | `/reservations/cancel` | Public | Cancel a reservation by confirmation code + matching email/phone. |
+| POST | `/order` | Public (rate-limited) | Place a pickup/delivery order (server-priced); returns a tracking code. Pay on collection. |
+| GET | `/order` | Public | Track an online order by tracking code (status + items). |
 | GET | `/receipt` | Public | View an itemized digital receipt by receipt code. |
 
 ### Analytics — `/api/analytics`
