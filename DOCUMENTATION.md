@@ -635,17 +635,35 @@ Harbor View.
 
 ## 15. Roadmap / Future Enhancements
 
-Prioritized by value-to-effort:
+The full, role-by-role enhancement backlog lives in **`RECOMMENDATIONS.md`**, organized
+ascending by impact (Tier 1 smallest → Tier 5 transformational) with effort estimates. The
+highlights below are grouped the same way.
 
-1. **Inventory auto-depletion** — link menu items to ingredients so sales reduce stock.
-2. **QR-code table ordering** — guests scan at the table to view the menu and order to that table.
-3. **Customer accounts & loyalty** — order history, points, saved details.
-4. **Operational notifications** — order-ready, table-needs-help, reservation reminders via SMS/push.
-5. **Split the bill** — settle a single order across multiple guests or by item.
-6. **Refund UI** — a refund button in payment history (endpoint already exists).
-7. **2FA** — optional multi-factor authentication for owner/manager accounts.
-8. **Shift swapping & availability** — staff-initiated schedule changes.
-9. **Waitlist** — walk-in queue alongside reservations.
+**Tier 1 — Quick wins / polish:** refund UI button (endpoint exists); low-stock alerts to the
+stockroom role; configurable tax/service-charge; stronger password policy & broader rate
+limiting; allergen filters + photos on the public menu; structured allergen flags on tickets;
+post-visit feedback link on receipts.
+
+**Tier 2–3 — Operational depth:** course firing and table transfer/merge; two-way and
+broadcast staff messaging; consolidated approvals dashboard; certification tracking; cycle
+counts / barcode receiving; split the bill; order edit/void with approval; chef "86" → live
+availability; vendor master records; waste/expiry (FIFO) tracking; per-employee performance;
+discounts/comps/voids; shift swapping; self-service staff portal; reservation reminders +
+waitlist; regional-manager role & cross-location staff lending; central menu with overrides;
+2FA; inventory valuation & COGS.
+
+**Tier 4 — High impact:** QR-code table ordering; par levels + auto-reorder; customer accounts
++ loyalty + referrals; email marketing/promotions (with consent); configurable
+roles/permissions; executive multi-location dashboard & benchmarking; demand-based scheduling;
+finance/accounting integration.
+
+**Tier 5 — Transformational:** inventory auto-depletion (recipes/BOM linking sales to stock);
+operational + real-time notifications (order-ready, needs-help, reminders); online ordering
+for pickup/delivery.
+
+**Scale-dependent (defer until past a single server):** PostgreSQL migration; Redis pub/sub for
+multi-instance WebSocket fan-out; accessibility (WCAG); i18n / multi-currency; GDPR
+data-deletion workflows.
 
 ## 16. Glossary
 
