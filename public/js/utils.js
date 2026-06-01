@@ -360,6 +360,16 @@ function _injectPaymentModal() {
         </div>
         <div style="font-size:12px;color:var(--success);margin-top:5px" id="payDiscountLine"></div>
       </div>
+      <div id="payDiscount" style="display:none;margin-bottom:12px;background:var(--cream);border-radius:8px;padding:10px 12px">
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">Discount / Comp</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+          <span>$</span>
+          <input type="number" id="payManualDiscount" min="0" step="0.01" value="0" oninput="renderPayTotal()"
+            style="width:90px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+          <input id="payDiscountReason" placeholder="Reason (e.g. comp)" style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+          <button class="btn btn-sm btn-ghost" type="button" onclick="compBill()">Comp 100%</button>
+        </div>
+      </div>
       <div style="font-size:20px;font-weight:800;color:var(--burgundy);text-align:right;margin:8px 0 14px">
         Total: $<span id="payTotal">0.00</span>
       </div>
