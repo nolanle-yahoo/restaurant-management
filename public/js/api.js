@@ -127,6 +127,10 @@ const API = {
   settings()             { return this.get('/settings'); },
   updateSettings(data)   { return this.put('/settings', data); },
 
+  marketingAudience()    { return this.get('/marketing/audience'); },
+  marketingHistory()     { return this.get('/marketing/history'); },
+  marketingSend(data)    { return this.post('/marketing/send', data); },
+
   auditLog(params = {}) {
     const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
     return this.get('/audit' + (qs ? '?' + qs : ''));
