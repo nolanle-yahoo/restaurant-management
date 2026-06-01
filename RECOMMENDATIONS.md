@@ -11,6 +11,8 @@
 > (pickup/delivery, pay-on-collection).
 > ✅ **Delivered in v1.11.0:** #35 QR-code table ordering · #37 Customer accounts + loyalty
 > (points accrual) · #38 Email marketing with opt-in/unsubscribe.
+> ✅ **Delivered in v1.12.0:** loyalty **redemption** (points → discount) · two-way **threaded
+> replies** + **broadcast announcements** (#12 staff messaging).
 
 Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
 from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
