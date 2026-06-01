@@ -74,4 +74,37 @@ router.put('/:id', requireRole('owner','manager','waiter','chef','employee','fro
   res.json({ success: true });
 });
 
+// Void an unpaid order: mark voided (with reason), restore any depleted
+// inventory, free the table, and audit. Permission-gated.
+router.put('/:id/void', requireOnDuty, requireCan('void'), (req, res) => {
+  const order = db.prepare(`SELECT * FROM orders WHERE id=?`).get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  if (order.voided) return res.status(400).json({ error: 'Order is already voided' });
+  const paid = db.prepare(`SELECT id FROM payments WHERE order_id=? AND status='paid'`).get(order.id);
+  if (paid) return res.status(400).json({ error: 'A paid order cannot be voided — issue a refund instead.' });
+  const reason = (req.body.reason || '').trim() || null;
+
+  db.exec('BEGIN');
+  try {
+    db.prepare(`UPDATE orders SET voided=1, void_reason=?, updated_at=datetime('now') WHERE id=?`).run(reason, order.id);
+    // Reverse inventory auto-depletion for this order.
+    const outs = db.prepare(`SELECT id, item_id, quantity FROM inventory_transactions WHERE type='out' AND notes LIKE ?`).all(`Auto-deplete: order #${order.id} %`);
+    const restock = db.prepare(`UPDATE inventory SET quantity=quantity+?, last_updated=datetime('now') WHERE id=?`);
+    const logIn = db.prepare(`INSERT INTO inventory_transactions (item_id, to_location_id, quantity, type, user_id, notes) VALUES (?,?,?,'in',?,?)`);
+    outs.forEach(t => { restock.run(t.quantity, t.item_id); logIn.run(t.item_id, order.location_id, t.quantity, req.user.id, `Void restock: order #${order.id}`); });
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+
+  if (order.table_id) {
+    db.prepare(`UPDATE tables SET status='empty' WHERE id=?`).run(order.table_id);
+    broadcast('table_update', { table_id: order.table_id, status: 'empty', location_id: order.location_id }, order.location_id);
+  }
+  broadcast('order_update', { type: 'void', order_id: order.id, location_id: order.location_id }, order.location_id);
+  auditLog(req, 'order_void', 'order', order.id, { reason });
+  res.json({ success: true });
+});
+
 module.exports = router;
