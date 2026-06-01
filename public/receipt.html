@@ -60,14 +60,13 @@
           <div id="fbAlert" class="alert hidden" style="margin-top:8px"></div>
           <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitFeedback('${d.receipt_code}')">Submit Feedback</button>
         </div>`;
-      _rating = 0; renderStars();
+      _rating = 0; renderStars(); setupStars();
     } catch { showErr('Network error. Please try again.'); }
   }
   let _rating = 0;
   function renderStars() {
     const el = document.getElementById('stars'); if (!el) return;
-    el.textContent = '★★★★★☆☆☆☆☆'.slice(5 - _rating, 10 - _rating);
-    [...el.childNodes];
+    el.textContent = '★'.repeat(_rating) + '☆'.repeat(5 - _rating);
   }
   function setupStars() {
     const el = document.getElementById('stars'); if (!el) return;
