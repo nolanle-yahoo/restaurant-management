@@ -238,6 +238,11 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-14.1** Order, table, and reservation changes are pushed over WebSocket to all relevant
   clients at the affected location, keeping kitchen, floor, and front-desk views current
   without polling.
+- **FR-14.2** **Operational notifications** are pushed as on-screen toasts to the relevant
+  roles: order-ready (→ front-of-house), table needs help (→ managers/servers), low-stock
+  crossings (→ managers/stockroom/chef), and new online orders (→ kitchen/managers).
+- **FR-14.3** **Reservation reminders** — a background check notifies front desk/managers of
+  confirmed reservations starting within the next 30 minutes (each reminded once).
 
 ### 5.15 Presentation & Accessibility
 - **FR-15.1** Responsive layout with a hamburger-driven sidebar on small screens and a
