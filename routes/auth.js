@@ -85,8 +85,29 @@ router.put('/password', verifyToken, (req, res) => {
   if (!bcrypt.compareSync(current_password, user.password_hash)) {
     return res.status(401).json({ error: 'Current password is incorrect' });
   }
-  db.prepare(`UPDATE users SET password_hash=? WHERE id=?`).run(bcrypt.hashSync(new_password, 10), req.user.id);
-  res.json({ success: true });
+  // Changing the password revokes all OTHER sessions; issue a fresh token so
+  // the current session keeps working.
+  db.prepare(`UPDATE users SET password_hash=?, token_version=token_version+1 WHERE id=?`).run(bcrypt.hashSync(new_password, 10), req.user.id);
+  const newTv = db.prepare(`SELECT token_version FROM users WHERE id=?`).get(req.user.id).token_version;
+  const token = jwt.sign(
+    { id: user.id, role: user.role, location_id: user.location_id, name: user.name, tv: newTv },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN }
+  );
+  res.json({ success: true, token });
+});
+
+// Log out everywhere: invalidate every issued token for this user, then mint a
+// fresh one so the current device stays signed in.
+router.post('/logout-all', verifyToken, (req, res) => {
+  db.prepare(`UPDATE users SET token_version=token_version+1 WHERE id=?`).run(req.user.id);
+  const user = db.prepare(`SELECT id, role, location_id, name, token_version FROM users WHERE id=?`).get(req.user.id);
+  const token = jwt.sign(
+    { id: user.id, role: user.role, location_id: user.location_id, name: user.name, tv: user.token_version },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN }
+  );
+  res.json({ success: true, token, message: 'All other sessions have been signed out.' });
 });
 
 // ── Forgot / reset password ──────────────────────────────────
