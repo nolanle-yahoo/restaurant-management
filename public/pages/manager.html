@@ -1431,8 +1431,19 @@ function renderMessages() {
       </div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:8px">From: <strong style="color:var(--charcoal)">${m.sender_name}</strong> · ${m.sender_role}</div>
       <div style="font-size:14px;line-height:1.6;margin-bottom:10px">${m.message}</div>
-      ${!m.is_read ? `<button class="btn btn-sm btn-ghost" onclick="markMsgRead(${m.id})">Mark as Read</button>` : '<span class="text-sm text-muted">✓ Read</span>'}
+      ${(m.replies||[]).map(rp => `<div style="margin:6px 0 6px 16px;padding:8px 10px;background:var(--cream);border-radius:8px;font-size:13px"><b>${rp.sender_name}</b> <span style="color:var(--muted)">(${rp.sender_role})</span>: ${rp.message}</div>`).join('')}
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input id="mreply-${m.id}" placeholder="Reply…" style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+        <button class="btn btn-sm btn-primary" onclick="mgrReply(${m.id})">Reply</button>
+        ${!m.is_read ? `<button class="btn btn-sm btn-ghost" onclick="markMsgRead(${m.id})">Mark Read</button>` : ''}
+      </div>
     </div>`).join('');
+}
+
+async function mgrReply(id) {
+  const el = document.getElementById('mreply-' + id);
+  const msg = el.value.trim(); if (!msg) return;
+  try { await API.messagesReply(id, msg); loadMgrMessages(); } catch(e) { alert(e.message); }
 }
 
 async function markMsgRead(id) {
@@ -1440,6 +1451,31 @@ async function markMsgRead(id) {
   loadMgrMessages();
   refreshBell();
 }
+
+// ── Announcements (manager: own location) ─────────────────────
+async function loadMgrAnnouncements() {
+  let list = []; try { list = await API.announcements(); } catch(e) { return; }
+  const el = document.getElementById('mgrAnnList'); if (!el) return;
+  el.innerHTML = list.length ? list.map(a => `
+    <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between"><b>${a.title}</b>
+        <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="delMgrAnn(${a.id})">✕</button></div>
+      <div style="font-size:13px;margin:4px 0">${a.body}</div>
+      <div style="font-size:11.5px;color:var(--muted)">${a.author_name||''} · ${a.location_name||'All locations'} · ${fmtDateTime(a.created_at)}</div>
+    </div>`).join('') : '<p style="color:var(--muted);padding:10px">No announcements.</p>';
+}
+async function postMgrAnnouncement() {
+  const title = document.getElementById('mgrAnnTitle').value.trim();
+  const body = document.getElementById('mgrAnnBody').value.trim();
+  if (!title || !body) return showAlert('mgrAnnAlert', 'Title and message required');
+  try {
+    await API.announcementCreate({ title, body });
+    document.getElementById('mgrAnnTitle').value=''; document.getElementById('mgrAnnBody').value='';
+    showAlert('mgrAnnAlert', 'Posted — staff at your location notified.', 'success');
+    loadMgrAnnouncements();
+  } catch(e) { showAlert('mgrAnnAlert', e.message); }
+}
+async function delMgrAnn(id) { if(!confirm('Delete this announcement?'))return; try{ await API.announcementDelete(id); loadMgrAnnouncements(); }catch(e){ alert(e.message); } }
 
 // ── Reservations ──────────────────────────────────────────────
 let mgrResData = [];
