@@ -90,6 +90,22 @@
   </div>
 </div>
 
+<!-- Edit Order Modal -->
+<div class="modal-overlay" id="editOrderModal">
+  <div class="modal" style="width:460px">
+    <div class="modal-title" id="editOrderTitle">Edit Order</div>
+    <div id="editOrderAlert" class="alert hidden"></div>
+    <div id="editOrderItems"></div>
+    <div style="display:flex;gap:6px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+      <select id="editAddSelect" style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px"></select>
+      <button class="btn btn-sm btn-ghost" onclick="editAddItem()">+ Add</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="hideModal('editOrderModal');loadAll()">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Change Table Status Modal -->
 <div class="modal-overlay" id="statusModal">
   <div class="modal">
