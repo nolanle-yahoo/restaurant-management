@@ -569,7 +569,9 @@ Shared client modules:
 ## 10. Security
 
 - **Authentication:** stateless JWT; tokens carry minimal claims and expire (default 8h).
-- **Passwords:** stored only as bcrypt hashes; never returned by the API.
+- **Passwords:** stored only as bcrypt hashes; never returned by the API; minimum length 8.
+- **Rate limiting:** login, password reset, and password change are throttled (password change
+  is keyed per user so staff sharing a public IP aren't collectively locked out).
 - **Authorization:** every protected route validates the token and, where applicable, the
   caller's role; location scoping prevents cross-location data access for non-owners.
 - **Login protection:** per-IP rate limiting on the login endpoint.
