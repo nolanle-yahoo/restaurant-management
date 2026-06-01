@@ -77,13 +77,24 @@
   <div class="pub-foot">© 2026 Restaurant Management System</div>
 
 <script>
-let cart = {}, orderType = 'pickup', menuData = [];
-async function api(path, opts) {
+let cart = {}, orderType = 'pickup', menuData = [], tableMode = false, tableId = null;
+async function api(path, opts = {}) {
+  const ct = localStorage.getItem('ctoken');
+  opts.headers = { ...(opts.headers || {}), ...(ct ? { Authorization: 'Bearer ' + ct } : {}) };
   const r = await fetch('/api/public' + path, opts);
   if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || 'Request failed');
   return r.json();
 }
 const money = n => '$' + (Number(n)||0).toFixed(2);
+
+// Reflect signed-in state in the account link.
+function refreshAccountLink() {
+  try {
+    const c = JSON.parse(localStorage.getItem('customer') || 'null');
+    const el = document.getElementById('accountLink');
+    if (c && localStorage.getItem('ctoken')) el.textContent = `👤 ${c.name.split(' ')[0]} · ${c.points ?? 0} pts`;
+  } catch {}
+}
 
 async function init() {
   try {
