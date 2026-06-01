@@ -1531,6 +1531,29 @@ function manRange(days) {
   document.getElementById('manEnd').value = new Date().toISOString().slice(0,10);
   loadMgrAnalytics();
 }
+async function loadMgrPayments() {
+  let rows = [];
+  try { rows = await API.payments(); } catch(e) { return; }
+  const el = document.getElementById('mgrPayments');
+  if (!el) return;
+  if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);padding:16px;text-align:center">No payments yet.</div>'; return; }
+  const badge = s => s==='paid'?'badge-success':s==='refunded'?'badge-danger':'badge-warning';
+  el.innerHTML = `<table class="data-table"><thead><tr><th>When</th><th>Table</th><th>Server</th><th>Method</th><th>Total</th><th>Status</th><th></th></tr></thead><tbody>${
+    rows.slice(0,100).map(p => `<tr>
+      <td>${new Date((p.created_at||'').replace(' ','T')+'Z').toLocaleString()}</td>
+      <td>${p.table_number ?? '—'}</td>
+      <td>${p.waiter_name||'—'}</td>
+      <td style="text-transform:capitalize">${p.method}</td>
+      <td class="fw-700">$${(p.total||0).toFixed(2)}</td>
+      <td><span class="badge ${badge(p.status)}">${p.status}</span></td>
+      <td>${p.status==='paid' ? `<button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="doMgrRefund(${p.id})">Refund</button>` : ''}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+async function doMgrRefund(id) {
+  if (!confirm('Refund this payment? This cannot be undone.')) return;
+  try { await API.refundPayment(id); showAlert('mgrPayAlert','Payment refunded.','success'); loadMgrPayments(); }
+  catch(e) { showAlert('mgrPayAlert', e.message); }
+}
 async function loadMgrAnalytics() {
   if (!document.getElementById('manStart').value) {
     document.getElementById('manStart').value = new Date(Date.now()-29*864e5).toISOString().slice(0,10);
