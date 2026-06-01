@@ -468,7 +468,12 @@ function _redeemPts() {
 function renderPayTotal() {
   const b = _payState.bill; if (!b) return;
   const tip = parseFloat(document.getElementById('payTip').value) || 0;
-  document.getElementById('payTotal').textContent = (b.subtotal + (b.service_charge || 0) + b.tax + Math.max(0, tip)).toFixed(2);
+  const pts = _redeemPts();
+  const discount = Math.round(pts * (_payState.pointValue || 0.05) * 100) / 100;
+  const line = document.getElementById('payDiscountLine');
+  if (line) line.textContent = discount > 0 ? `−$${discount.toFixed(2)} loyalty discount (${pts} pts)` : '';
+  const total = b.subtotal + (b.service_charge || 0) + b.tax - discount + Math.max(0, tip);
+  document.getElementById('payTotal').textContent = Math.max(0, total).toFixed(2);
 }
 
 function _loadStripeJs() {
