@@ -289,6 +289,19 @@ function createSchema() {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
+    -- Vendor master records for supply ordering.
+    CREATE TABLE IF NOT EXISTS vendors (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      contact_name TEXT,
+      phone TEXT,
+      email TEXT,
+      lead_time_days INTEGER DEFAULT 0,
+      notes TEXT,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     -- Waste / spoilage log: stock written off with a reason.
     CREATE TABLE IF NOT EXISTS waste_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
