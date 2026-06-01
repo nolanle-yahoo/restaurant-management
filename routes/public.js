@@ -266,11 +266,25 @@ router.post('/account/register', accountLimiter, (req, res) => {
   if (db.prepare(`SELECT id FROM customers WHERE email=?`).get(em)) {
     return res.status(409).json({ error: 'An account with that email already exists.' });
   }
+  // Optional referral: credit the referrer and the new member.
+  let referrer = null;
+  if (req.body.referral_code) {
+    referrer = db.prepare(`SELECT id FROM customers WHERE referral_code=?`).get(String(req.body.referral_code).trim().toUpperCase());
+  }
   const unsub = crypto.randomBytes(16).toString('hex');
-  const r = db.prepare(`INSERT INTO customers (name, email, phone, password_hash, marketing_opt_in, unsubscribe_token) VALUES (?,?,?,?,?,?)`)
-    .run(String(name).slice(0, 120), em, phone ? String(phone).slice(0, 40) : null, bcrypt.hashSync(String(password), 10), marketing_opt_in ? 1 : 0, unsub);
-  const c = { id: r.lastInsertRowid, name, email: em };
-  res.json({ token: signCustomer(c), customer: { ...c, points: 0, marketing_opt_in: marketing_opt_in ? 1 : 0 } });
+  let myCode; // unique referral code
+  do { myCode = makeReferralCode(); } while (db.prepare(`SELECT 1 FROM customers WHERE referral_code=?`).get(myCode));
+
+  const welcome = referrer ? REFERRAL_BONUS : 0;
+  const r = db.prepare(`INSERT INTO customers (name, email, phone, password_hash, marketing_opt_in, unsubscribe_token, referral_code, referred_by, points) VALUES (?,?,?,?,?,?,?,?,?)`)
+    .run(String(name).slice(0, 120), em, phone ? String(phone).slice(0, 40) : null, bcrypt.hashSync(String(password), 10), marketing_opt_in ? 1 : 0, unsub, myCode, referrer ? referrer.id : null, welcome);
+  const id = r.lastInsertRowid;
+  if (referrer) {
+    db.prepare(`INSERT INTO loyalty_transactions (customer_id, points, reason) VALUES (?,?,?)`).run(id, welcome, 'Referral welcome bonus');
+    awardCustomerPoints(referrer.id, REFERRAL_BONUS, 'Referred a friend');
+  }
+  const c = { id, name, email: em };
+  res.json({ token: signCustomer(c), customer: { ...c, points: welcome, marketing_opt_in: marketing_opt_in ? 1 : 0, tier: tierFor(welcome), referral_code: myCode } });
 });
 
 router.post('/account/login', accountLimiter, (req, res) => {
