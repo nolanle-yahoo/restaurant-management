@@ -1737,16 +1737,24 @@ function openAddMenuItemModal() {
   document.getElementById('menuItemName').value = '';
   document.getElementById('menuItemPrice').value = '';
   document.getElementById('menuItemDesc').value = '';
+  document.getElementById('menuItemImage').value = '';
+  document.getElementById('menuItemAllergens').value = '';
+  ['dietVeg','dietVegan','dietGf'].forEach(id => document.getElementById(id).checked = false);
   document.getElementById('menuItemCat').innerHTML = menuCats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   showModal('menuItemModal');
 }
 async function submitMenuItem() {
   const locId = document.getElementById('menuLocFilter')?.value || locations[0]?.id;
+  const dietary = ['dietVeg','dietVegan','dietGf'].filter(id => document.getElementById(id).checked)
+    .map(id => document.getElementById(id).value).join(',');
   const data = {
     category_id: document.getElementById('menuItemCat').value,
     name: document.getElementById('menuItemName').value.trim(),
     price: parseFloat(document.getElementById('menuItemPrice').value),
     description: document.getElementById('menuItemDesc').value.trim(),
+    image_url: document.getElementById('menuItemImage').value.trim(),
+    allergens: document.getElementById('menuItemAllergens').value.trim(),
+    dietary,
     location_id: locId,
   };
   if (!data.name || isNaN(data.price)) return showAlert('menuItemAlert','Name and price required');
