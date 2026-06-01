@@ -555,6 +555,23 @@ async function submitPayment() {
   }
 }
 
+// ── Staff capabilities (configurable permissions) ────────────
+let _staffCaps = null;
+async function getCaps() {
+  if (_staffCaps) return _staffCaps;
+  try { _staffCaps = (await API.paymentConfig()).caps || {}; } catch { _staffCaps = {}; }
+  return _staffCaps;
+}
+async function voidOrderPrompt(id, onDone) {
+  const reason = prompt('Void this order? Optionally enter a reason:');
+  if (reason === null) return; // cancelled
+  try {
+    await API.voidOrder(id, reason || '');
+    showToast('Order voided', 'info');
+    if (typeof onDone === 'function') onDone();
+  } catch (e) { alert(e.message); }
+}
+
 // ── Toast notifications ──────────────────────────────────────
 const TOAST_STYLE = {
   order_ready:  { icon: '✅', bg: '#2E7D46' },
