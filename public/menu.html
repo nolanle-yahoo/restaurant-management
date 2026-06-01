@@ -67,6 +67,12 @@ async function init() {
   }
 }
 
+let _menu = [];
+const DIET_LABELS = { vegetarian: '🥗 Veg', vegan: '🌱 Vegan', gluten_free: '🌾 GF' };
+function dietBadges(d) {
+  return (d || '').split(',').map(x => x.trim()).filter(Boolean)
+    .map(x => `<span class="badge badge-success" style="font-size:10.5px">${DIET_LABELS[x] || x}</span>`).join(' ');
+}
 async function loadMenu() {
   const locId = document.getElementById('locSelect').value;
   const el = document.getElementById('menuContent');
@@ -74,22 +80,32 @@ async function loadMenu() {
   try {
     const { location, menu } = await api('/menu?location_id=' + locId);
     document.getElementById('locLabel').textContent = location.name;
-    if (!menu.length) { el.innerHTML = '<p style="text-align:center;color:var(--muted);padding:40px">No menu items available right now.</p>'; return; }
-    el.innerHTML = menu.map(cat => `
-      <div class="menu-cat">
-        <h2>${cat.name}</h2>
-        ${cat.items.map(i => `
-          <div class="menu-row">
-            <div>
-              <div class="mi-name">${i.name}</div>
-              ${i.description ? `<div class="mi-desc">${i.description}</div>` : ''}
-            </div>
-            <div class="mi-price">$${i.price.toFixed(2)}</div>
-          </div>`).join('')}
-      </div>`).join('');
+    _menu = menu;
+    renderMenu();
   } catch (e) {
     el.innerHTML = `<p style="text-align:center;color:var(--danger);padding:40px">${e.message}</p>`;
   }
+}
+function renderMenu() {
+  const el = document.getElementById('menuContent');
+  const diet = document.getElementById('dietSelect').value;
+  const cats = _menu.map(cat => ({ ...cat, items: cat.items.filter(i => !diet || (i.dietary || '').includes(diet)) }))
+                    .filter(c => c.items.length);
+  if (!cats.length) { el.innerHTML = '<p style="text-align:center;color:var(--muted);padding:40px">No items match that filter.</p>'; return; }
+  el.innerHTML = cats.map(cat => `
+    <div class="menu-cat">
+      <h2>${cat.name}</h2>
+      ${cat.items.map(i => `
+        <div class="menu-row">
+          ${i.image_url ? `<img src="${i.image_url}" alt="${i.name}" style="width:64px;height:64px;object-fit:cover;border-radius:8px" loading="lazy" onerror="this.style.display='none'">` : ''}
+          <div style="flex:1">
+            <div class="mi-name">${i.name} ${dietBadges(i.dietary)}</div>
+            ${i.description ? `<div class="mi-desc">${i.description}</div>` : ''}
+            ${i.allergens ? `<div style="font-size:11.5px;color:var(--danger);margin-top:2px">Contains: ${i.allergens}</div>` : ''}
+          </div>
+          <div class="mi-price">$${i.price.toFixed(2)}</div>
+        </div>`).join('')}
+    </div>`).join('');
 }
 init();
 </script>
