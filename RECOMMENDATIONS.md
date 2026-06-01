@@ -20,11 +20,12 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 | Priority | Gap | Who benefits | Tier |
 |---|---|---|---|
 | ✅ done | Inventory auto-depletion (sell an item → decrement ingredients) — *shipped v1.9.0* | Stockroom, Manager, Owner | 5 |
-| 🔴 1 | Operational + real-time notifications | Waiter, Chef, Front Desk, Customer | 5 |
-| 🔴 3 | Online ordering (pickup/delivery) + QR table ordering | Customer, Owner | 5 / 4 |
-| 🟠 4 | Two-way / broadcast staff messaging | All staff | 2–3 |
-| 🟠 5 | Customer accounts + loyalty + marketing email | Customer, Owner | 4 |
-| 🟠 6 | Configurable roles/permissions + discounts/comps/voids | Owner, Manager | 3–4 |
+| ✅ done | Operational + real-time notifications — *shipped v1.10.0* | Waiter, Chef, Front Desk | 5 |
+| ✅ done | Online ordering (pickup/delivery) — *shipped v1.10.0* | Customer, Owner | 5 |
+| 🔴 1 | QR-code table ordering | Customer, Owner | 4 |
+| 🟠 2 | Two-way / broadcast staff messaging | All staff | 2–3 |
+| 🟠 3 | Customer accounts + loyalty + marketing email | Customer, Owner | 4 |
+| 🟠 4 | Configurable roles/permissions + discounts/comps/voids | Owner, Manager | 3–4 |
 
 ---
 
