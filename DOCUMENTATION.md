@@ -116,7 +116,8 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-1.4** Users are routed to a role-appropriate dashboard automatically; mobile-capable
   roles may use the mobile interface.
 - **FR-1.5** Any user can update their own profile (name, email) and change their own
-  password (current password required; minimum 6 characters).
+  password (current password required; minimum 8 characters). Password changes are
+  rate-limited per user.
 - **FR-1.6** Any user can **log out everywhere** — revoking every previously issued token
   while keeping the current device signed in. Changing a password, resetting a password, and
   account deactivation also revoke all existing sessions immediately.
