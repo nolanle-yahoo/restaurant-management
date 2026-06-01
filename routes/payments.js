@@ -42,7 +42,15 @@ function computeBill(orderId) {
   const subtotal = round2(items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0));
   const service_charge = round2(subtotal * service_charge_rate);
   const tax = round2((subtotal + service_charge) * sales_tax_rate);
-  return { order, items, subtotal, service_charge, tax, tax_rate: sales_tax_rate, service_rate: service_charge_rate };
+  // If the order is linked to a customer account, surface their loyalty balance
+  // so staff can redeem points at settlement.
+  let customer = null;
+  if (order.customer_id) {
+    const c = db.prepare(`SELECT id, name, points FROM customers WHERE id=?`).get(order.customer_id);
+    if (c) customer = { id: c.id, name: c.name, points: c.points };
+  }
+  return { order, items, subtotal, service_charge, tax, tax_rate: sales_tax_rate,
+           service_rate: service_charge_rate, customer, point_value: POINT_VALUE };
 }
 
 // Frontend asks which payment flow to use
