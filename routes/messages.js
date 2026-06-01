@@ -44,12 +44,12 @@ function attachReplies(rows) {
   return rows.map(r => ({ ...r, replies: byParent[r.id] || [] }));
 }
 
-// Employee — their own sent messages
+// Employee — their own sent messages, each with any staff replies.
 router.get('/mine', (req, res) => {
   const rows = db.prepare(`
-    SELECT * FROM employee_messages WHERE user_id=? ORDER BY created_at DESC
+    SELECT * FROM employee_messages WHERE user_id=? AND parent_id IS NULL ORDER BY created_at DESC
   `).all(req.user.id);
-  res.json(rows);
+  res.json(attachReplies(rows));
 });
 
 // Send a message
