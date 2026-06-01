@@ -480,8 +480,10 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | DELETE | `/categories/:id` | Owner, Manager | Delete category + items. |
 | GET | `/items` | Any | Items for location (optional category). |
 | POST | `/items` | Owner, Manager | Create item. |
-| PUT | `/items/:id` | Owner, Manager, Waiter | Update item / availability. |
-| DELETE | `/items/:id` | Owner, Manager | Delete item. |
+| PUT | `/items/:id` | Owner, Manager (full); Waiter, Chef (availability only) | Update item / toggle availability ("86"). |
+| DELETE | `/items/:id` | Owner, Manager | Delete item (and its recipe). |
+| GET | `/items/:id/recipe` | Owner, Manager, Chef | Item's ingredient list with current stock. |
+| PUT | `/items/:id/recipe` | Owner, Manager | Replace the item's recipe (ingredients + quantities). |
 
 ### Audit — `/api/audit`
 | Method | Path | Access | Description |
