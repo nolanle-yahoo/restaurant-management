@@ -211,6 +211,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   ingredients are deducted from that location's inventory and logged as transactions (clamped
   at zero). Any menu item whose ingredients can no longer cover one serving is automatically
   marked unavailable ("auto-86").
+- **FR-8.7** **Waste/spoilage logging** — owners, managers, stockroom, and chefs can write off
+  stock with a reason; the quantity is deducted, logged to a waste log + transaction ledger,
+  and audited.
 
 ### 5.9 Scheduling
 - **FR-9.1** Weekly staff schedules per location (work date, shift start/end).
