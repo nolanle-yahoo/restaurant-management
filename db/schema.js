@@ -331,7 +331,22 @@ function createSchema() {
   try { db.exec(`ALTER TABLE orders ADD COLUMN tracking_code TEXT`); } catch {}
   try { db.exec(`ALTER TABLE orders ADD COLUMN customer_id INTEGER REFERENCES customers(id)`); } catch {}
   try { db.exec(`ALTER TABLE payments ADD COLUMN discount REAL NOT NULL DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE payments ADD COLUMN manual_discount REAL NOT NULL DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE payments ADD COLUMN discount_reason TEXT`); } catch {}
   try { db.exec(`ALTER TABLE employee_messages ADD COLUMN parent_id INTEGER REFERENCES employee_messages(id)`); } catch {}
+  try { db.exec(`ALTER TABLE orders ADD COLUMN voided INTEGER NOT NULL DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE orders ADD COLUMN void_reason TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE customers ADD COLUMN referral_code TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE customers ADD COLUMN referred_by INTEGER REFERENCES customers(id)`); } catch {}
+
+  // Seed default permissions (idempotent): managers may refund/void/discount;
+  // owner is always allowed in code. Other roles default to not allowed.
+  try {
+    const insPerm = db.prepare(`INSERT OR IGNORE INTO permissions (capability, role, allowed) VALUES (?,?,?)`);
+    [['refund','manager',1], ['void','manager',1], ['discount','manager',1],
+     ['refund','waiter',0], ['void','waiter',0], ['discount','waiter',0],
+     ['discount','employee',0], ['void','employee',0]].forEach(([c,r,a]) => insPerm.run(c,r,a));
+  } catch {}
 
   // Migrate tables table: remove old CHECK constraint, add area_id
   try {
