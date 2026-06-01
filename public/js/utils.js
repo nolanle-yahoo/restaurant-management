@@ -157,6 +157,25 @@ function openAccountSettings() {
   document.getElementById('newPw').value = '';
   document.getElementById('confirmPw').value = '';
   showModal('accountSettingsModal');
+  loadMyPay();
+}
+
+async function loadMyPay() {
+  const el = document.getElementById('myPayInfo'); if (!el) return;
+  el.textContent = 'Loading…';
+  try {
+    const p = await API.myPay();
+    const m = n => '$' + (Number(n)||0).toFixed(2);
+    const row = (label, val) => `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>${label}</span><span class="fw-700">${val}</span></div>`;
+    el.innerHTML =
+      row('Hours worked', (p.total_hours||0) + ' hrs') +
+      row('Hourly rate', m(p.hourly_rate)) +
+      row('Gross pay', m(p.gross_pay)) +
+      row('Net pay (after 15%)', m(p.net_pay)) +
+      row('Tips', m(p.tips)) +
+      `<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:800;color:var(--burgundy)"><span>Take-home</span><span>${m(p.take_home)}</span></div>` +
+      `<div style="font-size:11.5px;color:var(--muted)">${p.start} → ${p.end}</div>`;
+  } catch(e) { el.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`; }
 }
 
 async function saveProfile() {
