@@ -168,6 +168,7 @@ router.post('/:id/confirm', requireRole(...STAFF), requireOnDuty, async (req, re
     db.prepare(`UPDATE payments SET status='paid', updated_at=datetime('now') WHERE id=?`).run(payment.id);
     settleOrder(req, payment.order_id);
     emailReceipt(payment.id);
+    awardLoyalty(payment.order_id, payment.subtotal);
     auditLog(req, 'payment_recorded', 'payment', payment.id, { method: 'card', total: payment.total, tip: payment.tip });
     res.json({ success: true, total: payment.total, receipt_code: payment.receipt_code });
   } catch (e) {
