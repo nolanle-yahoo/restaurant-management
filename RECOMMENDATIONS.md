@@ -98,7 +98,8 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 ---
 
 ## Suggested starting sequence
-1. Knock out the Tier-1 quick wins (#1–#4) for immediate polish.
-2. Pair **#20 (chef 86-ing)** with **#43 (auto-depletion)** — complementary, and they close the
-   single biggest operational gap.
-3. Then tackle Tier-5 #44 (notifications) and #45 (online ordering) as the major revenue/efficiency bets.
+1. ✅ Tier-1 quick wins (#1–#4) — **done in v1.9.0**.
+2. ✅ **#20 (chef 86-ing)** + **#43 (auto-depletion)** — **done in v1.9.0**; closed the single
+   biggest operational gap.
+3. **Next:** Tier-5 **#44 (operational/real-time notifications)** and **#45 (online ordering)** —
+   the major revenue/efficiency bets. Then the remaining Tier-1 polish (#5–#9).
