@@ -229,6 +229,8 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-10.3** Tips collected at bill settlement are attributed to the serving employee and
   reported per employee, with a take-home figure (net wages + tips) and grand totals.
 - **FR-10.4** Reports are printable and exportable to CSV.
+- **FR-10.5** **Self-service pay** — any staff member can see their own hours, gross/net pay, and
+  tips for the last 7 days from Account Settings → My Pay.
 
 ### 5.11 Time Off Requests
 - **FR-11.1** Any employee submits time-off requests (vacation, sick, personal, other) with a
