@@ -177,6 +177,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-5.7** **Courses** — each order item is tagged with a course (derived from its menu
   category: Appetizers/Mains/Desserts/Drinks); the kitchen queue groups a ticket's items by
   course for clearer prep/firing.
+- **FR-5.8** **Order edit** — staff can add items, change quantities, and remove items on an
+  order until it has a payment; inventory re-depletes or restocks the delta (with auto-86), and
+  each change is audited. Editing is blocked once any payment exists, or if the order is voided.
 
 ### 5.6 Menu Management & Pricing
 - **FR-6.1** Owners and managers maintain a per-location menu of categories and priced items.
