@@ -280,7 +280,14 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 
 ## 7. Data Model
 
-SQLite database with 25 tables. Core entities and relationships:
+SQLite database with 27 tables. Core entities and relationships:
+
+> **Entity-relationship overview.** `locations` is the hub: `users`, `areas`, `tables`,
+> `orders`, `inventory`, `reservations`, `menu_categories/items`, and `payments` all carry a
+> `location_id`. `orders` → `order_items` (1-to-many) and `orders` → `payments` (1-to-1 when
+> settled). `users` are referenced by `clock_records`, `orders.waiter_id`,
+> `time_off_requests`, `employee_messages`, `audit_log`, and `password_reset_tokens`.
+> `menu_categories` → `menu_items` (1-to-many). All child rows reference parents by foreign key.
 
 - **locations** — restaurant branches.
 - **users** — staff accounts (role enum, location FK, hourly rate, active flag).
