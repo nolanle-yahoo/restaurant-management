@@ -116,7 +116,7 @@ async function loadQueue() {
       <div class="order-card status-${o.status}" style="margin-bottom:14px">
         <div class="order-header">
           <div>
-            <div class="order-table">Table ${o.table_number}</div>
+            <div class="order-table">${orderLabel(o)}</div>
             <div class="order-time ${urgent?'elapsed-urgent':''}">⏱ ${mins}m waiting${urgent?' — URGENT':''}</div>
           </div>
           ${statusBadge(o.status)}
