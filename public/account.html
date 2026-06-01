@@ -124,6 +124,9 @@ async function render() {
     const me = await api('/account/me');
     document.getElementById('dName').textContent = me.name;
     document.getElementById('dPoints').textContent = me.points;
+    document.getElementById('dTier').textContent = me.tier || 'Bronze';
+    document.getElementById('dNextTier').textContent = me.next_tier ? `· ${me.next_tier.points_needed} pts to ${me.next_tier.name}` : '· top tier 🏆';
+    document.getElementById('dReferral').textContent = me.referral_code || '—';
     document.getElementById('dOptIn').checked = !!me.marketing_opt_in;
     localStorage.setItem('customer', JSON.stringify(me));
     const orders = await api('/account/orders');
