@@ -31,6 +31,12 @@
   </div>
   <div class="pub-nav">
     <select id="locSelect" class="loc-select" onchange="loadMenu()"></select>
+    <select id="dietSelect" class="loc-select" onchange="renderMenu()">
+      <option value="">All diets</option>
+      <option value="vegetarian">Vegetarian</option>
+      <option value="vegan">Vegan</option>
+      <option value="gluten_free">Gluten-free</option>
+    </select>
     <a class="btn btn-primary" href="/order.html">🛍️ Order Online</a>
     <a class="btn btn-ghost" href="/reserve.html">📅 Book a Table</a>
     <a class="btn btn-ghost" href="/">Staff Login</a>
