@@ -122,6 +122,20 @@ function createSchema() {
       created_by INTEGER REFERENCES users(id)
     );
 
+    CREATE TABLE IF NOT EXISTS shift_swaps (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      shift_id INTEGER NOT NULL REFERENCES schedules(id),
+      requester_id INTEGER NOT NULL REFERENCES users(id),
+      location_id INTEGER NOT NULL REFERENCES locations(id),
+      target_user_id INTEGER REFERENCES users(id),
+      accepted_by INTEGER REFERENCES users(id),
+      status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','accepted','approved','rejected','cancelled')),
+      note TEXT,
+      reviewed_by INTEGER REFERENCES users(id),
+      created_at TEXT DEFAULT (datetime('now')),
+      decided_at TEXT
+    );
+
     CREATE TABLE IF NOT EXISTS transfer_requests (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       item_name TEXT NOT NULL,
