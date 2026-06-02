@@ -196,6 +196,17 @@ const API = {
   menuItemDelete(id)           { return this.delete(`/menu/items/${id}`); },
   itemRecipe(id)               { return this.get(`/menu/items/${id}/recipe`); },
   itemRecipeUpdate(id, ingredients) { return this.put(`/menu/items/${id}/recipe`, { ingredients }); },
+  resetItemToCentral(id)       { return this.post(`/menu/items/${id}/reset-central`, {}); },
+
+  centralCategories()          { return this.get('/menu/central/categories'); },
+  centralCategoryCreate(data)  { return this.post('/menu/central/categories', data); },
+  centralCategoryUpdate(id, data){ return this.put(`/menu/central/categories/${id}`, data); },
+  centralCategoryDelete(id)    { return this.delete(`/menu/central/categories/${id}`); },
+  centralItems()               { return this.get('/menu/central/items'); },
+  centralItemCreate(data)      { return this.post('/menu/central/items', data); },
+  centralItemUpdate(id, data)  { return this.put(`/menu/central/items/${id}`, data); },
+  centralItemDelete(id)        { return this.delete(`/menu/central/items/${id}`); },
+  centralApply(data)           { return this.post('/menu/central/apply', data); },
 
   settings()             { return this.get('/settings'); },
   updateSettings(data)   { return this.put('/settings', data); },
