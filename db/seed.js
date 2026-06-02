@@ -157,6 +157,18 @@ function seed() {
     }
   });
 
+  // ── Sample delivery orders (for the dispatch board) ──────────────
+  const insDelivOrder = db.prepare(`INSERT INTO orders (location_id, status, order_type, customer_name, customer_phone, customer_email, delivery_address, tracking_code, created_at) VALUES (?, 'ready', 'delivery', ?, ?, ?, ?, ?, datetime('now', ?))`);
+  const insDeliv = db.prepare(`INSERT INTO deliveries (order_id, location_id, status) VALUES (?,?,'pending')`);
+  [
+    ['Jordan Reese', '(555) 222-0101', 'jordan@example.com', '120 Oak St, Apt 4, Downtown', 'ORD-DLV001', '-14 minutes'],
+    ['Sam Patel',    '(555) 222-0144', 'sam@example.com',    '88 Birch Ave, Downtown',      'ORD-DLV002', '-6 minutes'],
+  ].forEach(([nm, ph, em, addr, code, off]) => {
+    const r = insDelivOrder.run(1, nm, ph, em, addr, code, off);
+    for (let i = 0; i < 2; i++) { const it = menuItems[(r.lastInsertRowid + i) % menuItems.length]; insertItem.run(r.lastInsertRowid, it[0], 1, it[1]); }
+    insDeliv.run(r.lastInsertRowid, 1);
+  });
+
   // ── Clock Records ────────────────────────────────────────────────
   const insertClockOpen = db.prepare(`INSERT INTO clock_records (user_id, location_id, check_in) VALUES (?,?,datetime('now',?))`);
   const insertClock     = db.prepare(`INSERT INTO clock_records (user_id, location_id, check_in, check_out, hours_worked) VALUES (?,?,datetime('now',?,?),datetime('now',?,?),?)`);
