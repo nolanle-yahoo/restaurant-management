@@ -55,8 +55,9 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 | ✅ done | Cycle counts · per-employee performance · certification tracking — *shipped v1.18.0* | Stockroom, Mgr | 2–3 |
 | ✅ done | Waitlist · SKU/scan-receive · valuation & COGS — *shipped v1.19.0* | Front desk, Stockroom, Owner | 2–3 |
 | ✅ done | Staff scheduling (weekly editor + My Schedule) — *shipped v1.20.0* | Owner, Mgr, Staff | 3 |
+| ✅ done | Shift swapping (offer → claim → approval) — *shipped v1.21.0* | Staff, Mgr | 2 |
 | 🔴 1 | Central menu w/ per-location overrides; 2FA | Owner | 3–4 |
-| 🟠 2 | Shift swapping (now on the scheduling base); expiry/lot (FIFO); regional manager role | Staff, Stockroom, Owner | 2–4 |
+| 🟠 2 | Expiry/lot (FIFO) tracking; regional manager role & cross-location staff lending | Stockroom, Owner | 2–4 |
 
 ---
 
