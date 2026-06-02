@@ -423,7 +423,7 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-18.5** **Per-employee performance** — a breakdown by serving staff (orders, sales, average
   ticket, tips) over the selected range.
 
-### 5.19 Notifications & Self-Service (Email)
+### 5.19 Notifications & Self-Service (Email & SMS)
 - **FR-19.1** A shared email layer sends transactional messages via SMTP when configured, or
   records them to an email log in simulated mode otherwise — so all flows work without setup.
 - **FR-19.2** Guests who provide an email receive a **reservation confirmation** with a code,
