@@ -182,4 +182,8 @@ const API = {
     const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
     return this.get('/analytics' + (qs ? '?' + qs : ''));
   },
+  staffPerformance(params = {}) {
+    const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
+    return this.get('/analytics/staff' + (qs ? '?' + qs : ''));
+  },
 };
