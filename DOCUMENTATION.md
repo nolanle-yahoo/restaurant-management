@@ -629,6 +629,15 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/:id/confirm` | Order-handling staff | Confirm a card payment after the client completes the Stripe flow. |
 | POST | `/:id/refund` | Staff with `refund` permission | Refund a paid payment. |
 
+### Schedules — `/api/schedules`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/` | Owner, Manager | Shifts for a location over a date range. |
+| GET | `/mine` | Any staff | The caller's own upcoming shifts. |
+| POST | `/` | Owner, Manager | Create a shift (user, date, start, end). |
+| PUT | `/:id` | Owner, Manager | Update a shift. |
+| DELETE | `/:id` | Owner, Manager | Remove a shift. |
+
 ### Waitlist — `/api/waitlist`
 | Method | Path | Access | Description |
 |---|---|---|---|
