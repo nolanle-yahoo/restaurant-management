@@ -133,7 +133,10 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 47. ✅ **DONE (v1.30.0)** — **Apple Pay / Google Pay + saved cards**: checkout uses the Stripe
     Payment Element (auto-offers wallets on supported devices); signed-in customers can save a
     card (Stripe Customer; only brand/last4/expiry stored locally) and reuse it off-session, or
-    manage cards under My Account. *(Delivery dispatch/driver tracking remains a follow-up.)*
+    manage cards under My Account.
+48. ✅ **DONE (v1.31.0)** — **Delivery dispatch + driver tracking**: `driver` role + app, manager
+    dispatch board with ETA, driver status updates + live GPS sharing, and a customer
+    live-tracking timeline + map.
 
 ---
 
