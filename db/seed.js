@@ -26,6 +26,7 @@ function seed() {
     UPDATE customers SET referred_by=NULL;
     DELETE FROM customers;
     DELETE FROM tables; DELETE FROM areas; DELETE FROM clock_records; DELETE FROM users; DELETE FROM locations;
+    DELETE FROM regions;
     DELETE FROM sqlite_sequence;
   `);
 
