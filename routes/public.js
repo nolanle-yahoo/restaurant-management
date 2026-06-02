@@ -24,6 +24,15 @@ function awardCustomerPoints(customerId, pts, reason) {
   db.prepare(`INSERT INTO loyalty_transactions (customer_id, points, reason) VALUES (?,?,?)`).run(customerId, pts, reason);
 }
 
+// Ensure the customer has a Stripe Customer id (for saved cards), persisting it.
+async function stripeCustomerFor(customerId) {
+  const cust = db.prepare(`SELECT id, name, email, stripe_customer_id FROM customers WHERE id=?`).get(customerId);
+  if (!cust) return null;
+  const id = await stripeLib.ensureCustomer({ email: cust.email, name: cust.name, existingId: cust.stripe_customer_id });
+  if (id && id !== cust.stripe_customer_id) db.prepare(`UPDATE customers SET stripe_customer_id=? WHERE id=?`).run(id, customerId);
+  return id;
+}
+
 const router = express.Router();
 
 // Short, human-friendly confirmation/receipt code (e.g. "RSV-7K3Q2H")
