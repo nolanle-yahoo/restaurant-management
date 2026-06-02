@@ -204,6 +204,8 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   no-show and cancelled terminal states.
 - **FR-7.3** Reservations are filterable by location (owner), date, and status; changes
   broadcast in real time.
+- **FR-7.4** **Walk-in waitlist** — front desk/managers add walk-in parties (name, size, quoted
+  wait) to a live queue and seat or remove them; updates broadcast in real time.
 
 ### 5.8 Inventory & Supply Chain
 - **FR-8.1** Per-location inventory with quantity, unit, category, and minimum threshold.
