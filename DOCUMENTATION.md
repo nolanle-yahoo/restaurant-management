@@ -973,7 +973,8 @@ data-deletion workflows.
 | 1.17.0 | Order edit: add items, change quantities, and remove items on an unpaid order — inventory re-depletes/restocks the delta (with auto-86) and every change is audited; blocked once a payment exists. |
 | 1.18.0 | Cycle counts (reconcile to a physical count with variance + adjustment); per-employee performance analytics (orders/sales/avg-ticket/tips); staff certification tracking with expiry highlighting. |
 | 1.19.0 | Walk-in waitlist (host queue with live updates); SKU / scan-to-receive stock entry; inventory valuation & COGS (stock value by category + consumed cost over a range). |
-| 1.20.0 | **Staff scheduling: a weekly shift editor for owners/managers (employees × days grid, add/edit/delete, week navigation) and a per-staff "My Schedule" view — the foundation for shift swapping.** |
+| 1.20.0 | Staff scheduling: a weekly shift editor for owners/managers (employees × days grid, add/edit/delete, week navigation) and a per-staff "My Schedule" view — the foundation for shift swapping. |
+| 1.21.0 | **Shift swapping: staff offer an upcoming shift (open or to a named colleague), a colleague claims it, and an owner/manager approves the hand-over (which reassigns the shift). Requester-cancel and manager-reject supported; managers review pending swaps from the Schedule tab.** |
 
 ---
 
