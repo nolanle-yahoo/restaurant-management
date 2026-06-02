@@ -462,6 +462,55 @@
         </div>
       </section>
 
+      <!-- ── Regions & Staff Lending ─────────────────────── -->
+      <section id="sec-regions" class="hidden">
+        <div id="regionsAlert" class="alert hidden" style="margin-bottom:12px"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Regions</div></div>
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <input id="newRegionName" placeholder="New region name" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+              <button class="btn btn-primary btn-sm" onclick="createRegion()">Add</button>
+            </div>
+            <div id="regionsList"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Locations → Region</div></div>
+            <div id="locRegionList"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">Regional Managers</div></div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Promote a manager to oversee a whole region (they re-sign-in to get regional access). Set to “— none —” to demote.</div>
+          <div id="regionalMgrList"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Staff Lending — Active &amp; Recent</div>
+            <button class="btn btn-primary btn-sm" onclick="openOwnerLendModal()">+ Lend Staff</button>
+          </div>
+          <div id="ownerLoansList"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Lend Staff Modal (owner) ───────────────────── -->
+<div class="modal-overlay" id="ownerLendModal">
+  <div class="modal">
+    <div class="modal-title">Lend a Staff Member</div>
+    <div id="ownerLendAlert" class="alert hidden"></div>
+    <div class="form-group"><label>Staff member *</label>
+      <select id="ownerLendUser" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px"></select></div>
+    <div class="form-group"><label>Lend to location *</label>
+      <select id="ownerLendLoc" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px"></select></div>
+    <div class="form-group"><label>Note</label>
+      <input id="ownerLendNote" placeholder="e.g., covering Saturday rush" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="submitOwnerLend()">Lend</button>
+      <button class="btn btn-ghost" onclick="hideModal('ownerLendModal')">Cancel</button>
     </div>
   </div>
 </div>
