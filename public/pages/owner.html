@@ -2159,6 +2159,66 @@ function renderAudit() {
 onModalOverlayClick('ownerResModal');
 onModalOverlayClick('menuItemModal');
 onModalOverlayClick('menuCatModal');
+onModalOverlayClick('ownerShiftModal');
+
+// ── Schedule (owner: review + assign/adjust per location) ──
+let ownerSchedWeekOffset = 0, ownerSchedEmps = [];
+function ownerWeekDates() {
+  const t = new Date(); t.setHours(0,0,0,0);
+  const start = new Date(t); start.setDate(t.getDate() - t.getDay() + ownerSchedWeekOffset * 7); // Sunday
+  return Array.from({ length: 7 }, (_, d) => { const x = new Date(start); x.setDate(start.getDate() + d); return x; });
+}
+const ownerYmd = d => d.toISOString().slice(0, 10);
+function ownerSchedLocId() { return document.getElementById('ownerSchedLoc').value || (locations[0]?.id || ''); }
+function ownerSchedWeek(n) { ownerSchedWeekOffset = n === 0 ? 0 : ownerSchedWeekOffset + n; loadOwnerSchedule(); }
+
+async function loadOwnerSchedule() {
+  const sel = document.getElementById('ownerSchedLoc');
+  if (sel && !sel.options.length) sel.innerHTML = locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  const locId = ownerSchedLocId();
+  if (!locId) { document.getElementById('ownerSchedGrid').innerHTML = '<p style="padding:20px;color:var(--muted)">No locations.</p>'; return; }
+  const days = ownerWeekDates();
+  const start = ownerYmd(days[0]), end = ownerYmd(days[6]);
+  document.getElementById('ownerSchedWeekLabel').textContent = `${days[0].toLocaleDateString([], {month:'short',day:'numeric'})} – ${days[6].toLocaleDateString([], {month:'short',day:'numeric'})}`;
+  const [emps, shifts] = await Promise.all([API.employees(locId), API.schedules({ location_id: locId, start, end })]);
+  ownerSchedEmps = emps;
+  const byKey = {};
+  shifts.forEach(s => { (byKey[s.user_id + '|' + s.work_date] = byKey[s.user_id + '|' + s.work_date] || []).push(s); });
+  let html = `<div class="sched-head">Employee</div>${days.map(d=>`<div class="sched-head">${d.toLocaleDateString([], {weekday:'short'})}<br>${d.getDate()}</div>`).join('')}`;
+  emps.forEach(emp => {
+    html += `<div class="sched-name">${emp.name}<br><span class="text-sm text-muted">${emp.role}</span></div>`;
+    days.forEach(d => {
+      const list = byKey[emp.id + '|' + ownerYmd(d)] || [];
+      html += `<div class="sched-cell">${list.length ? list.map(s =>
+        `<span class="sched-shift" title="Remove" style="cursor:pointer" onclick="removeOwnerShift(${s.id})">${s.shift_start}–${s.shift_end} ✕</span>`).join('<br>')
+        : '<span class="sched-empty">—</span>'}</div>`;
+    });
+  });
+  document.getElementById('ownerSchedGrid').innerHTML = html;
+}
+function openOwnerShiftModal() {
+  if (!ownerSchedEmps.length) return showToast('No staff at this location', 'error');
+  document.getElementById('ownerShiftAlert').classList.add('hidden');
+  document.getElementById('ownerShiftEmp').innerHTML = ownerSchedEmps.map(e => `<option value="${e.id}">${e.name} (${e.role})</option>`).join('');
+  document.getElementById('ownerShiftDate').value = ownerYmd(ownerWeekDates()[0]);
+  showModal('ownerShiftModal');
+}
+async function submitOwnerShift() {
+  try {
+    await API.scheduleCreate({
+      user_id: document.getElementById('ownerShiftEmp').value,
+      location_id: ownerSchedLocId(),
+      work_date: document.getElementById('ownerShiftDate').value,
+      shift_start: document.getElementById('ownerShiftStart').value,
+      shift_end: document.getElementById('ownerShiftEnd').value,
+    });
+    hideModal('ownerShiftModal'); loadOwnerSchedule();
+  } catch(e) { showAlert('ownerShiftAlert', e.message); }
+}
+async function removeOwnerShift(id) {
+  if (!confirm('Remove this shift?')) return;
+  try { await API.scheduleDelete(id); loadOwnerSchedule(); } catch(e) { showToast(e.message, 'error'); }
+}
 
 // ── Regions & Staff Lending ───────────────────────────────
 let regionsData = [], loansData = [], lendableStaff = [];
