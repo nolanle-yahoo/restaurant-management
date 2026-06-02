@@ -289,6 +289,29 @@ function createSchema() {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
+    -- Cycle counts: physical inventory reconciliation with variance.
+    CREATE TABLE IF NOT EXISTS cycle_counts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_id INTEGER NOT NULL REFERENCES inventory(id),
+      location_id INTEGER REFERENCES locations(id),
+      system_qty REAL NOT NULL,
+      counted_qty REAL NOT NULL,
+      variance REAL NOT NULL,
+      user_id INTEGER REFERENCES users(id),
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    -- Staff certifications (e.g., food handler) with expiry tracking.
+    CREATE TABLE IF NOT EXISTS certifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      name TEXT NOT NULL,
+      issued_date TEXT,
+      expiry_date TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     -- Vendor master records for supply ordering.
     CREATE TABLE IF NOT EXISTS vendors (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
