@@ -103,6 +103,16 @@ const API = {
   vendorDelete(id)   { return this.delete(`/inventory/vendors/${id}`); },
   cycleCount(data)   { return this.post('/inventory/count', data); },
   cycleCounts(locId) { return this.get('/inventory/counts' + (locId ? `?location_id=${locId}` : '')); },
+  inventoryItemUpdate(id, data) { return this.put(`/inventory/${id}`, data); },
+  receiveStock(data) { return this.post('/inventory/receive', data); },
+  valuation(params = {}) {
+    const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
+    return this.get('/inventory/valuation' + (qs ? '?' + qs : ''));
+  },
+
+  waitlist(locId)        { return this.get('/waitlist' + (locId ? `?location_id=${locId}` : '')); },
+  waitlistAdd(data)      { return this.post('/waitlist', data); },
+  waitlistUpdate(id, status) { return this.put(`/waitlist/${id}`, { status }); },
   supplyOrders(locId){ return this.get('/inventory/supply-orders' + (locId ? `?location_id=${locId}` : '')); },
   transferRequests(locId) { return this.get('/inventory/transfer-requests' + (locId ? `?location_id=${locId}` : '')); },
   createTransferRequest(data)    { return this.post('/inventory/transfer-request', data); },
