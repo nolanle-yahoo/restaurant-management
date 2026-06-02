@@ -25,8 +25,9 @@ function redirectByRole(role, mobile) {
     waiter:    '/pages/waiter.html',
     chef:      '/pages/chef.html',
     stockroom: '/pages/manager.html',
+    regional:  '/pages/regional.html',
   };
-  location.href = map[role] || '/';
+  location.href = map[role] || '/staff';
 }
 
 function logout() {
