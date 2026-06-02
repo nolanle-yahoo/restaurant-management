@@ -197,6 +197,21 @@ function seed() {
     db.prepare(`UPDATE inventory SET unit_cost=?, sku=? WHERE id=?`).run(costMap[r.item_name] || 1, 'SKU-' + String(r.id).padStart(4, '0'), r.id);
   });
 
+  // ── Demo inventory lots with expiry (FIFO / expiring-soon panel) ──
+  // For a few perishables at Downtown, split current stock into two dated lots:
+  // one expiring very soon (or just expired) and one further out.
+  const insLot = db.prepare(`INSERT INTO inventory_lots (item_id, location_id, lot_code, received_qty, quantity, unit_cost, expiry_date, received_by) VALUES (?,?,?,?,?,?,date('now', ?),?)`);
+  const perishables = ['Atlantic Salmon','Shrimp','Mixed Greens','Heavy Cream','Roma Tomatoes'];
+  perishables.forEach((name, i) => {
+    const inv = db.prepare(`SELECT id, location_id, quantity, unit_cost FROM inventory WHERE item_name=? AND location_id=1`).get(name);
+    if (!inv) return;
+    const soon = Math.round(inv.quantity * 0.4 * 1000) / 1000;
+    const later = Math.round((inv.quantity - soon) * 1000) / 1000;
+    const soonOffset = (i - 1) + ' days';            // -1d (expired), 0d, +1d, +2d, +3d
+    insLot.run(inv.id, inv.location_id, 'LOT-A' + (i + 1), soon, soon, inv.unit_cost || 0, soonOffset, null);
+    insLot.run(inv.id, inv.location_id, 'LOT-B' + (i + 1), later, later, inv.unit_cost || 0, '+21 days', null);
+  });
+
   // ── Vendors (master records) ─────────────────────────────────────
   const insertVendor = db.prepare(`INSERT INTO vendors (name, contact_name, phone, email, lead_time_days, notes) VALUES (?,?,?,?,?,?)`);
   [['Pacific Fresh Co.', 'Dana Lee', '(555) 410-0001', 'orders@pacificfresh.com', 2, 'Seafood & produce'],
