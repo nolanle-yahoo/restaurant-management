@@ -80,6 +80,9 @@ function seed() {
   // Regional manager over the East Region (home base: Downtown).
   db.prepare(`INSERT INTO users (name, email, password_hash, role, location_id, region_id, hourly_rate) VALUES (?,?,?,?,?,?,?)`)
     .run('Grace Mbeki', 'regional@east.com', h('region123'), 'regional', 1, eastId, 32.00);
+  // Delivery drivers (Downtown).
+  insertUser.run('Diego Ramirez', 'driver@downtown.com',  h('driver123'), 'driver', 1, 16.00);
+  insertUser.run('Tara Singh',    'driver2@downtown.com', h('driver123'), 'driver', 1, 16.00);
   // Each user's home location starts as their assigned location.
   db.prepare(`UPDATE users SET home_location_id=location_id WHERE home_location_id IS NULL`).run();
 
