@@ -106,6 +106,7 @@ router.post('/reservations', bookingLimiter, (req, res) => {
   if (guest_phone) {
     sendSMS(guest_phone, `${locName}: reservation request for ${reservation_date} ${reservation_time}, party of ${size}. Code ${code} — we'll confirm shortly.`, 'reservation');
   }
+  tg.sendTelegram(`📅 New reservation — ${guest_name}, ${reservation_date} ${reservation_time}, party of ${size} (${locName}, code ${code})`, 'reservation');
 
   broadcast('reservation_update', { location_id: Number(location_id) }, location_id);
   res.json({ success: true, id: r.lastInsertRowid, confirmation_code: code,
