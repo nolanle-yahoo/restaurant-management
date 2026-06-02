@@ -769,7 +769,7 @@ let invData = [], whData = null, supplyData = [], trData = [], currentTab = 'sta
 let editingMgrTableId = null, mgrAssignAreaId = null;
 
 function switchTab(tab) {
-  TABS.forEach(t => document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab));
+  TABS.forEach(t => { const el = document.getElementById('tab-'+t); if (el) el.classList.toggle('hidden', t !== tab); });
   document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', TABS[i] === tab));
   document.getElementById('tabTitle').textContent = TAB_LABELS[tab];
   currentTab = tab;
