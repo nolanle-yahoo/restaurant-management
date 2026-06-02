@@ -155,5 +155,6 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 13. ✅ **Staff scheduling backend + UI** — **done in v1.20.0** (unblocks shift swapping).
 14. ✅ **Shift swapping** (offer → claim → owner/manager approval) — **done in v1.21.0**.
 15. ✅ **Expiry / lot (FIFO) tracking** — **done in v1.22.0**.
-16. **Next (remaining):** **regional-manager role & cross-location staff lending**; then the two
-    larger items — **central menu with per-location overrides** and **2FA**.
+16. ✅ **Regions + regional-manager role + cross-location staff lending** — **done in v1.23.0**.
+17. **Next (remaining):** the two larger items — **central menu with per-location overrides**
+    and **2FA**.
