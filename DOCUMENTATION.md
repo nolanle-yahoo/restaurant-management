@@ -229,6 +229,10 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   the supply-order history.
 - **FR-8.9** **Cycle counts** — staff reconcile an item to a physically-counted quantity; the
   variance is recorded, stock is updated to the count, and an adjustment transaction is logged.
+- **FR-8.10** **SKU / scan-to-receive** — inventory items carry a SKU; stock can be received by
+  scanning/typing the SKU + quantity (adds stock + logs a transaction).
+- **FR-8.11** **Valuation & COGS** — items carry a unit cost; owners/managers see current stock
+  value (by category) and the cost of stock consumed over a date range.
 
 ### 5.9 Scheduling
 - **FR-9.1** Weekly staff schedules per location (work date, shift start/end).
