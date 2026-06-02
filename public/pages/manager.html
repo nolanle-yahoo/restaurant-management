@@ -348,6 +348,18 @@
         </div>
       </div>
 
+      <!-- ── Delivery Dispatch tab ── -->
+      <div id="tab-deliveries" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Delivery Dispatch</div>
+            <button class="btn btn-ghost btn-sm" onclick="loadDeliveries()">↻ Refresh</button>
+          </div>
+          <div id="dispatchAlert" class="alert hidden" style="margin-bottom:10px"></div>
+          <div id="dispatchList"><p style="color:var(--muted)">Loading…</p></div>
+        </div>
+      </div>
+
       <!-- ── Floor Plan tab ── -->
       <div id="tab-floorplan" class="hidden">
         <div class="card">
