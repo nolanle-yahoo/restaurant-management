@@ -537,6 +537,8 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/waste` | Owner, Manager, Stockroom, Chef | Recent waste entries (location-scoped). |
 | GET | `/vendors` | Owner, Manager, Stockroom, Chef | Active vendor list. |
 | POST · PUT · DELETE | `/vendors[/:id]` | Owner, Manager | Create / edit / deactivate a vendor. |
+| POST | `/count` | Owner, Manager, Stockroom, Chef | Cycle count an item (records variance + adjustment). |
+| GET | `/counts` | Owner, Manager, Stockroom, Chef | Recent cycle counts (location-scoped). |
 
 ### Locations — `/api/locations`
 | Method | Path | Access | Description |
