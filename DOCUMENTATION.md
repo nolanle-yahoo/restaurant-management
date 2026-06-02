@@ -658,6 +658,16 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/` | Any | List locations. |
 | GET | `/summary` | Any | Per-location KPIs + global totals. |
 
+### Deliveries — `/api/deliveries`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/` | Owner, Manager | Dispatch board: delivery orders + status/driver (location-scoped). |
+| GET | `/drivers` | Owner, Manager | Active drivers (on-duty first) to assign. |
+| POST | `/:id/assign` | Owner, Manager | Assign/reassign a driver (+ optional `eta_minutes`). |
+| GET | `/mine` | Driver, Owner, Manager | The driver's active (assigned/en-route) deliveries. |
+| POST | `/:id/status` | Driver (own), Owner, Manager | Advance status: `picked_up` / `delivered` / `failed`. |
+| POST | `/:id/location` | Driver (own) | Push the driver's GPS `lat`/`lng` for live tracking. |
+
 ### Regions & Staff Lending — `/api/regions`
 | Method | Path | Access | Description |
 |---|---|---|---|
