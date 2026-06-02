@@ -190,6 +190,12 @@ function seed() {
     });
   });
 
+  // Unit costs + SKUs (for valuation, COGS, and scan-to-receive demos)
+  const costMap = { 'Beef Tenderloin':12,'Chicken Breast':4,'Atlantic Salmon':9,'Shrimp':8,'Roma Tomatoes':1.5,'Mixed Greens':2,'Potatoes':0.8,'Garlic':3,'Olive Oil':18,'Sea Salt':1,'Black Pepper':6,'Flour':0.6,'Sugar':0.7,'Butter':4.5,'Heavy Cream':3,'Parmesan':10,'Red Wine':12,'White Wine':11,'Sparkling Water':0.5,'Coffee Beans':9 };
+  db.prepare(`SELECT id, item_name FROM inventory`).all().forEach(r => {
+    db.prepare(`UPDATE inventory SET unit_cost=?, sku=? WHERE id=?`).run(costMap[r.item_name] || 1, 'SKU-' + String(r.id).padStart(4, '0'), r.id);
+  });
+
   // ── Vendors (master records) ─────────────────────────────────────
   const insertVendor = db.prepare(`INSERT INTO vendors (name, contact_name, phone, email, lead_time_days, notes) VALUES (?,?,?,?,?,?)`);
   [['Pacific Fresh Co.', 'Dana Lee', '(555) 410-0001', 'orders@pacificfresh.com', 2, 'Seafood & produce'],
