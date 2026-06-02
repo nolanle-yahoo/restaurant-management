@@ -789,7 +789,8 @@ to scope their subscription. The server broadcasts:
 
 | Page | Audience | Key areas |
 |---|---|---|
-| `index.html` | All | Login, theme toggle, links to public menu / reservation, mobile entry. |
+| `home.html` | Public (customers) | **Served at `/`** — landing page: Order / Reserve / Menu CTAs, account & reservation-lookup links, live list of locations, discreet Staff Login link. |
+| `index.html` | Staff | **Served at `/staff`** — staff login, theme toggle, mobile entry, "back to main site" link. |
 | `menu.html` | Public (customers) | Browse any location's priced menu; no login. |
 | `reserve.html` | Public (customers) | Submit an online reservation request (returns a confirmation code); no login. |
 | `reserve-lookup.html` | Public (customers) | Look up or cancel a reservation by code + contact; no login. |
