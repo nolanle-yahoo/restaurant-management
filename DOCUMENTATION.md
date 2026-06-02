@@ -1018,7 +1018,8 @@ data-deletion workflows.
 | 1.19.0 | Walk-in waitlist (host queue with live updates); SKU / scan-to-receive stock entry; inventory valuation & COGS (stock value by category + consumed cost over a range). |
 | 1.20.0 | Staff scheduling: a weekly shift editor for owners/managers (employees × days grid, add/edit/delete, week navigation) and a per-staff "My Schedule" view — the foundation for shift swapping. |
 | 1.21.0 | Shift swapping: staff offer an upcoming shift (open or to a named colleague), a colleague claims it, and an owner/manager approves the hand-over (which reassigns the shift). Requester-cancel and manager-reject supported; managers review pending swaps from the Schedule tab. |
-| 1.22.0 | **Expiry / lot (FIFO) tracking: received stock can carry an expiry date + lot #; consumption (sales, waste, transfers, negative counts) draws down lots earliest-expiry-first; an "Expiring Soon" panel (7/14/30-day windows) lists expiring/expired lots, each discardable to waste.** |
+| 1.22.0 | Expiry / lot (FIFO) tracking: received stock can carry an expiry date + lot #; consumption (sales, waste, transfers, negative counts) draws down lots earliest-expiry-first; an "Expiring Soon" panel (7/14/30-day windows) lists expiring/expired lots, each discardable to waste. |
+| 1.23.0 | **Regions & regional managers: owners group locations into regions and promote a manager to a region-scoped `regional` role with a KPI overview dashboard. Cross-location staff lending: owners (anywhere) and regional managers (within their region) temporarily lend staff to another location and return them to their home location.** |
 
 ---
 
