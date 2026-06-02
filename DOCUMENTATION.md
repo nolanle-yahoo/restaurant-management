@@ -367,12 +367,24 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   auth redirects (sign-out, expired session, unauthorized page) return to `/staff`, and a
   "Staff Login" link sits discreetly on the home page. *(Subdomains — `www.` vs `app.` — are a
   drop-in upgrade once a custom domain is attached; no back-end change required.)*
-- **FR-17.4** **Online ordering** — anyone can place a **pickup or delivery** order from a
-  location's menu without logging in. Prices are taken from the server; the order enters the
-  kitchen queue as a normal order (no table/waiter), inventory auto-depletes, and staff are
-  notified. The customer gets a **tracking code** to follow status (received → preparing →
-  ready → completed) and an email confirmation. Payment is collected by staff at
-  collection/handoff (online prepayment is a planned follow-up).
+- **FR-17.4** **Online ordering with prepayment + tipping** — anyone can place a **pickup or
+  delivery** order from a location's menu without logging in. Prices are server-authoritative.
+  Checkout adds a **tip** (None / 15% / 18% / 20% / custom) and shows a full breakdown
+  (subtotal · service · tax · tip · total), then the guest **prepays by card**. The flow is a
+  standard two-step Stripe sequence: `POST /order/intent` creates a PaymentIntent for the priced
+  cart (no order yet); the card is confirmed client-side (Stripe.js Elements); then
+  `POST /order/confirm` verifies the intent **succeeded** (and, with real Stripe, that the
+  captured amount matches) before creating the now-**paid** order, firing it to the kitchen,
+  depleting inventory, awarding loyalty, and emailing a receipt. The customer gets a **tracking
+  code** and a **receipt code**. Confirmation is idempotent (a given intent fulfils one order).
+- **FR-17.4a** **Stripe configuration** — set `STRIPE_SECRET_KEY` (and `STRIPE_PUBLISHABLE_KEY`)
+  to take real card payments; without them the system runs in **simulated mode** (no external
+  call, intents auto-"succeed") so the full flow works for demos. This mirrors the email layer's
+  real-or-simulated behavior and applies to staff card payments too.
+- **FR-17.5** **QR-code table ordering** — each table has a QR code (printable from the manager
+  Floor Plan) that opens the menu in "table mode"; guests order **dine-in** straight to the
+  kitchen, the table flips to *ordered*, and a server settles the bill at the table (tip handled
+  at settlement). *(Prepayment applies to pickup/delivery; dine-in QR pays at the table.)*
 - **FR-17.5** **QR-code table ordering** — each table has a QR code (printable from the manager
   Floor Plan) that opens the menu in "table mode"; guests order **dine-in** straight to the
   kitchen, the table flips to *ordered*, and a server settles the bill as usual.
