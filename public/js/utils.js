@@ -210,6 +210,11 @@ function openAccountSettings() {
   document.getElementById('currentPw').value = '';
   document.getElementById('newPw').value = '';
   document.getElementById('confirmPw').value = '';
+  // Reset to the default size on each open (drag or expand state is per-session).
+  const box = document.getElementById('accountSettingsBox');
+  if (box) { box.classList.remove('expanded'); box.style.width = ''; box.style.height = ''; }
+  const xb = document.getElementById('settingsExpandBtn');
+  if (xb) xb.textContent = '⤢';
   showModal('accountSettingsModal');
   loadMyPay();
   loadMySchedule();
