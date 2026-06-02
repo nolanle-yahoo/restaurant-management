@@ -110,6 +110,14 @@ const API = {
     return this.get('/inventory/valuation' + (qs ? '?' + qs : ''));
   },
 
+  schedules(params = {}) {
+    const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
+    return this.get('/schedules' + (qs ? '?' + qs : ''));
+  },
+  mySchedule()           { return this.get('/schedules/mine'); },
+  scheduleCreate(data)   { return this.post('/schedules', data); },
+  scheduleDelete(id)     { return this.delete(`/schedules/${id}`); },
+
   waitlist(locId)        { return this.get('/waitlist' + (locId ? `?location_id=${locId}` : '')); },
   waitlistAdd(data)      { return this.post('/waitlist', data); },
   waitlistUpdate(id, status) { return this.put(`/waitlist/${id}`, { status }); },
