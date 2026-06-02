@@ -18,7 +18,7 @@ router.get('/', requireRole('owner','manager'), (req, res) => {
 // Get all employees including owner (admin view)
 router.get('/all', requireRole('owner'), (req, res) => {
   const rows = db.prepare(`
-    SELECT u.id,u.name,u.email,u.role,u.location_id,u.hourly_rate,u.is_active,u.created_at,
+    SELECT u.id,u.name,u.email,u.role,u.location_id,u.region_id,u.home_location_id,u.hourly_rate,u.is_active,u.created_at,
            l.name as location_name
     FROM users u LEFT JOIN locations l ON u.location_id=l.id
     ORDER BY u.role, u.name
