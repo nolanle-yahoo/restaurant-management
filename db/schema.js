@@ -474,6 +474,8 @@ function createSchema() {
   try { db.exec(`ALTER TABLE menu_categories ADD COLUMN central_id INTEGER REFERENCES menu_categories(id)`); } catch {}
   try { db.exec(`ALTER TABLE menu_items ADD COLUMN central_id INTEGER REFERENCES menu_items(id)`); } catch {}
   try { db.exec(`ALTER TABLE menu_items ADD COLUMN price_overridden INTEGER NOT NULL DEFAULT 0`); } catch {}
+  // Direct table-to-staff assignment (managers assign; waiters can claim a free table).
+  try { db.exec(`ALTER TABLE tables ADD COLUMN assigned_to INTEGER REFERENCES users(id)`); } catch {}
   // Regions & cross-location staff lending.
   try { db.exec(`ALTER TABLE locations ADD COLUMN region_id INTEGER REFERENCES regions(id)`); } catch {}
   try { db.exec(`ALTER TABLE users ADD COLUMN region_id INTEGER REFERENCES regions(id)`); } catch {}
