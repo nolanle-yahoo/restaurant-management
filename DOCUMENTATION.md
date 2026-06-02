@@ -349,6 +349,8 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   payment-method split.
 - **FR-18.4** Owners additionally see revenue broken down by location; managers are scoped to
   their own location.
+- **FR-18.5** **Per-employee performance** — a breakdown by serving staff (orders, sales, average
+  ticket, tips) over the selected range.
 
 ### 5.19 Notifications & Self-Service (Email)
 - **FR-19.1** A shared email layer sends transactional messages via SMTP when configured, or
