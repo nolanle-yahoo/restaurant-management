@@ -439,6 +439,8 @@ SQLite database with 34 tables. Core entities and relationships:
 - **vendors** — supplier master records (contact, lead time); `supply_orders.vendor_id` links them.
 - **cycle_counts** — physical inventory counts (system vs counted qty + variance).
 - **certifications** — staff certifications with issue/expiry dates.
+- **waitlist** — walk-in host queue (party, size, quote, status).
+- **inventory** also carries `sku` and `unit_cost` (for scan-receiving and valuation).
 - **order_items** also carry a `course` (Appetizers/Mains/Desserts/Drinks) for kitchen grouping.
 - **menu_items** also carry `image_url`, `allergens`, and `dietary` tags.
 - **employee_messages** carries `parent_id` for threaded replies; **payments** carries
