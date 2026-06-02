@@ -549,6 +549,9 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST · PUT · DELETE | `/vendors[/:id]` | Owner, Manager | Create / edit / deactivate a vendor. |
 | POST | `/count` | Owner, Manager, Stockroom, Chef | Cycle count an item (records variance + adjustment). |
 | GET | `/counts` | Owner, Manager, Stockroom, Chef | Recent cycle counts (location-scoped). |
+| PUT | `/:id` | Owner, Manager, Stockroom | Update an item's SKU / min level / unit cost. |
+| POST | `/receive` | Owner, Manager, Stockroom | Receive stock by SKU (or item_id) + quantity. |
+| GET | `/valuation` | Owner, Manager | Stock value (by category) + consumed cost over a range. |
 
 ### Locations — `/api/locations`
 | Method | Path | Access | Description |
