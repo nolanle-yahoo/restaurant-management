@@ -130,6 +130,8 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-2.3** Deactivation is a soft delete (account disabled and email anonymized) to preserve
   historical records; the last active owner cannot be deactivated.
 - **FR-2.4** Live "on duty" view of currently clocked-in staff.
+- **FR-2.5** **Certifications** — owners/managers record per-employee certifications (e.g., food
+  handler) with issue/expiry dates; the UI highlights expired and soon-to-expire ones.
 
 ### 5.3 Time & Attendance
 - **FR-3.1** All non-owner staff clock in and out; a topbar clock widget is available on every
