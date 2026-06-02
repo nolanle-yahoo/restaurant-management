@@ -415,6 +415,8 @@ function createSchema() {
   try { db.exec(`ALTER TABLE menu_items ADD COLUMN dietary TEXT`); } catch {}
   try { db.exec(`ALTER TABLE supply_orders ADD COLUMN vendor_id INTEGER REFERENCES vendors(id)`); } catch {}
   try { db.exec(`ALTER TABLE order_items ADD COLUMN course TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE inventory ADD COLUMN sku TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE inventory ADD COLUMN unit_cost REAL NOT NULL DEFAULT 0`); } catch {}
 
   // Seed default permissions (idempotent): managers may refund/void/discount;
   // owner is always allowed in code. Other roles default to not allowed.
