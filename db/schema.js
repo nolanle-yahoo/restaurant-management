@@ -2,6 +2,12 @@ const db = require('./database');
 
 function createSchema() {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS regions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS locations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
