@@ -53,6 +53,7 @@ router.post('/count', requireRole('owner','manager','stockroom','chef'), (req, r
   const systemQty = item.quantity;
   const variance = Math.round((counted - systemQty) * 1000) / 1000;
   db.prepare(`UPDATE inventory SET quantity=?, last_updated=datetime('now') WHERE id=?`).run(counted, item.id);
+  if (variance < 0) consumeFIFO(item.id, -variance);
   db.prepare(`INSERT INTO cycle_counts (item_id, location_id, system_qty, counted_qty, variance, user_id) VALUES (?,?,?,?,?,?)`)
     .run(item.id, item.location_id, systemQty, counted, variance, req.user.id);
   if (variance !== 0) {
