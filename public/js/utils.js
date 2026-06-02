@@ -163,6 +163,21 @@ function openAccountSettings() {
   document.getElementById('confirmPw').value = '';
   showModal('accountSettingsModal');
   loadMyPay();
+  loadMySchedule();
+}
+
+async function loadMySchedule() {
+  const el = document.getElementById('myScheduleInfo'); if (!el) return;
+  el.textContent = 'Loading…';
+  try {
+    const rows = await API.mySchedule();
+    el.innerHTML = rows.length ? rows.map(s => {
+      const d = new Date(s.work_date + 'T00:00:00');
+      return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span>${d.toLocaleDateString([], { weekday:'short', month:'short', day:'numeric' })}</span>
+        <span class="fw-700">${s.shift_start}–${s.shift_end}</span></div>`;
+    }).join('') : '<p style="color:var(--muted);padding:8px 0">No upcoming shifts scheduled.</p>';
+  } catch(e) { el.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`; }
 }
 
 async function loadMyPay() {
