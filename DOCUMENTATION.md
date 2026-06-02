@@ -837,12 +837,13 @@ demo dataset.
 
 ## 12. Demo Accounts
 
-After seeding, the following representative accounts are available (26 users total across 5
-locations and all roles):
+After seeding, the following representative accounts are available (27 users total across 5
+locations, 2 regions, and all roles):
 
 | Role | Email | Password | Location |
 |---|---|---|---|
 | Owner | `owner@restaurant.com` | `owner123` | All locations |
+| Regional | `regional@east.com` | `region123` | East Region (Downtown/Uptown/Harbor) |
 | Manager | `manager@downtown.com` | `mgr123` | Downtown Bistro |
 | Stockroom | `stock@uptown.com` | `stock123` | Uptown Grille |
 | Chef | `chef@downtown.com` | `chef123` | Downtown Bistro |
