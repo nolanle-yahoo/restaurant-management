@@ -431,6 +431,8 @@ SQLite database with 33 tables. Core entities and relationships:
 - **feedback** — post-visit guest ratings (1–5) + comments, tied to a receipt.
 - **waste_log** — stock written off (quantity + reason + actor) for spoilage/loss tracking.
 - **vendors** — supplier master records (contact, lead time); `supply_orders.vendor_id` links them.
+- **cycle_counts** — physical inventory counts (system vs counted qty + variance).
+- **certifications** — staff certifications with issue/expiry dates.
 - **order_items** also carry a `course` (Appetizers/Mains/Desserts/Drinks) for kitchen grouping.
 - **menu_items** also carry `image_url`, `allergens`, and `dietary` tags.
 - **employee_messages** carries `parent_id` for threaded replies; **payments** carries
