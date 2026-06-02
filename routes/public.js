@@ -239,6 +239,11 @@ router.post('/order', orderLimiter, (req, res) => {
              message: `Order placed! Your tracking code is ${code}.` });
 });
 
+// Which SMS provider is active (for ops/verification).
+router.get('/sms-config', (req, res) => {
+  res.json({ provider: sms.provider, live: sms.enabled });
+});
+
 // ── Online prepayment (Stripe) + tipping ───────────────────
 // Tells the client whether real card collection is available and the publishable key.
 router.get('/pay-config', (req, res) => {
