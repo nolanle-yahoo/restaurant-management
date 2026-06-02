@@ -356,6 +356,15 @@ router.post('/order/confirm', orderLimiter, async (req, res) => {
     return res.status(500).json({ error: 'Payment captured but the order failed to save. Please contact the restaurant with your code.' });
   }
 
+  // Save the card for reuse if the signed-in customer asked us to.
+  if (req.body.save_card && customerId) {
+    try {
+      const c = await stripeLib.cardFromIntent(intent_id);
+      if (c) db.prepare(`INSERT OR IGNORE INTO customer_cards (customer_id, stripe_pm_id, brand, last4, exp_month, exp_year) VALUES (?,?,?,?,?,?)`)
+        .run(customerId, c.stripe_pm_id, c.brand, c.last4, c.exp_month, c.exp_year);
+    } catch (e) { console.error('save card failed:', e.message); }
+  }
+
   // Now that it's paid, fire to the kitchen.
   depleteForOrder({}, orderId, Number(location_id));
   const who = customer_name || 'Online';
