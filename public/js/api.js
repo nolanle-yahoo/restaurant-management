@@ -143,6 +143,7 @@ const API = {
   waitlist(locId)        { return this.get('/waitlist' + (locId ? `?location_id=${locId}` : '')); },
   waitlistAdd(data)      { return this.post('/waitlist', data); },
   waitlistUpdate(id, status) { return this.put(`/waitlist/${id}`, { status }); },
+  waitlistNotify(id)         { return this.post(`/waitlist/${id}/notify`, {}); },
   supplyOrders(locId){ return this.get('/inventory/supply-orders' + (locId ? `?location_id=${locId}` : '')); },
   transferRequests(locId) { return this.get('/inventory/transfer-requests' + (locId ? `?location_id=${locId}` : '')); },
   createTransferRequest(data)    { return this.post('/inventory/transfer-request', data); },
