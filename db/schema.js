@@ -535,11 +535,11 @@ function createSchema() {
     }
   } catch(e) { db.exec(`PRAGMA foreign_keys = ON`); }
 
-  // Widen users.role CHECK to include 'regional' (regional manager). Guarded
+  // Widen users.role CHECK to include 'regional' and 'driver'. Guarded
   // table-rebuild preserving ids so existing FK references stay valid.
   try {
     const ddl = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='users'`).get();
-    if (ddl && !ddl.sql.includes("'regional'")) {
+    if (ddl && !ddl.sql.includes("'driver'")) {
       db.exec(`PRAGMA foreign_keys = OFF`);
       db.exec(`
         CREATE TABLE users_new (
