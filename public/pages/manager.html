@@ -1763,10 +1763,21 @@ async function refreshBell() {
   } catch {}
 }
 
-loadStats();
-loadStaff();
-refreshBell();
-setInterval(loadStats, 30000);
+// Stockroom shares this dashboard but only has inventory/supply-chain access.
+// Hide the manager-only tabs and skip the manager-only boot calls so the page
+// never fires requests it isn't allowed to make (no 403 noise in the console).
+const STOCKROOM_TABS = ['inventory','warehouse','supply','transfers'];
+if (user && user.role === 'stockroom') {
+  document.querySelectorAll('.sidebar-nav .nav-item').forEach((n, i) => {
+    if (!STOCKROOM_TABS.includes(TABS[i])) n.style.display = 'none';
+  });
+  switchTab('inventory');
+} else {
+  loadStats();
+  loadStaff();
+  refreshBell();
+  setInterval(loadStats, 30000);
+}
 setInterval(refreshBell, 30000);
 
 // ── Time Off ──────────────────────────────────────────
