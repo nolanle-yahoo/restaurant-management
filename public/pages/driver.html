@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Driver</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .deliv { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:14px; }
+    .deliv h3 { margin:0 0 4px; font-size:16px; color:var(--burgundy); }
+    .deliv .addr { font-size:14px; margin:6px 0; }
+    .deliv .meta { font-size:12.5px; color:var(--muted); }
+    .pill { display:inline-block; font-size:11px; padding:2px 9px; border-radius:11px; background:var(--bg-soft,#f3efe9); font-weight:700; }
+    .deliv .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon">🚗</div><div class="logo-name">Restaurant Mgmt</div><div class="logo-sub">Driver</div></div>
+    <div class="sidebar-user">
+      <div class="user-name" id="sb-name"></div><div class="user-role" id="sb-role"></div><div class="user-loc" id="sb-location"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#" onclick="loadAll();return false"><span class="nav-icon">📦</span>My Deliveries</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn">Sign Out</button></div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <button class="hamburger-btn" id="hamburgerBtn">☰</button>
+      <div class="topbar-title">My Deliveries</div>
+      <div class="topbar-right">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer">
+          <input type="checkbox" id="shareLoc" onchange="toggleShare()"> 📍 Share location
+        </label>
+        <span class="text-muted text-sm" id="topbarTime"></span>
+        <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻ Refresh</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <div id="locNote" class="hidden" style="font-size:12.5px;color:var(--muted);margin-bottom:10px"></div>
+      <div id="delivList"><p class="text-muted">Loading…</p></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script>
+const user = requireAuth(['driver','owner','manager']);
+if (user) populateSidebar(user);
+liveClock('topbarTime');
+
+let deliveries = [], shareTimer = null;
+const money = n => '$' + (Number(n)||0).toFixed(2);
+const STATUS = { assigned:'Assigned', picked_up:'Picked up — en route', delivered:'Delivered', failed:'Failed' };
+
+connectWebSocket(user.location_id, { delivery_update: () => loadAll() });
+
+async function loadAll() {
+  try { deliveries = await API.myDeliveries(); } catch(e) { document.getElementById('delivList').innerHTML = `<p style="color:var(--danger)">${e.message}</p>`; return; }
+  const el = document.getElementById('delivList');
+  if (!deliveries.length) { el.innerHTML = '<div class="deliv"><p class="text-muted" style="margin:0">No active deliveries right now. New assignments appear here.</p></div>'; return; }
+  el.innerHTML = deliveries.map(d => {
+    const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.delivery_address||'')}`;
+    return `<div class="deliv">
+      <h3>${d.customer_name || 'Customer'} <span class="pill">${STATUS[d.status]||d.status}</span></h3>
+      <div class="addr">📍 <a href="${maps}" target="_blank" rel="noopener">${d.delivery_address || '—'}</a></div>
+      <div class="meta">Order ${d.tracking_code} · ${money(d.subtotal)}${d.eta_minutes!=null?` · ETA ${d.eta_minutes} min`:''}
+        ${d.customer_phone?` · <a href="tel:${d.customer_phone}">📞 ${d.customer_phone}</a>`:''}</div>
+      <div class="actions">
+        ${d.status==='assigned' ? `<button class="btn btn-primary btn-sm" onclick="setStatus(${d.id},'picked_up')">✅ Picked up</button>` : ''}
+        ${d.status==='picked_up' ? `<button class="btn btn-gold btn-sm" onclick="setStatus(${d.id},'delivered')">🏁 Delivered</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="setStatus(${d.id},'failed')">⚠ Can't deliver</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function setStatus(id, status) {
+  if (status === 'failed' && !confirm('Mark this delivery as failed?')) return;
+  try { await API.deliveryStatus(id, status); showToast(status==='delivered'?'Delivered! 🎉':'Updated'); loadAll(); }
+  catch(e) { showToast(e.message, 'error'); }
+}
+
+// Periodically push the driver's GPS location so customers can track live.
+function toggleShare() {
+  const on = document.getElementById('shareLoc').checked;
+  const note = document.getElementById('locNote');
+  if (on) {
+    if (!navigator.geolocation) { showToast('Location not available on this device', 'error'); document.getElementById('shareLoc').checked = false; return; }
+    note.textContent = 'Sharing your location with customers for active deliveries.'; note.classList.remove('hidden');
+    pingLocation();
+    shareTimer = setInterval(pingLocation, 15000);
+  } else {
+    note.classList.add('hidden');
+    if (shareTimer) clearInterval(shareTimer); shareTimer = null;
+  }
+}
+function pingLocation() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude, longitude } = pos.coords;
+    deliveries.filter(d => d.status==='assigned' || d.status==='picked_up')
+      .forEach(d => API.driverLocation(d.id, latitude, longitude).catch(()=>{}));
+  }, () => {}, { enableHighAccuracy: true, maximumAge: 10000, timeout: 8000 });
+}
+
+loadAll();
+</script>
+</body>
+</html>
