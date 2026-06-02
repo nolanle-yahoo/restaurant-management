@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db/database');
 const { verifyToken, requireRole } = require('../middleware/auth');
 const { auditLog } = require('../lib/audit');
+const { receiveLot, consumeFIFO } = require('../lib/lots');
 
 const router = express.Router();
 router.use(verifyToken);
