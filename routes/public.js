@@ -227,6 +227,10 @@ router.post('/order', orderLimiter, (req, res) => {
       `Tracking code: ${code}\nTrack it at: ${(process.env.ALLOWED_ORIGIN || 'http://localhost:3000')}/order.html?code=${code}\n\nWe'll have it ready soon!`,
       'online_order');
   }
+  if (customer_phone && type !== 'dine_in') {
+    const origin = process.env.ALLOWED_ORIGIN || 'http://localhost:3000';
+    sendSMS(customer_phone, `${locName}: order ${code} received (est. $${estimated_total.toFixed(2)}, pay on ${type === 'delivery' ? 'delivery' : 'collection'}). Track: ${origin}/order.html?code=${code}`, 'order');
+  }
 
   res.json({ success: true, tracking_code: code, estimated_total,
              message: `Order placed! Your tracking code is ${code}.` });
