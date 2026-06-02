@@ -932,6 +932,7 @@ locations, 2 regions, and all roles):
 |---|---|---|---|
 | Owner | `owner@restaurant.com` | `owner123` | All locations |
 | Regional | `regional@east.com` | `region123` | East Region (Downtown/Uptown/Harbor) |
+| Driver | `driver@downtown.com` | `driver123` | Downtown Bistro |
 | Manager | `manager@downtown.com` | `mgr123` | Downtown Bistro |
 | Stockroom | `stock@uptown.com` | `stock123` | Uptown Grille |
 | Chef | `chef@downtown.com` | `chef123` | Downtown Bistro |
