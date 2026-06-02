@@ -661,6 +661,10 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | DELETE | `/items/:id` | Owner, Manager | Delete item (and its recipe). |
 | GET | `/items/:id/recipe` | Owner, Manager, Chef | Item's ingredient list with current stock. |
 | PUT | `/items/:id/recipe` | Owner, Manager | Replace the item's recipe (ingredients + quantities). |
+| POST | `/items/:id/reset-central` | Owner, Manager | Clear a price override and restore the central template price. |
+| GET · POST · PUT · DELETE | `/central/categories[/:id]` | Owner | Manage the central menu's categories. |
+| GET · POST · PUT · DELETE | `/central/items[/:id]` | Owner | Manage the central menu's items (with linked-location counts). |
+| POST | `/central/apply` | Owner | Push the central template to locations (`location_ids: 'all'` or `[ids]`); returns created/updated counts. |
 
 ### Audit — `/api/audit`
 | Method | Path | Access | Description |
