@@ -927,7 +927,7 @@ demo dataset.
 
 ## 12. Demo Accounts
 
-After seeding, the following representative accounts are available (27 users total across 5
+After seeding, the following representative accounts are available (29 users total across 5
 locations, 2 regions, and all roles):
 
 | Role | Email | Password | Location |
