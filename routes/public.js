@@ -395,6 +395,7 @@ router.post('/order/confirm', orderLimiter, async (req, res) => {
   if (p.type === 'delivery') { try { db.prepare(`INSERT OR IGNORE INTO deliveries (order_id, location_id, status) VALUES (?,?,'pending')`).run(orderId, location_id); } catch {} }
   const who = customer_name || 'Online';
   notify(`New paid ${p.type} order — ${who} (${code})`, { locId: Number(location_id), roles: ['chef', 'manager', 'owner'], kind: 'online_order' });
+  tg.sendTelegram(`💳 New PAID ${p.type} order ${code} — ${who}, $${p.total.toFixed(2)}`, 'order');
   broadcast('order_update', { type: 'new', order_id: orderId, location_id: Number(location_id) }, location_id);
 
   const locName = (db.prepare(`SELECT name FROM locations WHERE id=?`).get(location_id) || {}).name || 'our restaurant';
