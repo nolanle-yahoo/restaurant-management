@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Regional Manager</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .kpi-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px; }
+    .kpi-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px; }
+    .kpi-card h3 { margin:0 0 10px; font-size:15px; }
+    .kpi-row { display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
+    .kpi-row b { color:var(--burgundy); }
+    .badge { display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px; background:var(--bg-soft,#f3f3f3); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🍷</div>
+      <div class="logo-name">Restaurant Mgmt</div>
+      <div class="logo-sub">Regional Manager</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-name" id="sb-name"></div>
+      <div class="user-role" id="sb-role"></div>
+      <div class="user-loc" id="sb-location"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#" onclick="switchView('overview')"><span class="nav-icon">📊</span>Region Overview</a>
+      <a class="nav-item" href="#" onclick="switchView('lending')"><span class="nav-icon">🤝</span>Staff Lending</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn">Sign Out</button></div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <button class="hamburger-btn" id="hamburgerBtn">☰</button>
+      <div class="topbar-title" id="pageTitle">Region Overview</div>
+      <div class="topbar-right">
+        <span class="text-muted text-sm" id="topbarTime"></span>
+        <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <!-- Overview -->
+      <div id="view-overview">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title" id="regionTitle">Region</div></div>
+          <div class="kpi-grid" id="locGrid"><p class="text-muted">Loading…</p></div>
+        </div>
+      </div>
+
+      <!-- Staff & lending -->
+      <div id="view-lending" class="hidden">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <div class="card-title">Active &amp; Recent Loans</div>
+            <button class="btn btn-primary btn-sm" onclick="openLendModal()">+ Lend Staff</button>
+          </div>
+          <div id="loansList"><p class="text-muted">Loading…</p></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Staff Across the Region</div></div>
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Role</th><th>Currently at</th><th>Home</th><th></th></tr></thead>
+            <tbody id="staffBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lend modal -->
+<div class="modal-overlay" id="lendModal">
+  <div class="modal">
+    <div class="modal-title">Lend a Staff Member</div>
+    <div id="lendAlert" class="alert hidden"></div>
+    <div class="form-group"><label>Staff member *</label>
+      <select id="lendUser" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px"></select></div>
+    <div class="form-group"><label>Lend to location *</label>
+      <select id="lendLoc" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px"></select></div>
+    <div class="form-group"><label>Note</label>
+      <input id="lendNote" placeholder="e.g., covering Saturday rush" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="submitLend()">Lend</button>
+      <button class="btn btn-ghost" onclick="hideModal('lendModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script>
+const user = requireAuth(['regional','owner']);
+if (user) populateSidebar(user);
+liveClock('topbarTime');
+onModalOverlayClick('lendModal');
+
+let regionData = null, currentView = 'overview';
+
+function switchView(v) {
+  document.getElementById('view-overview').classList.toggle('hidden', v !== 'overview');
+  document.getElementById('view-lending').classList.toggle('hidden', v !== 'lending');
+  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', ['overview','lending'][i] === v));
+  document.getElementById('pageTitle').textContent = { overview:'Region Overview', lending:'Staff Lending' }[v];
+  currentView = v;
+  if (v === 'lending') loadLoans();
+}
+
+async function loadAll() {
+  try {
+    regionData = await API.myRegion();
+  } catch(e) { document.getElementById('locGrid').innerHTML = `<p style="color:var(--danger)">${e.message}</p>`; return; }
+  document.getElementById('regionTitle').textContent = regionData.region.name + ' — ' + regionData.locations.length + ' locations';
+  document.getElementById('locGrid').innerHTML = regionData.locations.map(l => `
+    <div class="kpi-card">
+      <h3>${l.name}</h3>
+      <div class="kpi-row"><span>On duty</span><b>${l.staff_on_duty}</b></div>
+      <div class="kpi-row"><span>Open orders</span><b>${l.open_orders}</b></div>
+      <div class="kpi-row"><span>Occupancy</span><b>${l.occupancy_pct}%</b></div>
+      <div class="kpi-row"><span>Low stock</span><b>${l.low_stock_count}</b></div>
+    </div>`).join('') || '<p class="text-muted">No locations assigned to this region yet.</p>';
+  renderStaff();
+}
+
+function renderStaff() {
+  const tb = document.getElementById('staffBody'); if (!tb) return;
+  tb.innerHTML = regionData.staff.map(s => {
+    const lent = s.home_location_id && s.location_id !== s.home_location_id;
+    return `<tr>
+      <td>${s.name}</td><td>${s.role}</td>
+      <td>${s.location_name || '—'} ${lent ? '<span class="badge">on loan</span>' : ''}</td>
+      <td>${homeName(s.home_location_id)}</td>
+      <td>${s.role==='manager'||s.role==='regional' ? '' : `<button class="btn btn-sm btn-ghost" onclick="openLendModal(${s.id})">Lend</button>`}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="text-muted">No staff.</td></tr>';
+}
+function homeName(id) { const l = regionData.locations.find(x => x.id === id); return l ? l.name : '—'; }
+
+async function loadLoans() {
+  const el = document.getElementById('loansList');
+  try {
+    const loans = await API.staffLoans();
+    if (!loans.length) { el.innerHTML = '<p class="text-muted">No loans yet.</p>'; return; }
+    el.innerHTML = loans.map(l => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px solid var(--border)">
+        <span><b>${l.user_name}</b> (${l.user_role}) · ${l.from_location_name || '—'} → <b>${l.to_location_name}</b>
+          <span class="badge">${l.status}</span>${l.note ? ' · ' + l.note : ''}</span>
+        ${l.status==='active' ? `<button class="btn btn-sm btn-ghost" onclick="returnStaff(${l.id})">Return</button>` : ''}
+      </div>`).join('');
+  } catch(e) { el.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`; }
+}
+async function returnStaff(id) {
+  if (!confirm('Return this staff member to their home location?')) return;
+  try { await API.returnStaff(id); showToast('Returned'); loadLoans(); loadAll(); }
+  catch(e) { showToast(e.message, 'error'); }
+}
+
+function openLendModal(preUserId) {
+  document.getElementById('lendAlert').classList.add('hidden');
+  const lendable = regionData.staff.filter(s => s.role !== 'manager' && s.role !== 'regional');
+  document.getElementById('lendUser').innerHTML = lendable.map(s => `<option value="${s.id}" ${s.id===preUserId?'selected':''}>${s.name} (${s.role}) — ${s.location_name||'—'}</option>`).join('');
+  document.getElementById('lendLoc').innerHTML = regionData.locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  document.getElementById('lendNote').value = '';
+  showModal('lendModal');
+}
+async function submitLend() {
+  const user_id = document.getElementById('lendUser').value;
+  const to_location_id = document.getElementById('lendLoc').value;
+  const note = document.getElementById('lendNote').value.trim();
+  try {
+    await API.lendStaff({ user_id: Number(user_id), to_location_id: Number(to_location_id), note });
+    hideModal('lendModal'); showToast('Staff lent'); loadAll();
+    if (currentView === 'lending') loadLoans();
+  } catch(e) { showAlert('lendAlert', e.message); }
+}
+
+loadAll();
+</script>
+</body>
+</html>
