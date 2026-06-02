@@ -105,6 +105,8 @@
 
 <script>
 let cart = {}, orderType = 'pickup', menuData = [], tableMode = false, tableId = null;
+let savedCards = [], selectedCardId = null; // null = pay with a new card
+const signedIn = () => !!localStorage.getItem('ctoken');
 async function api(path, opts = {}) {
   const ct = localStorage.getItem('ctoken');
   opts.headers = { ...(opts.headers || {}), ...(ct ? { Authorization: 'Bearer ' + ct } : {}) };
