@@ -304,6 +304,7 @@ router.post('/transfer', requireRole('owner','manager','stockroom'), (req, res) 
   if (!src) return res.status(404).json({ error: 'Source item not found' });
   if (src.quantity < quantity) return res.status(400).json({ error: 'Insufficient stock' });
   db.prepare(`UPDATE inventory SET quantity=quantity-? WHERE id=? AND location_id=?`).run(quantity, item_id, from_location_id);
+  consumeFIFO(item_id, quantity);
   const dest = db.prepare(`SELECT * FROM inventory WHERE item_name=? AND location_id=?`).get(src.item_name, to_location_id);
   if (dest) {
     db.prepare(`UPDATE inventory SET quantity=quantity+? WHERE id=?`).run(quantity, dest.id);
