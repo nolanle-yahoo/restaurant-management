@@ -99,7 +99,7 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 28. ✅ **DONE (v1.21.0)** — **Self-service staff portal**: Account Settings → My Schedule shows upcoming shifts and drives shift offers/claims (alongside My Pay & Tips from v1.16.0).
 29. **Broadcast announcements** (manager/owner → staff). *M*
 30. **Reservation reminders** + real-time availability + **waitlist** (R9). *M*
-31. **Regional grouping + regional-manager role**; **cross-location staff lending**. *M*
+31. ✅ **DONE (v1.23.0)** — **Regional grouping + regional-manager role + cross-location staff lending**: owners group locations into regions, promote a region-scoped `regional` manager with a KPI overview, and lend/return staff between locations.
 32. **Central menu with per-location overrides**. *M*
 33. **2FA for owner/manager** (R7). *M* — security-critical
 34. **Inventory valuation & COGS** reporting. *M*
