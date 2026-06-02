@@ -708,7 +708,7 @@ to scope their subscription. The server broadcasts:
 | `manager.html` | Manager / Stockroom | Staff, Schedule, Timesheets, Inventory, Warehouse, Supply, Transfers, Floor Plan (incl. printable table QR codes), Reservations, Menu, Sales Analytics (incl. Payments & Refunds), Time Off, Messages; low-stock banner; Online Orders panel; live toasts. |
 | `waiter.html` | Waiter | My Area, Full Floor, My Orders; take/serve with menu picker + special request; Settle Bill. |
 | `chef.html` | Chef | Kitchen queue (dine-in + online pickup/delivery), inventory quick view, low-stock alert, Menu Availability (86/un-86), and live toasts. |
-| `frontdesk.html` | Front Desk | Floor Map, Areas & Staff, Reservations. |
+| `frontdesk.html` | Front Desk | Floor Map, Areas & Staff, Reservations, Waitlist. |
 | `employee.html` | Employee | My Time (clock), Tables & Orders (take orders, Settle Bill), Time Off, Messages. |
 | `mobile.html` | Field roles | Floor, My Area, Orders, Profile (clock) — touch-optimized. |
 
