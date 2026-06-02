@@ -477,6 +477,8 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/` | Owner, Manager | Create employee. |
 | PUT | `/:id` | Owner, Manager | Update employee. |
 | DELETE | `/:id` | Owner | Soft-delete employee. |
+| GET · POST | `/:id/certifications` | Owner, Manager | List / add an employee's certifications. |
+| DELETE | `/:id/certifications/:certId` | Owner, Manager | Remove a certification. |
 
 ### Time Clock — `/api/clock`
 | Method | Path | Access | Description |
