@@ -105,6 +105,15 @@ const API = {
   cycleCounts(locId) { return this.get('/inventory/counts' + (locId ? `?location_id=${locId}` : '')); },
   inventoryItemUpdate(id, data) { return this.put(`/inventory/${id}`, data); },
   receiveStock(data) { return this.post('/inventory/receive', data); },
+  lots(params = {})  {
+    const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
+    return this.get('/inventory/lots' + (qs ? '?' + qs : ''));
+  },
+  expiringLots(params = {}) {
+    const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v !== undefined && v !== '')).toString();
+    return this.get('/inventory/expiring' + (qs ? '?' + qs : ''));
+  },
+  discardLot(id, reason) { return this.post(`/inventory/lots/${id}/discard`, { reason }); },
   valuation(params = {}) {
     const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
     return this.get('/inventory/valuation' + (qs ? '?' + qs : ''));
