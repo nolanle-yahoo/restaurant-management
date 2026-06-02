@@ -22,6 +22,7 @@
 > ✅ **Delivered in v1.16.0:** **vendor master records** · **self-service My Pay & Tips** ·
 > **course tagging + kitchen grouping**.
 > ✅ **Delivered in v1.17.0:** **order edit** (add/change-qty/remove with inventory re-depletion + audit).
+> ✅ **Delivered in v1.18.0:** **cycle counts** · **per-employee performance** · **certification tracking**.
 
 Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
 from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
