@@ -956,7 +956,8 @@ data-deletion workflows.
 | 1.16.0 | Vendor master records (linked to supply orders); self-service "My Pay & Tips" for all staff (hours/gross/net/tips, last 7 days); course tagging with kitchen-ticket grouping (Appetizers/Mains/Desserts/Drinks). |
 | 1.17.0 | Order edit: add items, change quantities, and remove items on an unpaid order — inventory re-depletes/restocks the delta (with auto-86) and every change is audited; blocked once a payment exists. |
 | 1.18.0 | Cycle counts (reconcile to a physical count with variance + adjustment); per-employee performance analytics (orders/sales/avg-ticket/tips); staff certification tracking with expiry highlighting. |
-| 1.19.0 | **Walk-in waitlist (host queue with live updates); SKU / scan-to-receive stock entry; inventory valuation & COGS (stock value by category + consumed cost over a range).** |
+| 1.19.0 | Walk-in waitlist (host queue with live updates); SKU / scan-to-receive stock entry; inventory valuation & COGS (stock value by category + consumed cost over a range). |
+| 1.20.0 | **Staff scheduling: a weekly shift editor for owners/managers (employees × days grid, add/edit/delete, week navigation) and a per-staff "My Schedule" view — the foundation for shift swapping.** |
 
 ---
 
