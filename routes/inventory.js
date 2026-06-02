@@ -283,6 +283,7 @@ router.put('/transfer-request/:id', requireRole('owner','manager','stockroom'), 
   if (status === 'received') {
     if (fromItem) {
       db.prepare(`UPDATE inventory SET quantity=quantity-? WHERE id=?`).run(tr.quantity, fromItem.id);
+      consumeFIFO(fromItem.id, tr.quantity);
       db.prepare(`INSERT INTO inventory_transactions (item_id, from_location_id, to_location_id, quantity, type, user_id) VALUES (?,?,?,?,'transfer_sent',?)`).run(fromItem.id, tr.from_location_id, tr.to_location_id, tr.quantity, req.user.id);
     }
     const toItem = db.prepare(`SELECT * FROM inventory WHERE item_name=? AND location_id=?`).get(tr.item_name, tr.to_location_id);
