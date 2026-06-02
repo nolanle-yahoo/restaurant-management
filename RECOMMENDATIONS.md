@@ -28,6 +28,7 @@
 > ✅ **Delivered in v1.21.0:** **shift swapping** (offer → claim → owner/manager approval).
 > ✅ **Delivered in v1.22.0:** **expiry / lot (FIFO) tracking** (dated lots, FIFO use, expiring-soon panel, discard-to-waste).
 > ✅ **Delivered in v1.23.0:** **regions + regional-manager role + cross-location staff lending**.
+> ✅ **Delivered in v1.24.0:** **central menu with per-location overrides** (template + apply-to-all + protected price overrides + reset-to-central).
 
 Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
 from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
