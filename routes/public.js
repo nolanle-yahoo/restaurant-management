@@ -306,26 +306,38 @@ router.delete('/account/cards/:id', requireCustomer, async (req, res) => {
 // Step 2: after the card is confirmed client-side, verify the intent succeeded,
 // then create the (now paid) order and fire it to the kitchen.
 router.post('/order/confirm', orderLimiter, async (req, res) => {
-  const { intent_id } = req.body;
-  if (!intent_id) return res.status(400).json({ error: 'Missing payment reference.' });
   const p = priceOnlineOrder(req.body);
   if (p.error) return res.status(400).json({ error: p.error });
+  const customerId = customerIdFromReq(req);
+  let intentId = req.body.intent_id;
 
-  let pay;
-  try { pay = await stripeLib.retrieveIntent(intent_id); }
-  catch (e) { console.error('confirm retrieve error:', e.message); return res.status(502).json({ error: 'Could not verify payment.' }); }
-  if (pay.status !== 'succeeded') return res.status(402).json({ error: 'Payment was not completed.' });
-  // Real Stripe: the captured amount must match the order we are about to create.
-  if (pay.amount != null && pay.amount !== Math.round(p.total * 100)) {
-    return res.status(409).json({ error: 'Payment amount mismatch. Please start over.' });
+  if (customerId && req.body.card_id) {
+    // Saved-card flow: charge now, alongside order creation.
+    const card = db.prepare(`SELECT * FROM customer_cards WHERE id=? AND customer_id=?`).get(req.body.card_id, customerId);
+    if (!card) return res.status(404).json({ error: 'Saved card not found.' });
+    const stripeCust = await stripeCustomerFor(customerId);
+    let charge;
+    try { charge = await stripeLib.chargeSavedCard(Math.round(p.total * 100), stripeCust, card.stripe_pm_id, { kind: 'online_order' }); }
+    catch (e) { console.error('saved-card charge error:', e.message); return res.status(402).json({ error: 'Could not charge that card. Please use a new card.' }); }
+    if (charge.status !== 'succeeded') return res.status(402).json({ error: 'Could not charge that card. Please use a new card.' });
+    intentId = charge.id;
+  } else {
+    // New-card flow: the card was confirmed client-side; verify the intent.
+    if (!intentId) return res.status(400).json({ error: 'Missing payment reference.' });
+    let pay;
+    try { pay = await stripeLib.retrieveIntent(intentId); }
+    catch (e) { console.error('confirm retrieve error:', e.message); return res.status(502).json({ error: 'Could not verify payment.' }); }
+    if (pay.status !== 'succeeded') return res.status(402).json({ error: 'Payment was not completed.' });
+    if (pay.amount != null && pay.amount !== Math.round(p.total * 100)) {
+      return res.status(409).json({ error: 'Payment amount mismatch. Please start over.' });
+    }
   }
-  // Guard against double-fulfilling the same intent.
-  if (db.prepare(`SELECT id FROM payments WHERE stripe_payment_intent_id=?`).get(intent_id)) {
+  // Guard against double-fulfilling the same payment.
+  if (db.prepare(`SELECT id FROM payments WHERE stripe_payment_intent_id=?`).get(intentId)) {
     return res.status(409).json({ error: 'This payment was already processed.' });
   }
 
   const { location_id, customer_name, customer_phone, customer_email, delivery_address, notes } = req.body;
-  const customerId = customerIdFromReq(req);
   const code = makeCode('ORD');
   const receiptCode = makeCode('RCT');
   let orderId;
