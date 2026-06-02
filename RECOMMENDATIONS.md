@@ -59,8 +59,8 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 | ✅ done | Staff scheduling (weekly editor + My Schedule) — *shipped v1.20.0* | Owner, Mgr, Staff | 3 |
 | ✅ done | Shift swapping (offer → claim → approval) — *shipped v1.21.0* | Staff, Mgr | 2 |
 | ✅ done | Expiry/lot (FIFO) tracking — *shipped v1.22.0* | Stockroom, Mgr, Chef | 3 |
+| ✅ done | Regional manager role & cross-location staff lending — *shipped v1.23.0* | Owner, Regional | 3 |
 | 🔴 1 | Central menu w/ per-location overrides; 2FA | Owner | 3–4 |
-| 🟠 2 | Regional manager role & cross-location staff lending | Owner, Regional | 2–4 |
 
 ---
 
