@@ -108,4 +108,31 @@ router.delete('/:id', requireRole('owner'), (req, res) => {
   res.json({ success: true });
 });
 
+// ── Certifications (per employee) ──────────────────────────
+function canManageEmployee(req, empId) {
+  const emp = db.prepare(`SELECT location_id FROM users WHERE id=?`).get(empId);
+  if (!emp) return false;
+  return req.user.role === 'owner' || emp.location_id === req.user.location_id;
+}
+
+router.get('/:id/certifications', requireRole('owner','manager'), (req, res) => {
+  if (!canManageEmployee(req, req.params.id)) return res.status(403).json({ error: 'Not permitted for this employee.' });
+  res.json(db.prepare(`SELECT * FROM certifications WHERE user_id=? ORDER BY expiry_date IS NULL, expiry_date`).all(req.params.id));
+});
+
+router.post('/:id/certifications', requireRole('owner','manager'), (req, res) => {
+  if (!canManageEmployee(req, req.params.id)) return res.status(403).json({ error: 'Not permitted for this employee.' });
+  const { name, issued_date, expiry_date, notes } = req.body;
+  if (!name || !String(name).trim()) return res.status(400).json({ error: 'Certification name required' });
+  const r = db.prepare(`INSERT INTO certifications (user_id, name, issued_date, expiry_date, notes) VALUES (?,?,?,?,?)`)
+    .run(req.params.id, String(name).slice(0,120), issued_date||null, expiry_date||null, notes||null);
+  res.json({ success: true, id: r.lastInsertRowid });
+});
+
+router.delete('/:id/certifications/:certId', requireRole('owner','manager'), (req, res) => {
+  if (!canManageEmployee(req, req.params.id)) return res.status(403).json({ error: 'Not permitted for this employee.' });
+  db.prepare(`DELETE FROM certifications WHERE id=? AND user_id=?`).run(req.params.certId, req.params.id);
+  res.json({ success: true });
+});
+
 module.exports = router;
