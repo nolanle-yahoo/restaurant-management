@@ -102,6 +102,17 @@ router.post('/:id/status', requireRole('driver', 'owner', 'manager'), (req, res)
   db.prepare(`UPDATE deliveries SET status=?${tsCol ? `, ${tsCol}=datetime('now')` : ''} WHERE id=?`).run(status, d.id);
   // Completing a delivery also closes out the kitchen order.
   if (status === 'delivered') db.prepare(`UPDATE orders SET status='served', updated_at=datetime('now') WHERE id=?`).run(d.order_id);
+  // Keep the customer posted by text.
+  if (status === 'picked_up' || status === 'delivered') {
+    const o = db.prepare(`SELECT customer_phone, tracking_code FROM orders WHERE id=?`).get(d.order_id);
+    if (o && o.customer_phone) {
+      const locName = (db.prepare(`SELECT name FROM locations WHERE id=?`).get(d.location_id) || {}).name || 'your restaurant';
+      const msg = status === 'picked_up'
+        ? `${locName}: your order ${o.tracking_code} is on the way! 🚗`
+        : `${locName}: your order ${o.tracking_code} has been delivered. Enjoy! 🎉`;
+      sendSMS(o.customer_phone, msg, 'delivery');
+    }
+  }
   auditLog(req, 'delivery_status', 'delivery', d.id, { status, order_id: d.order_id });
   broadcast('delivery_update', { id: d.id, order_id: d.order_id, location_id: d.location_id, status }, d.location_id);
   res.json({ success: true });
