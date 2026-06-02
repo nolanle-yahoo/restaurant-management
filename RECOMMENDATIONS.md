@@ -147,6 +147,7 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 10. ✅ **Order edit** (add/remove items with re-depletion + audit) — **done in v1.17.0**.
 11. ✅ **Cycle counts** + **per-employee performance** + **certification tracking** — **done in v1.18.0**.
 12. ✅ **Waitlist** + **SKU/scan-to-receive** + **inventory valuation & COGS** — **done in v1.19.0**.
-13. **Next (remaining):** the two larger items — **central menu with per-location overrides**
-    and **2FA**; plus a **scheduling backend** (prerequisite for shift swapping), expiry/lot
-    (FIFO) tracking, and a regional-manager role.
+13. ✅ **Staff scheduling backend + UI** — **done in v1.20.0** (unblocks shift swapping).
+14. **Next (remaining):** the two larger items — **central menu with per-location overrides**
+    and **2FA**; plus **shift swapping** (now on the scheduling base), expiry/lot (FIFO)
+    tracking, and a regional-manager role.
