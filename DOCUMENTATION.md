@@ -938,7 +938,7 @@ data-deletion workflows.
 | Term | Meaning |
 |---|---|
 | **Location** | A single physical restaurant branch. |
-| **Role** | One of: owner, manager, stockroom, chef, waiter, frontdesk, employee. |
+| **Role** | One of: owner, regional, manager, stockroom, chef, waiter, frontdesk, employee. |
 | **Area** | A named zone within a location (Main Hall, Patio, Bar, Private Dining). |
 | **Table status** | empty · occupied · waiting_order · ordered · waiting_food · need_help · waiting_payment · special_request · ready_clean · cleaning. |
 | **Order lifecycle** | pending → preparing → ready → served. |
