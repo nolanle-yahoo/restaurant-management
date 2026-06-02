@@ -98,6 +98,8 @@ const API = {
   vendors()          { return this.get('/inventory/vendors'); },
   vendorCreate(data) { return this.post('/inventory/vendors', data); },
   vendorDelete(id)   { return this.delete(`/inventory/vendors/${id}`); },
+  cycleCount(data)   { return this.post('/inventory/count', data); },
+  cycleCounts(locId) { return this.get('/inventory/counts' + (locId ? `?location_id=${locId}` : '')); },
   supplyOrders(locId){ return this.get('/inventory/supply-orders' + (locId ? `?location_id=${locId}` : '')); },
   transferRequests(locId) { return this.get('/inventory/transfer-requests' + (locId ? `?location_id=${locId}` : '')); },
   createTransferRequest(data)    { return this.post('/inventory/transfer-request', data); },
