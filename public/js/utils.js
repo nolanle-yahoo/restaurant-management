@@ -33,7 +33,7 @@ function redirectByRole(role, mobile) {
 function logout() {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  location.href = '/';
+  location.href = '/staff';
 }
 
 function populateSidebar(user) {
