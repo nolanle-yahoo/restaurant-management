@@ -32,7 +32,7 @@ router.get('/by-area', requireRole('owner','manager','frontdesk','waiter','chef'
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
   if (!locId) return res.status(400).json({ error: 'location_id required' });
   const areas = db.prepare(`SELECT * FROM areas WHERE location_id = ? ORDER BY sort_order, name`).all(locId);
-  const tables = db.prepare(`SELECT * FROM tables WHERE location_id = ? ORDER BY table_number`).all(locId);
+  const tables = db.prepare(`SELECT t.*, au.name as assigned_to_name FROM tables t LEFT JOIN users au ON t.assigned_to = au.id WHERE t.location_id = ? ORDER BY t.table_number`).all(locId);
   const assignments = db.prepare(`
     SELECT wa.id as assignment_id, wa.area_id, u.id, u.name, u.role
     FROM waiter_assignments wa JOIN users u ON wa.user_id = u.id
