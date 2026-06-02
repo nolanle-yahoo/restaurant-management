@@ -148,6 +148,17 @@ const API = {
   locations()        { return this.get('/locations'); },
   locationsSummary() { return this.get('/locations/summary'); },
 
+  regions()                       { return this.get('/regions'); },
+  regionCreate(name)              { return this.post('/regions', { name }); },
+  regionRename(id, name)          { return this.put(`/regions/${id}`, { name }); },
+  regionDelete(id)                { return this.delete(`/regions/${id}`); },
+  regionAssignLocation(data)      { return this.put('/regions/assign-location', data); },
+  regionAssignManager(data)       { return this.post('/regions/assign-manager', data); },
+  myRegion(regionId)              { return this.get('/regions/mine' + (regionId ? `?region_id=${regionId}` : '')); },
+  staffLoans()                    { return this.get('/regions/loans'); },
+  lendStaff(data)                 { return this.post('/regions/lend', data); },
+  returnStaff(loanId)             { return this.post(`/regions/loans/${loanId}/return`, {}); },
+
   timeOffList(locId)       { return this.get('/time-off' + (locId ? `?location_id=${locId}` : '')); },
   timeOffCreate(data)      { return this.post('/time-off', data); },
   timeOffUpdate(id, data)  { return this.put(`/time-off/${id}`, data); },
