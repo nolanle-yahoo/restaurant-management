@@ -1082,6 +1082,7 @@ function renderInv(items) {
         <button class="btn btn-sm btn-ghost" onclick="openTransferFromInv('${i.item_name.replace(/'/g,"\\'")}')">Transfer</button>
         <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="logWasteFor(${i.id},'${i.item_name.replace(/'/g,"\\'")}',${i.quantity})">Waste</button>
         <button class="btn btn-sm btn-ghost" onclick="countFor(${i.id},'${i.item_name.replace(/'/g,"\\'")}',${i.quantity})">Count</button>
+        <button class="btn btn-sm btn-ghost" onclick="editItemAttrs(${i.id},'${i.item_name.replace(/'/g,"\\'")}','${i.sku||''}',${i.unit_cost||0})" title="SKU & cost">⚙</button>
       </td>
     </tr>`;
   }).join('');
