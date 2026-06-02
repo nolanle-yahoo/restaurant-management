@@ -762,7 +762,7 @@ function showSection(name) {
   document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', NAV_KEYS[i] === name));
   document.getElementById('pageTitle').textContent = NAV_LABELS[name];
   currentSection = name;
-  const loaders = { staff: loadStaffLocations, warehouse: loadWarehouse, supply: loadSupply, transfers: loadTransfers, admin: loadAdmin, timesheets: initTimesheets, floorplan: loadFloorPlan, reservations: loadOwnerReservations, menu: loadOwnerMenu, analytics: () => { loadAnalytics(); loadSettings(); loadOwnerPayments(); loadPermissions(); loadOwnerFeedback(); }, auditlog: loadAuditLog, timeoff: loadOwnerTimeOff, messages: loadOwnerMessages, marketing: loadMarketing };
+  const loaders = { staff: loadStaffLocations, warehouse: loadWarehouse, supply: loadSupply, transfers: loadTransfers, admin: loadAdmin, timesheets: initTimesheets, floorplan: loadFloorPlan, reservations: loadOwnerReservations, menu: loadOwnerMenu, analytics: () => { loadAnalytics(); loadSettings(); loadOwnerPayments(); loadPermissions(); loadOwnerFeedback(); loadStaffPerf(); }, auditlog: loadAuditLog, timeoff: loadOwnerTimeOff, messages: loadOwnerMessages, marketing: loadMarketing };
   if (loaders[name]) loaders[name]();
 }
 
