@@ -289,6 +289,20 @@ function createSchema() {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
+    -- Walk-in waitlist (host queue alongside reservations).
+    CREATE TABLE IF NOT EXISTS waitlist (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      location_id INTEGER NOT NULL REFERENCES locations(id),
+      guest_name TEXT NOT NULL,
+      party_size INTEGER NOT NULL DEFAULT 2,
+      phone TEXT,
+      quoted_minutes INTEGER,
+      status TEXT NOT NULL DEFAULT 'waiting' CHECK(status IN ('waiting','seated','left')),
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      seated_at TEXT
+    );
+
     -- Cycle counts: physical inventory reconciliation with variance.
     CREATE TABLE IF NOT EXISTS cycle_counts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
