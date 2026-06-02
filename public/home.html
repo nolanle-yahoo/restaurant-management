@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome — Restaurant</title>
+  <meta name="description" content="Order online, reserve a table, and browse our menu.">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--bg, #faf7f2); min-height: 100vh; }
+    .home-hero {
+      background: linear-gradient(135deg, var(--burgundy) 0%, #4a1212 100%);
+      color: #fff; padding: 72px 20px 88px; text-align: center;
+    }
+    .home-hero .icon { font-size: 52px; }
+    .home-hero h1 { font-size: 34px; font-weight: 800; margin: 10px 0 6px; letter-spacing: .3px; }
+    .home-hero p  { font-size: 16px; color: rgba(255,255,255,.82); max-width: 540px; margin: 0 auto; }
+    .home-cta {
+      display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+      max-width: 860px; margin: -52px auto 0; padding: 0 20px;
+    }
+    .cta-card {
+      flex: 1 1 220px; background: #fff; border-radius: 16px; padding: 26px 22px;
+      box-shadow: 0 12px 36px rgba(0,0,0,.12); text-decoration: none; color: var(--charcoal, #2b2b2b);
+      transition: transform .15s, box-shadow .15s; text-align: center;
+    }
+    .cta-card:hover { transform: translateY(-4px); box-shadow: 0 18px 44px rgba(0,0,0,.18); }
+    .cta-card .emoji { font-size: 34px; }
+    .cta-card h3 { font-size: 18px; font-weight: 800; color: var(--burgundy); margin: 10px 0 6px; }
+    .cta-card p  { font-size: 13px; color: var(--muted); margin: 0; }
+    .home-section { max-width: 980px; margin: 56px auto 0; padding: 0 20px; }
+    .home-section h2 { font-size: 22px; font-weight: 800; color: var(--burgundy); margin-bottom: 18px; text-align: center; }
+    .loc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 16px; }
+    .loc-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+    .loc-card .name { font-weight: 800; color: var(--burgundy); font-size: 16px; }
+    .loc-card .meta { font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+    .loc-card .links { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .secondary-links { text-align: center; margin: 28px 0 0; display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+    .secondary-links a { color: var(--burgundy); font-weight: 600; font-size: 14px; text-decoration: none; }
+    .secondary-links a:hover { text-decoration: underline; }
+    .home-footer { text-align: center; color: var(--muted); font-size: 12.5px; margin: 56px 0 30px; }
+    .home-footer a { color: var(--muted); }
+    .home-dark-btn { position: fixed; top: 16px; right: 16px; background: rgba(255,255,255,.18); border: none;
+      border-radius: 8px; font-size: 18px; padding: 6px 10px; cursor: pointer; color: #fff; }
+    .staff-link { position: fixed; top: 16px; left: 16px; background: rgba(255,255,255,.16); color: #fff;
+      border-radius: 8px; padding: 7px 13px; font-size: 13px; font-weight: 600; text-decoration: none; }
+    .staff-link:hover { background: rgba(255,255,255,.28); }
+    body.dark { background: #0f172a; color: #e2e8f0; }
+    body.dark .cta-card, body.dark .loc-card { background: #1e293b; color: #e2e8f0; border-color: #334155; }
+    body.dark .cta-card p, body.dark .loc-card .meta { color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <a class="staff-link" href="/staff" title="Employee sign-in">👤 Staff Login</a>
+  <button class="home-dark-btn" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
+
+  <header class="home-hero">
+    <div class="icon">🍷</div>
+    <h1>Maison Restaurant Group</h1>
+    <p>Fresh, seasonal dining across our locations. Order online, reserve a table, or explore the menu.</p>
+  </header>
+
+  <nav class="home-cta">
+    <a class="cta-card" href="/order.html">
+      <div class="emoji">🛍️</div><h3>Order Online</h3>
+      <p>Pickup or delivery, straight to our kitchen.</p>
+    </a>
+    <a class="cta-card" href="/reserve.html">
+      <div class="emoji">📅</div><h3>Reserve a Table</h3>
+      <p>Book your visit in a few taps.</p>
+    </a>
+    <a class="cta-card" href="/menu.html">
+      <div class="emoji">🍽️</div><h3>View Menu</h3>
+      <p>See dishes, prices, and dietary info.</p>
+    </a>
+  </nav>
+
+  <div class="secondary-links">
+    <a href="/account.html">⭐ My Account &amp; Rewards</a>
+    <a href="/reserve-lookup.html">🔎 Find / Manage Reservation</a>
+  </div>
+
+  <section class="home-section">
+    <h2>Our Locations</h2>
+    <div class="loc-grid" id="locGrid"><p style="text-align:center;color:var(--muted)">Loading locations…</p></div>
+  </section>
+
+  <div class="home-footer">
+    © <span id="yr"></span> Maison Restaurant Group · <a href="/staff">Staff Login</a>
+  </div>
+
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+  // Dark mode (shared key with the rest of the app).
+  if (localStorage.getItem('darkMode') === 'on') document.body.classList.add('dark');
+  function toggleDark() {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark') ? 'on' : 'off');
+  }
+  // Show locations from the public endpoint.
+  (async () => {
+    const grid = document.getElementById('locGrid');
+    try {
+      const res = await fetch('/api/public/locations');
+      const locs = await res.json();
+      if (!Array.isArray(locs) || !locs.length) { grid.innerHTML = '<p style="text-align:center;color:var(--muted)">Locations coming soon.</p>'; return; }
+      grid.innerHTML = locs.map(l => `
+        <div class="loc-card">
+          <div class="name">${l.name}</div>
+          <div class="meta">${l.address || ''}${l.phone ? '<br>' + l.phone : ''}</div>
+          <div class="links">
+            <a class="btn btn-primary btn-sm" href="/order.html?location=${l.id}">Order</a>
+            <a class="btn btn-ghost btn-sm" href="/reserve.html?location=${l.id}">Reserve</a>
+            <a class="btn btn-ghost btn-sm" href="/menu.html?location=${l.id}">Menu</a>
+          </div>
+        </div>`).join('');
+    } catch { grid.innerHTML = '<p style="text-align:center;color:var(--danger)">Could not load locations.</p>'; }
+  })();
+</script>
+</body>
+</html>
