@@ -1181,8 +1181,10 @@ async function discardLot(id) {
   catch(e) { showToast(e.message, 'error'); }
 }
 async function loadValuation() {
-  let d; try { d = await API.valuation({ location_id: user.location_id }); } catch(e) { return; }
   const el = document.getElementById('valuation'); if (!el) return;
+  // Valuation/COGS is an owner/manager report; hide the card for stockroom.
+  if (user.role === 'stockroom') { const card = el.closest('.card'); if (card) card.style.display = 'none'; return; }
+  let d; try { d = await API.valuation({ location_id: user.location_id }); } catch(e) { return; }
   el.innerHTML = `
     <div style="font-size:26px;font-weight:800;color:var(--burgundy)">$${(d.total_value||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px">current stock value · consumed (30d): $${(d.consumed_cost||0).toFixed(2)}</div>
