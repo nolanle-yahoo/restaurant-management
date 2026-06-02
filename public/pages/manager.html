@@ -597,6 +597,23 @@
 </div>
 
 <!-- ── Add Employee Modal ── -->
+<div class="modal-overlay" id="certModal">
+  <div class="modal" style="width:460px">
+    <div class="modal-title" id="certTitle">Certifications</div>
+    <div id="certAlert" class="alert hidden"></div>
+    <div id="certList" style="margin-bottom:12px"></div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input id="certName" placeholder="Certification (e.g. Food Handler)" style="flex:1;min-width:160px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+      <label style="font-size:11px;color:var(--muted)">Issued <input id="certIssued" type="date" style="padding:6px;border:1.5px solid var(--border);border-radius:8px;font-size:12px"></label>
+      <label style="font-size:11px;color:var(--muted)">Expires <input id="certExpiry" type="date" style="padding:6px;border:1.5px solid var(--border);border-radius:8px;font-size:12px"></label>
+      <button class="btn btn-sm btn-primary" onclick="addCert()">+ Add</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-ghost" onclick="hideModal('certModal')">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="addEmpModal">
   <div class="modal" style="width:480px">
     <div class="modal-title">Add Employee</div>
