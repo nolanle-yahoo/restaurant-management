@@ -122,6 +122,23 @@ async function savePrefs() {
   catch(e){ alert(e.message); }
 }
 
+async function loadCards() {
+  const el = document.getElementById('cardList'); if (!el) return;
+  try {
+    const cards = await api('/account/cards');
+    el.innerHTML = cards.length ? cards.map(c => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 2px;border-bottom:1px solid var(--border)">
+        <span><b>${(c.brand||'card').toUpperCase()}</b> ••${c.last4} <span style="color:var(--muted);font-size:12px">exp ${String(c.exp_month).padStart(2,'0')}/${String(c.exp_year).slice(-2)}</span></span>
+        <button class="btn btn-ghost btn-sm" onclick="removeCard(${c.id})">Remove</button>
+      </div>`).join('') : '<p style="color:var(--muted);padding:10px">No saved cards yet.</p>';
+  } catch(e) { el.innerHTML = `<p style="color:var(--danger);padding:10px">${e.message}</p>`; }
+}
+async function removeCard(id) {
+  if (!confirm('Remove this saved card?')) return;
+  try { await api('/account/cards/' + id, { method:'DELETE' }); loadCards(); }
+  catch(e) { alert(e.message); }
+}
+
 async function render() {
   const ct = localStorage.getItem('ctoken');
   document.getElementById('authBox').classList.toggle('hidden', !!ct);
