@@ -1636,7 +1636,9 @@ function renderMgrFloorPlan(areasData, byAreaData, locId) {
       <div style="display:inline-flex;flex-direction:column;align-items:center;background:#fff;border:1.5px solid ${color};border-radius:10px;padding:8px 12px;min-width:72px">
         <div style="font-size:18px;font-weight:800;color:var(--charcoal)">T${t.table_number}</div>
         <div style="font-size:11px;color:var(--muted)">${t.capacity} seats</div>
+        <div style="font-size:10.5px;color:${t.assigned_to_name ? 'var(--burgundy)' : 'var(--muted)'};margin-top:2px">${t.assigned_to_name ? '👤 ' + t.assigned_to_name : 'unassigned'}</div>
         <div style="display:flex;gap:4px;margin-top:6px">
+          <button class="wh-btn" title="Assign staff" onclick="openMgrTableAssign(${t.id},${t.table_number},${t.assigned_to||'null'})">👤</button>
           <button class="wh-btn" onclick="openMgrTableModal(${t.id},${a.id||'null'})">✎</button>
           <button class="wh-btn" style="color:var(--danger)" onclick="deleteMgrTable(${t.id})">✕</button>
         </div>
