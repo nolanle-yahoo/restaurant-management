@@ -1721,6 +1721,25 @@ async function submitMgrAssign() {
   } catch(e) { showAlert('mgrAssignAlert', e.message); }
 }
 
+let mgrAssignTableId = null;
+async function openMgrTableAssign(tableId, tableNum, current) {
+  mgrAssignTableId = tableId;
+  document.getElementById('mgrTableAssignLabel').textContent = `Table ${tableNum}`;
+  document.getElementById('mgrTableAssignAlert').classList.add('hidden');
+  const emps = await API.employees(user.location_id);
+  document.getElementById('mgrTableAssignEmp').innerHTML = '<option value="">— unassigned —</option>' +
+    emps.filter(e => e.is_active).map(e => `<option value="${e.id}" ${e.id===current?'selected':''}>${e.name} (${e.role})</option>`).join('');
+  showModal('mgrTableAssignModal');
+}
+async function submitMgrTableAssign() {
+  const user_id = parseInt(document.getElementById('mgrTableAssignEmp').value) || null;
+  try {
+    await API.assignTable(mgrAssignTableId, user_id);
+    hideModal('mgrTableAssignModal');
+    loadMgrFloorPlan();
+  } catch(e) { showAlert('mgrTableAssignAlert', e.message); }
+}
+
 async function removeMgrAssignment(assignmentId) {
   await API.removeAssignment(assignmentId);
   loadMgrFloorPlan();
