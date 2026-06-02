@@ -86,7 +86,7 @@
 
   function getDestination(role, mobile) {
     if (mobile && MOBILE_ROLES.includes(role)) return '/pages/mobile.html';
-    const map = { owner:'owner', regional:'regional', manager:'manager', employee:'employee', frontdesk:'frontdesk', waiter:'waiter', chef:'chef', stockroom:'manager' };
+    const map = { owner:'owner', regional:'regional', manager:'manager', employee:'employee', frontdesk:'frontdesk', waiter:'waiter', chef:'chef', stockroom:'manager', driver:'driver' };
     return '/pages/' + (map[role] || 'employee') + '.html';
   }
 
