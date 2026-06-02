@@ -204,18 +204,18 @@ async function loadMySchedule() {
 
 async function offerSwap(shiftId) {
   if (!confirm('Offer this shift to colleagues at your location? A manager must approve once someone takes it.')) return;
-  try { await API.shiftSwapCreate({ shift_id: shiftId }); toast('Shift offered for swap'); loadMySchedule(); }
-  catch(e) { showToast ? showToast(e.message, 'error') : alert(e.message); }
+  try { await API.shiftSwapCreate({ shift_id: shiftId }); showToast('Shift offered for swap'); loadMySchedule(); }
+  catch(e) { showToast(e.message, 'error'); }
 }
 async function acceptSwap(id) {
   if (!confirm('Take this shift? Your manager will approve the swap.')) return;
-  try { await API.shiftSwapAccept(id); toast('Shift claimed — pending approval'); loadMySchedule(); }
-  catch(e) { showToast ? showToast(e.message, 'error') : alert(e.message); }
+  try { await API.shiftSwapAccept(id); showToast('Shift claimed — pending approval'); loadMySchedule(); }
+  catch(e) { showToast(e.message, 'error'); }
 }
 async function cancelSwap(id) {
   if (!confirm('Cancel this swap?')) return;
-  try { await API.shiftSwapCancel(id); toast('Swap cancelled'); loadMySchedule(); }
-  catch(e) { showToast ? showToast(e.message, 'error') : alert(e.message); }
+  try { await API.shiftSwapCancel(id); showToast('Swap cancelled'); loadMySchedule(); }
+  catch(e) { showToast(e.message, 'error'); }
 }
 
 async function loadMyPay() {
