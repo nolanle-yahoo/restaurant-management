@@ -50,7 +50,7 @@ function seed() {
   const insertUser = db.prepare(`INSERT INTO users (name, email, password_hash, role, location_id, hourly_rate) VALUES (?,?,?,?,?,?)`);
   const h = (pw) => bcrypt.hashSync(pw, 10);
 
-  insertUser.run('Alexandra Chen', 'owner@restaurant.com', h('owner123'), 'owner',     null, 0);
+  insertUser.run('Nolan Le',       'owner@restaurant.com', h('owner123'), 'owner',     null, 0);
   insertUser.run('Marco Rivera',   'manager@downtown.com', h('mgr123'),  'manager',   1, 25.00);
   insertUser.run('Priya Sharma',   'manager@uptown.com',   h('mgr123'),  'manager',   2, 25.00);
   insertUser.run('James Okafor',   'manager@airport.com',  h('mgr123'),  'manager',   3, 25.00);
