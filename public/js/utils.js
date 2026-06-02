@@ -26,6 +26,7 @@ function redirectByRole(role, mobile) {
     chef:      '/pages/chef.html',
     stockroom: '/pages/manager.html',
     regional:  '/pages/regional.html',
+    driver:    '/pages/driver.html',
   };
   location.href = map[role] || '/staff';
 }
