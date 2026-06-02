@@ -295,11 +295,26 @@ function seed() {
     ]},
   ];
 
+  // Central menu (template): location_id NULL. Locations link to it via central_id.
+  const insertCentralCat  = db.prepare(`INSERT INTO menu_categories (location_id, name, sort_order) VALUES (NULL,?,?)`);
+  const insertCentralItem = db.prepare(`INSERT INTO menu_items (category_id, location_id, name, description, price, sort_order) VALUES (?,NULL,?,?,?,?)`);
+  const insertLocCat  = db.prepare(`INSERT INTO menu_categories (location_id, central_id, name, sort_order) VALUES (?,?,?,?)`);
+  const insertLocItem = db.prepare(`INSERT INTO menu_items (category_id, location_id, central_id, name, description, price, sort_order) VALUES (?,?,?,?,?,?,?)`);
+
+  const centralCatId = {}, centralItemId = {};
+  menuTemplate.forEach(cat => {
+    const cc = insertCentralCat.run(cat.name, cat.sort);
+    centralCatId[cat.name] = cc.lastInsertRowid;
+    cat.items.forEach(([name, desc, price, sort]) => {
+      centralItemId[name] = insertCentralItem.run(cc.lastInsertRowid, name, desc, price, sort).lastInsertRowid;
+    });
+  });
+
   [1,2,3,4,5].forEach(locId => {
     menuTemplate.forEach(cat => {
-      const catRow = insertCat.run(locId, cat.name, cat.sort);
+      const catRow = insertLocCat.run(locId, centralCatId[cat.name], cat.name, cat.sort);
       cat.items.forEach(([name, desc, price, sort]) => {
-        insertMenuItem.run(catRow.lastInsertRowid, locId, name, desc, price, sort);
+        insertLocItem.run(catRow.lastInsertRowid, locId, centralItemId[name], name, desc, price, sort);
       });
     });
   });
