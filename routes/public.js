@@ -200,6 +200,7 @@ router.post('/order', orderLimiter, (req, res) => {
 
   // Deplete inventory (no req.user → logged with null actor) and alert staff.
   depleteForOrder({}, orderId, Number(location_id));
+  if (type === 'delivery') { try { db.prepare(`INSERT OR IGNORE INTO deliveries (order_id, location_id, status) VALUES (?,?,'pending')`).run(orderId, location_id); } catch {} }
   if (tableRow) {
     db.prepare(`UPDATE tables SET status='ordered' WHERE id=?`).run(tableRow.id);
     broadcast('table_update', { table_id: tableRow.id, status: 'ordered', location_id: Number(location_id) }, location_id);
