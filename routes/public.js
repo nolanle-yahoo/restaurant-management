@@ -101,6 +101,9 @@ router.post('/reservations', bookingLimiter, (req, res) => {
       `Check status or cancel anytime at:\n${(process.env.ALLOWED_ORIGIN||'http://localhost:3000')}/reserve-lookup.html\n\nThank you!`,
       'reservation_request');
   }
+  if (guest_phone) {
+    sendSMS(guest_phone, `${locName}: reservation request for ${reservation_date} ${reservation_time}, party of ${size}. Code ${code} — we'll confirm shortly.`, 'reservation');
+  }
 
   broadcast('reservation_update', { location_id: Number(location_id) }, location_id);
   res.json({ success: true, id: r.lastInsertRowid, confirmation_code: code,
