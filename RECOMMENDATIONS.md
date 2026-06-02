@@ -102,7 +102,7 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 29. **Broadcast announcements** (manager/owner → staff). *M*
 30. **Reservation reminders** + real-time availability + **waitlist** (R9). *M*
 31. ✅ **DONE (v1.23.0)** — **Regional grouping + regional-manager role + cross-location staff lending**: owners group locations into regions, promote a region-scoped `regional` manager with a KPI overview, and lend/return staff between locations.
-32. **Central menu with per-location overrides**. *M*
+32. ✅ **DONE (v1.24.0)** — **Central menu with per-location overrides**: one owner-managed template, "apply to all locations" sync, protected price overrides, and reset-to-central.
 33. **2FA for owner/manager** (R7). *M* — security-critical
 34. **Inventory valuation & COGS** reporting. *M*
 
