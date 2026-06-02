@@ -468,6 +468,12 @@ function createSchema() {
   try { db.exec(`ALTER TABLE order_items ADD COLUMN course TEXT`); } catch {}
   try { db.exec(`ALTER TABLE inventory ADD COLUMN sku TEXT`); } catch {}
   try { db.exec(`ALTER TABLE inventory ADD COLUMN unit_cost REAL NOT NULL DEFAULT 0`); } catch {}
+  // Central menu with per-location overrides: location rows link to a central
+  // (location_id IS NULL) template via central_id; price_overridden=1 protects a
+  // locally-edited price from being reset on the next central sync.
+  try { db.exec(`ALTER TABLE menu_categories ADD COLUMN central_id INTEGER REFERENCES menu_categories(id)`); } catch {}
+  try { db.exec(`ALTER TABLE menu_items ADD COLUMN central_id INTEGER REFERENCES menu_items(id)`); } catch {}
+  try { db.exec(`ALTER TABLE menu_items ADD COLUMN price_overridden INTEGER NOT NULL DEFAULT 0`); } catch {}
   // Regions & cross-location staff lending.
   try { db.exec(`ALTER TABLE locations ADD COLUMN region_id INTEGER REFERENCES regions(id)`); } catch {}
   try { db.exec(`ALTER TABLE users ADD COLUMN region_id INTEGER REFERENCES regions(id)`); } catch {}
