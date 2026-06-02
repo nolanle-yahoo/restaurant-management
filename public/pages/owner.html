@@ -498,6 +498,41 @@
         </div>
       </section>
 
+      <!-- ── Schedule ──────────────────────────────────── -->
+      <section id="sec-schedule" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Weekly Schedule — <span id="ownerSchedWeekLabel"></span></div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select id="ownerSchedLoc" onchange="ownerSchedWeek(0)" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px"></select>
+              <button class="btn btn-ghost btn-sm" onclick="ownerSchedWeek(-1)">‹ Prev</button>
+              <button class="btn btn-ghost btn-sm" onclick="ownerSchedWeek(0)">This week</button>
+              <button class="btn btn-ghost btn-sm" onclick="ownerSchedWeek(1)">Next ›</button>
+              <button class="btn btn-primary btn-sm" onclick="openOwnerShiftModal()">+ Add Shift</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto"><div class="sched-grid" id="ownerSchedGrid"></div></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Shift Modal (owner) ────────────────────── -->
+<div class="modal-overlay" id="ownerShiftModal">
+  <div class="modal">
+    <div class="modal-title">Add Shift</div>
+    <div id="ownerShiftAlert" class="alert hidden"></div>
+    <div class="form-group"><label>Employee *</label><select id="ownerShiftEmp" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px"></select></div>
+    <div class="form-group"><label>Date *</label><input id="ownerShiftDate" type="date" style="width:100%"></div>
+    <div style="display:flex;gap:10px">
+      <div class="form-group" style="flex:1"><label>Start *</label><input id="ownerShiftStart" type="time" value="09:00" style="width:100%"></div>
+      <div class="form-group" style="flex:1"><label>End *</label><input id="ownerShiftEnd" type="time" value="17:00" style="width:100%"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="submitOwnerShift()">Add Shift</button>
+      <button class="btn btn-ghost" onclick="hideModal('ownerShiftModal')">Cancel</button>
     </div>
   </div>
 </div>
