@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const db = require('../db/database');
 const { broadcast, notify } = require('../lib/ws');
 const { sendEmail } = require('../lib/email');
+const { sendSMS } = require('../lib/sms');
 const { depleteForOrder } = require('../lib/recipes');
 const { getRates } = require('../lib/settings');
 const stripeLib = require('../lib/stripe');
