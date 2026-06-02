@@ -143,6 +143,58 @@ router.post('/reservations/cancel', (req, res) => {
   res.json({ success: true, message: 'Your reservation has been cancelled.' });
 });
 
+// ── Self-service waitlist (virtual queue) ──────────────────────────
+const PER_PARTY_MIN = 12; // rough per-party turnover estimate for ETA
+function waitPosition(row) {
+  if (row.status !== 'waiting') return { position: null, estimated_wait: null };
+  const ahead = db.prepare(`SELECT COUNT(*) c FROM waitlist WHERE location_id=? AND status='waiting' AND created_at < ?`).get(row.location_id, row.created_at).c;
+  const position = ahead + 1;
+  const estimated_wait = row.quoted_minutes != null ? row.quoted_minutes : position * PER_PARTY_MIN;
+  return { position, estimated_wait };
+}
+
+// Join the queue online.
+router.post('/waitlist', bookingLimiter, (req, res) => {
+  const { location_id, guest_name, party_size, phone } = req.body;
+  if (!location_id || !guest_name) return res.status(400).json({ error: 'Location and your name are required.' });
+  const loc = db.prepare(`SELECT id FROM locations WHERE id=? AND status='active'`).get(location_id);
+  if (!loc) return res.status(404).json({ error: 'Location not found' });
+  const size = Math.max(1, Math.min(50, parseInt(party_size) || 2));
+  const code = makeCode('WL');
+  const r = db.prepare(`INSERT INTO waitlist (location_id, guest_name, party_size, phone, public_code) VALUES (?,?,?,?,?)`)
+    .run(location_id, String(guest_name).slice(0, 120), size, phone || null, code);
+  broadcast('waitlist_update', { location_id: Number(location_id) }, location_id);
+  const row = db.prepare(`SELECT * FROM waitlist WHERE id=?`).get(r.lastInsertRowid);
+  const pos = waitPosition(row);
+  const locName = (db.prepare(`SELECT name FROM locations WHERE id=?`).get(location_id) || {}).name || 'our restaurant';
+  tg.sendTelegram(`⏳ New waitlist join — ${guest_name} (party of ${size}) at ${locName}, currently #${pos.position}`, 'waitlist');
+  res.json({ success: true, public_code: code, position: pos.position, estimated_wait: pos.estimated_wait, party_size: size });
+});
+
+// Live status by code (guest polls this).
+router.get('/waitlist', (req, res) => {
+  const code = (req.query.code || '').toString().trim().toUpperCase();
+  if (!code) return res.status(400).json({ error: 'Code required' });
+  const row = db.prepare(`SELECT w.*, l.name AS location_name FROM waitlist w JOIN locations l ON w.location_id=l.id WHERE w.public_code=?`).get(code);
+  if (!row) return res.status(404).json({ error: 'No waitlist entry for that code.' });
+  const pos = waitPosition(row);
+  res.json({ status: row.status, ready: !!row.notified_at, party_size: row.party_size,
+             guest_name: row.guest_name, location_name: row.location_name,
+             position: pos.position, estimated_wait: pos.estimated_wait });
+});
+
+// Leave the queue.
+router.post('/waitlist/cancel', (req, res) => {
+  const code = (req.body.code || '').toString().trim().toUpperCase();
+  const row = db.prepare(`SELECT * FROM waitlist WHERE public_code=?`).get(code);
+  if (!row) return res.status(404).json({ error: 'No waitlist entry for that code.' });
+  if (row.status === 'waiting') {
+    db.prepare(`UPDATE waitlist SET status='left' WHERE id=?`).run(row.id);
+    broadcast('waitlist_update', { location_id: row.location_id }, row.location_id);
+  }
+  res.json({ success: true });
+});
+
 // ── Online ordering (pickup / delivery), pay on collection ──────────
 const orderLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
