@@ -758,7 +758,7 @@ if (user) {
   document.getElementById('invLocName').textContent = user.location_name || '';
 }
 liveClock('topbarTime');
-['orderModal','transferModal','trUpdateModal','addEmpModal','mgrTableModal','mgrAssignModal','toReviewModal'].forEach(id => onModalOverlayClick(id));
+['orderModal','transferModal','trUpdateModal','addEmpModal','mgrTableModal','mgrAssignModal','mgrTableAssignModal','toReviewModal'].forEach(id => onModalOverlayClick(id));
 
 // Live updates + operational toasts (order-ready, help, low-stock, new online orders).
 if (user) connectWebSocket(user.location_id, { order_update: () => loadOnlineOrders() });
