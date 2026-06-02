@@ -685,6 +685,7 @@ to scope their subscription. The server broadcasts:
 |---|---|
 | `order_update` | Order created or status changed. |
 | `notify` | Operational alert (order-ready, needs-help, low-stock, new online order, reservation reminder); client shows a role-targeted toast. |
+| `waitlist_update` | A walk-in waitlist entry was added or updated. |
 | `table_update` | Table status changed. |
 | `reservation_update` | Reservation created or updated. |
 
