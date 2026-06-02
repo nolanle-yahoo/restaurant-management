@@ -7,6 +7,7 @@ const db = require('../db/database');
 const { verifyToken, requireRole } = require('../middleware/auth');
 const { auditLog } = require('../lib/audit');
 const { broadcast, notify } = require('../lib/ws');
+const { sendSMS } = require('../lib/sms');
 
 const router = express.Router();
 router.use(verifyToken);
