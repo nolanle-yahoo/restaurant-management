@@ -944,8 +944,11 @@ colleague), a colleague claims it, and an owner/manager approves the reassignmen
 **Delivered in 1.22.0:** **expiry / lot (FIFO) tracking** — dated receiving lots, FIFO
 consumption, an "Expiring Soon" panel, and lot discard-to-waste.
 
-**Remaining:** regional-manager role & cross-location staff lending; **central menu with
-per-location overrides** and **2FA** (the two larger items).
+**Delivered in 1.23.0:** **regions, a regional-manager role, and cross-location staff lending**
+— group locations into regions, a region-scoped overview dashboard, and lend/return staff
+between locations.
+
+**Remaining:** **central menu with per-location overrides** and **2FA** (the two larger items).
 
 **Tier 4 — High impact:** par levels + auto-reorder; executive multi-location dashboard &
 benchmarking; demand-based scheduling; finance/accounting integration. *(Configurable
