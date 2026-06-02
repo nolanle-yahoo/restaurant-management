@@ -133,6 +133,40 @@ function _injectAccountSettingsModal() {
         <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Your upcoming shifts.</div>
         <div id="myScheduleInfo" style="font-size:14px">Loading…</div>
       </div>
+      <div id="tabMessage" class="tab-pane">
+        <div id="msgAlert" class="alert hidden"></div>
+        <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Send a comment or question to your manager or the owner.</div>
+        <div class="form-group"><label>To</label>
+          <select id="msgRecipient" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px">
+            <option value="manager">My Manager</option>
+            <option value="owner">Owner</option>
+            <option value="both">Manager &amp; Owner</option>
+          </select></div>
+        <div class="form-group"><label>Subject</label><input id="msgSubject" placeholder="Subject"></div>
+        <div class="form-group"><label>Message</label><textarea id="msgBody" rows="3" placeholder="Your message…" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;resize:vertical"></textarea></div>
+        <button class="btn btn-primary" onclick="sendStaffMessage()">Send</button>
+        <div style="font-size:12px;color:var(--muted);margin:16px 0 6px;font-weight:700">Your messages</div>
+        <div id="myMessagesInfo" style="font-size:13px">Loading…</div>
+      </div>
+      <div id="tabTimeOff" class="tab-pane">
+        <div id="toAlert" class="alert hidden"></div>
+        <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Request time off. Your manager or the owner reviews it.</div>
+        <div class="form-group"><label>Type</label>
+          <select id="toType" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px">
+            <option value="vacation">Vacation</option>
+            <option value="sick">Sick</option>
+            <option value="personal">Personal</option>
+            <option value="other">Other</option>
+          </select></div>
+        <div style="display:flex;gap:10px">
+          <div class="form-group" style="flex:1"><label>Start</label><input id="toStart" type="date" style="width:100%"></div>
+          <div class="form-group" style="flex:1"><label>End</label><input id="toEnd" type="date" style="width:100%"></div>
+        </div>
+        <div class="form-group"><label>Reason (optional)</label><input id="toReason" placeholder="e.g., family event"></div>
+        <button class="btn btn-primary" onclick="submitStaffTimeOff()">Request</button>
+        <div style="font-size:12px;color:var(--muted);margin:16px 0 6px;font-weight:700">Your requests</div>
+        <div id="myTimeOffInfo" style="font-size:13px">Loading…</div>
+      </div>
       <div id="tabPassword" class="tab-pane">
         <div id="pwAlert" class="alert hidden"></div>
         <div class="form-group"><label>Current Password</label><input id="currentPw" type="password" placeholder="••••••••"></div>
