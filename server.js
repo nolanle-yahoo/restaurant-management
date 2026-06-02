@@ -47,6 +47,7 @@ app.use('/api/feedback',     require('./routes/feedback'));
 app.use('/api/waitlist',     require('./routes/waitlist'));
 app.use('/api/schedules',    require('./routes/schedules'));
 app.use('/api/shift-swaps',  require('./routes/shift-swaps'));
+app.use('/api/regions',      require('./routes/regions'));
 app.use('/api/public',       require('./routes/public'));
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
