@@ -27,6 +27,7 @@
 > ✅ **Delivered in v1.20.0:** **staff scheduling** (weekly editor + My Schedule) — unblocks shift swapping.
 > ✅ **Delivered in v1.21.0:** **shift swapping** (offer → claim → owner/manager approval).
 > ✅ **Delivered in v1.22.0:** **expiry / lot (FIFO) tracking** (dated lots, FIFO use, expiring-soon panel, discard-to-waste).
+> ✅ **Delivered in v1.23.0:** **regions + regional-manager role + cross-location staff lending**.
 
 Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
 from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
