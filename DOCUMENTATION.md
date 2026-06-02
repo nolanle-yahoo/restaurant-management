@@ -635,6 +635,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | Method | Path | Access | Description |
 |---|---|---|---|
 | GET | `/` | Owner, Manager | Sales analytics for a date range: KPIs (revenue, paid orders, avg ticket, tips), revenue by day, payment-method split, top-selling items, and revenue by location (owner, all-locations view). Managers are scoped to their own location. |
+| GET | `/staff` | Owner, Manager | Per-employee performance (orders, sales, avg ticket, tips) for a range. |
 
 ### Settings — `/api/settings`
 | Method | Path | Access | Description |
