@@ -252,6 +252,15 @@ function createSchema() {
       updated_at TEXT DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS sms_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      to_number TEXT,
+      body TEXT,
+      category TEXT,
+      status TEXT NOT NULL DEFAULT 'sent' CHECK(status IN ('sent','simulated','failed')),
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS email_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       to_email TEXT,
