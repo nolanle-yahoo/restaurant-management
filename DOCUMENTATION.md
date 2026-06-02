@@ -961,7 +961,10 @@ consumption, an "Expiring Soon" panel, and lot discard-to-waste.
 — group locations into regions, a region-scoped overview dashboard, and lend/return staff
 between locations.
 
-**Remaining:** **central menu with per-location overrides** and **2FA** (the two larger items).
+**Delivered in 1.24.0:** **central menu with per-location overrides** — a single owner-managed
+template, one-click "apply to locations", protected price overrides, and reset-to-central.
+
+**Remaining:** **2FA for owner/manager** — the last larger item.
 
 **Tier 4 — High impact:** par levels + auto-reorder; executive multi-location dashboard &
 benchmarking; demand-based scheduling; finance/accounting integration. *(Configurable
