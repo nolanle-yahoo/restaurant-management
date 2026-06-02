@@ -766,6 +766,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/order` | Public | Track an online order by tracking code (status + items). |
 | POST | `/account/register` · `/account/login` | Public (rate-limited) | Customer sign-up / sign-in; returns a customer JWT. |
 | GET | `/account/me` · `/account/orders` · `/account/loyalty` | Customer | Profile, order history, and points + ledger. |
+| GET · DELETE | `/account/cards[/:id]` | Customer | List or remove saved payment cards (brand/last4/expiry only). |
 | PUT | `/account/preferences` | Customer | Toggle marketing opt-in. |
 | POST | `/unsubscribe` | Public | One-click unsubscribe via emailed token. |
 | POST | `/feedback` | Public (rate-limited) | Submit a 1–5 rating + comment for a receipt code. |
