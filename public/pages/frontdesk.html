@@ -197,6 +197,7 @@ async function addToWaitlist() {
   } catch(e) { showAlert('wlAlert', e.message); }
 }
 async function waitlistSet(id, status) { try { await API.waitlistUpdate(id, status); loadWaitlist(); } catch(e) { alert(e.message); } }
+async function waitlistNotify(id) { try { await API.waitlistNotify(id); loadWaitlist(); } catch(e) { alert(e.message); } }
 
 function setFilter(status, btn) {
   filterStatus = status;
