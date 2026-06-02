@@ -735,6 +735,19 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="mgrTableAssignModal">
+  <div class="modal" style="width:400px">
+    <div class="modal-title">Assign Table to Staff</div>
+    <p id="mgrTableAssignLabel" style="color:var(--muted);font-size:13px;margin-bottom:14px"></p>
+    <div id="mgrTableAssignAlert" class="alert hidden"></div>
+    <div class="form-group"><label>Staff member</label><select id="mgrTableAssignEmp"><option value="">— unassigned —</option></select></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" onclick="submitMgrTableAssign()">Save</button>
+      <button class="btn btn-ghost" onclick="hideModal('mgrTableAssignModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script>
