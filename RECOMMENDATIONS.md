@@ -129,8 +129,11 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
     tracking, server-priced, kitchen-integrated, manager fulfillment panel.
 46. ✅ **DONE (v1.29.0)** — **Online prepayment + tipping (Stripe)**: card prepay at checkout with
     tip presets/custom and a full breakdown; two-step intent→confirm flow creates the paid order
-    only after payment succeeds (idempotent, amount-verified); simulated without keys. *(Delivery
-    dispatch/driver tracking remains a follow-up.)*
+    only after payment succeeds (idempotent, amount-verified); simulated without keys.
+47. ✅ **DONE (v1.30.0)** — **Apple Pay / Google Pay + saved cards**: checkout uses the Stripe
+    Payment Element (auto-offers wallets on supported devices); signed-in customers can save a
+    card (Stripe Customer; only brand/last4/expiry stored locally) and reuse it off-session, or
+    manage cards under My Account. *(Delivery dispatch/driver tracking remains a follow-up.)*
 
 ---
 
