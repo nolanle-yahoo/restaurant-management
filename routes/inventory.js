@@ -360,11 +360,77 @@ router.post('/receive', requireRole('owner','manager','stockroom'), (req, res) =
   if (req.user.role !== 'owner' && item.location_id !== req.user.location_id) return res.status(403).json({ error: 'Not your location.' });
   const qty = Math.max(0, parseFloat(req.body.quantity) || 0);
   if (qty <= 0) return res.status(400).json({ error: 'Quantity must be greater than 0.' });
+  const expiry = (req.body.expiry_date || '').toString().trim() || null;
+  if (expiry && !/^\d{4}-\d{2}-\d{2}$/.test(expiry)) return res.status(400).json({ error: 'Expiry date must be YYYY-MM-DD.' });
+  const lotCode = (req.body.lot_code || '').toString().trim().slice(0, 60) || null;
   db.prepare(`UPDATE inventory SET quantity=quantity+?, last_updated=datetime('now') WHERE id=?`).run(qty, item.id);
+  receiveLot({ item_id: item.id, location_id: item.location_id, quantity: qty, unit_cost: item.unit_cost || 0, expiry_date: expiry, lot_code: lotCode, user_id: req.user.id });
   db.prepare(`INSERT INTO inventory_transactions (item_id, to_location_id, quantity, type, user_id, notes) VALUES (?,?,?,'in',?,?)`)
-    .run(item.id, item.location_id, qty, req.user.id, 'Received (scan)');
-  auditLog(req, 'stock_received', 'inventory', item.id, { item: item.item_name, quantity: qty, sku: item.sku });
+    .run(item.id, item.location_id, qty, req.user.id, expiry ? `Received (scan), exp ${expiry}` : 'Received (scan)');
+  auditLog(req, 'stock_received', 'inventory', item.id, { item: item.item_name, quantity: qty, sku: item.sku, expiry_date: expiry, lot_code: lotCode });
   res.json({ success: true, item_name: item.item_name, new_quantity: Math.round((item.quantity + qty) * 1000) / 1000 });
+});
+
+// ── Lots & expiry (FIFO) ───────────────────────────────────
+// Active lots (remaining > 0), earliest expiry first.
+router.get('/lots', requireRole('owner','manager','stockroom','chef'), (req, res) => {
+  const locId = req.user.role === 'owner' ? (req.query.location_id || null) : req.user.location_id;
+  const conds = ['lo.quantity > 0'];
+  const args = [];
+  if (locId)            { conds.push('lo.location_id=?'); args.push(locId); }
+  if (req.query.item_id){ conds.push('lo.item_id=?');     args.push(req.query.item_id); }
+  const rows = db.prepare(`
+    SELECT lo.*, i.item_name, i.unit, l.name AS location_name
+    FROM inventory_lots lo
+    JOIN inventory i ON lo.item_id=i.id
+    LEFT JOIN locations l ON lo.location_id=l.id
+    WHERE ${conds.join(' AND ')}
+    ORDER BY (lo.expiry_date IS NULL), lo.expiry_date ASC, lo.received_at ASC
+    LIMIT 300
+  `).all(...args);
+  res.json(rows);
+});
+
+// Lots expiring within `days` (default 7), including already-expired ones.
+router.get('/expiring', requireRole('owner','manager','stockroom','chef'), (req, res) => {
+  const locId = req.user.role === 'owner' ? (req.query.location_id || null) : req.user.location_id;
+  const days = Math.max(0, parseInt(req.query.days) || 7);
+  const conds = ['lo.quantity > 0', 'lo.expiry_date IS NOT NULL', `date(lo.expiry_date) <= date('now', '+' || ? || ' days')`];
+  const args = [days];
+  if (locId) { conds.push('lo.location_id=?'); args.push(locId); }
+  const rows = db.prepare(`
+    SELECT lo.*, i.item_name, i.unit, l.name AS location_name,
+           CAST(julianday(lo.expiry_date) - julianday(date('now')) AS INTEGER) AS days_left
+    FROM inventory_lots lo
+    JOIN inventory i ON lo.item_id=i.id
+    LEFT JOIN locations l ON lo.location_id=l.id
+    WHERE ${conds.join(' AND ')}
+    ORDER BY lo.expiry_date ASC
+    LIMIT 300
+  `).all(...args);
+  const expired = rows.filter(r => r.days_left < 0).length;
+  res.json({ days, expired, soon: rows.length - expired, lots: rows });
+});
+
+// Discard a lot (e.g., expired): write it off as waste and reduce stock by what remains.
+router.post('/lots/:id/discard', requireRole('owner','manager','stockroom','chef'), (req, res) => {
+  const lot = db.prepare(`SELECT * FROM inventory_lots WHERE id=?`).get(req.params.id);
+  if (!lot) return res.status(404).json({ error: 'Lot not found' });
+  if (req.user.role !== 'owner' && lot.location_id !== req.user.location_id) return res.status(403).json({ error: 'Not your location.' });
+  if (lot.quantity <= 0) return res.status(409).json({ error: 'Lot is already empty.' });
+  const item = db.prepare(`SELECT * FROM inventory WHERE id=?`).get(lot.item_id);
+  const qty = lot.quantity;
+  const reason = (req.body.reason || 'Expired').toString().slice(0, 200);
+  db.exec('BEGIN');
+  try {
+    db.prepare(`UPDATE inventory_lots SET quantity=0, depleted_at=datetime('now') WHERE id=?`).run(lot.id);
+    db.prepare(`UPDATE inventory SET quantity=MAX(0, quantity-?), last_updated=datetime('now') WHERE id=?`).run(qty, lot.item_id);
+    db.prepare(`INSERT INTO waste_log (item_id, location_id, quantity, reason, user_id) VALUES (?,?,?,?,?)`).run(lot.item_id, lot.location_id, qty, reason, req.user.id);
+    db.prepare(`INSERT INTO inventory_transactions (item_id, from_location_id, quantity, type, user_id, notes) VALUES (?,?,?,'out',?,?)`).run(lot.item_id, lot.location_id, qty, req.user.id, `Discard lot${lot.lot_code ? ' ' + lot.lot_code : ''}: ${reason}`);
+    db.exec('COMMIT');
+  } catch (e) { db.exec('ROLLBACK'); throw e; }
+  auditLog(req, 'lot_discarded', 'inventory', lot.item_id, { lot_id: lot.id, item: item?.item_name, quantity: qty, reason });
+  res.json({ success: true });
 });
 
 // ── Inventory valuation & COGS ─────────────────────────────
