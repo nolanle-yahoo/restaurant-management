@@ -137,6 +137,9 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 48. ✅ **DONE (v1.31.0)** — **Delivery dispatch + driver tracking**: `driver` role + app, manager
     dispatch board with ETA, driver status updates + live GPS sharing, and a customer
     live-tracking timeline + map.
+49. ✅ **DONE (v1.32.0)** — **SMS notifications (Twilio)**: order received, payment received,
+    ready-for-pickup, delivery on-the-way/delivered, and reservation request texts; simulated
+    (sms_log) without keys.
 
 ---
 
