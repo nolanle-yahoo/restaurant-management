@@ -87,4 +87,28 @@ router.get('/', (req, res) => {
   res.json({ start, end, location_id: locId, kpis, by_day: byDay, by_method: byMethod, top_items: topItems, by_location: byLocation });
 });
 
+// Per-employee performance (the server who settled each paid order).
+router.get('/staff', (req, res) => {
+  const locId = scope(req);
+  const end   = req.query.end   || new Date().toISOString().slice(0, 10);
+  const start = req.query.start || new Date(Date.now() - 29 * 864e5).toISOString().slice(0, 10);
+  const locCond = locId ? 'AND p.location_id = ?' : '';
+  const args = [start, end, ...(locId ? [locId] : [])];
+  const rows = db.prepare(`
+    SELECT u.id, u.name, u.role,
+           COUNT(*)                       AS orders,
+           ROUND(SUM(p.subtotal),2)       AS sales,
+           ROUND(SUM(p.tip),2)            AS tips,
+           ROUND(SUM(p.total),2)          AS revenue,
+           ROUND(AVG(p.total),2)          AS avg_ticket
+    FROM payments p
+    JOIN users u ON p.waiter_id = u.id
+    WHERE p.status='paid' AND p.waiter_id IS NOT NULL
+      AND date(p.created_at) >= ? AND date(p.created_at) <= ? ${locCond}
+    GROUP BY u.id
+    ORDER BY revenue DESC
+  `).all(...args);
+  res.json({ start, end, staff: rows });
+});
+
 module.exports = router;
