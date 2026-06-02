@@ -962,7 +962,34 @@ async function loadSchedule() {
     });
   });
   document.getElementById('schedGrid').innerHTML = html;
+  loadSwaps();
 }
+
+async function loadSwaps() {
+  const el = document.getElementById('swapList'); if (!el) return;
+  try {
+    const swaps = await API.shiftSwaps({ location_id: user.location_id });
+    const active = swaps.filter(s => s.status === 'open' || s.status === 'accepted');
+    if (!active.length) { el.innerHTML = '<p class="text-muted" style="padding:10px 4px">No pending shift swaps.</p>'; return; }
+    const fmt = wd => new Date(wd + 'T00:00:00').toLocaleDateString([], { weekday:'short', month:'short', day:'numeric' });
+    el.innerHTML = active.map(s => {
+      const who = s.status === 'accepted'
+        ? `<b>${s.requester_name}</b> → <b>${s.accepted_by_name}</b>`
+        : `<b>${s.requester_name}</b> offered${s.target_name ? ` to <b>${s.target_name}</b>` : ' (open)'}`;
+      const actions = s.status === 'accepted'
+        ? `<button class="btn btn-primary btn-sm" onclick="approveSwap(${s.id})">Approve</button>
+           <button class="btn btn-ghost btn-sm" onclick="rejectSwap(${s.id})">Reject</button>`
+        : `<button class="btn btn-ghost btn-sm" onclick="rejectSwap(${s.id})">Reject</button>`;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px solid var(--border)">
+        <span>${fmt(s.work_date)} <b>${s.shift_start}–${s.shift_end}</b> · ${who}
+          <span class="text-sm text-muted">(${s.status})</span></span>
+        <span style="display:flex;gap:6px">${actions}</span></div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = `<p style="color:var(--danger);padding:10px 4px">${e.message}</p>`; }
+}
+async function approveSwap(id) { try { await API.shiftSwapApprove(id); loadSchedule(); } catch(e) { alert(e.message); } }
+async function rejectSwap(id)  { if(!confirm('Reject this swap?'))return; try { await API.shiftSwapReject(id); loadSwaps(); } catch(e) { alert(e.message); } }
+
 function openShiftModal() {
   document.getElementById('shiftAlert').classList.add('hidden');
   document.getElementById('shiftEmp').innerHTML = schedEmps.map(e => `<option value="${e.id}">${e.name} (${e.role})</option>`).join('');
