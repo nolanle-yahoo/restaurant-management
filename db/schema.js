@@ -419,6 +419,27 @@ function createSchema() {
       depleted_at TEXT
     );
 
+    -- Delivery dispatch + driver tracking for delivery orders. One row per delivery
+    -- order, with its own lifecycle (separate from the kitchen order status) and the
+    -- assigned driver's latest location for live tracking.
+    CREATE TABLE IF NOT EXISTS deliveries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id INTEGER NOT NULL REFERENCES orders(id),
+      location_id INTEGER REFERENCES locations(id),
+      driver_id INTEGER REFERENCES users(id),
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','assigned','picked_up','delivered','failed')),
+      eta_minutes INTEGER,
+      driver_lat REAL,
+      driver_lng REAL,
+      location_updated_at TEXT,
+      notes TEXT,
+      assigned_at TEXT,
+      picked_up_at TEXT,
+      delivered_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(order_id)
+    );
+
     -- Cross-location staff lending: temporarily reassign a staff member to another
     -- location. While active the user's location_id points to the borrowing location;
     -- returning restores their home_location_id.
