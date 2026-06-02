@@ -547,7 +547,7 @@ function createSchema() {
           name TEXT NOT NULL,
           email TEXT UNIQUE NOT NULL,
           password_hash TEXT NOT NULL,
-          role TEXT NOT NULL CHECK(role IN ('owner','regional','manager','stockroom','employee','frontdesk','waiter','chef')),
+          role TEXT NOT NULL CHECK(role IN ('owner','regional','manager','stockroom','employee','frontdesk','waiter','chef','driver')),
           location_id INTEGER REFERENCES locations(id),
           hourly_rate REAL DEFAULT 0,
           is_active INTEGER DEFAULT 1,
