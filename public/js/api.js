@@ -18,7 +18,7 @@ const API = {
     if (res.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      location.href = '/';
+      location.href = '/staff';
       return;
     }
     const data = await res.json();
