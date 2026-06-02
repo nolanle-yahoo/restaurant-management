@@ -221,6 +221,124 @@ router.post('/order', orderLimiter, (req, res) => {
              message: `Order placed! Your tracking code is ${code}.` });
 });
 
+// ── Online prepayment (Stripe) + tipping ───────────────────
+// Tells the client whether real card collection is available and the publishable key.
+router.get('/pay-config', (req, res) => {
+  res.json({ stripe_enabled: stripeLib.enabled, publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || null });
+});
+
+// Validate + server-price an online (pickup/delivery) cart and return the amount
+// breakdown including a clamped tip. Shared by /order/intent and /order/confirm.
+function priceOnlineOrder(body) {
+  const type = ['delivery', 'pickup'].includes(body.order_type) ? body.order_type : 'pickup';
+  if (!body.location_id || !Array.isArray(body.items) || !body.items.length) return { error: 'Location and at least one item are required.' };
+  const loc = db.prepare(`SELECT id FROM locations WHERE id=? AND status='active'`).get(body.location_id);
+  if (!loc) return { error: 'Location not found' };
+  if (!body.customer_name || !body.customer_phone) return { error: 'Your name and phone are required.' };
+  if (type === 'delivery' && !body.delivery_address) return { error: 'A delivery address is required for delivery orders.' };
+  const lookup = db.prepare(`SELECT id, name, price FROM menu_items WHERE id=? AND location_id=? AND is_available=1`);
+  const resolved = [];
+  for (const it of body.items) {
+    const mi = lookup.get(it.id, body.location_id);
+    if (!mi) return { error: 'One or more items are unavailable. Please refresh the menu.' };
+    resolved.push({ name: mi.name, price: mi.price, quantity: Math.max(1, Math.min(50, parseInt(it.quantity) || 1)) });
+  }
+  const subtotal = round2(resolved.reduce((s, i) => s + i.price * i.quantity, 0));
+  const { sales_tax_rate, service_charge_rate } = getRates();
+  const service = round2(subtotal * service_charge_rate);
+  const tax = round2((subtotal + service) * sales_tax_rate);
+  const tip = round2(Math.max(0, Math.min(1000, parseFloat(body.tip) || 0)));
+  const total = round2(subtotal + service + tax + tip);
+  return { type, resolved, subtotal, service, tax, tip, total };
+}
+
+// Step 1: create a PaymentIntent for the priced cart (no order created yet).
+router.post('/order/intent', orderLimiter, async (req, res) => {
+  const p = priceOnlineOrder(req.body);
+  if (p.error) return res.status(400).json({ error: p.error });
+  try {
+    const intent = await stripeLib.createIntent(Math.round(p.total * 100), { kind: 'online_order', location_id: String(req.body.location_id) });
+    res.json({
+      intent_id: intent.id, client_secret: intent.client_secret, simulated: !!intent.simulated,
+      publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || null,
+      breakdown: { subtotal: p.subtotal, service: p.service, tax: p.tax, tip: p.tip, total: p.total },
+    });
+  } catch (e) {
+    console.error('public intent error:', e.message);
+    res.status(502).json({ error: 'Could not start payment. Please try again.' });
+  }
+});
+
+// Step 2: after the card is confirmed client-side, verify the intent succeeded,
+// then create the (now paid) order and fire it to the kitchen.
+router.post('/order/confirm', orderLimiter, async (req, res) => {
+  const { intent_id } = req.body;
+  if (!intent_id) return res.status(400).json({ error: 'Missing payment reference.' });
+  const p = priceOnlineOrder(req.body);
+  if (p.error) return res.status(400).json({ error: p.error });
+
+  let pay;
+  try { pay = await stripeLib.retrieveIntent(intent_id); }
+  catch (e) { console.error('confirm retrieve error:', e.message); return res.status(502).json({ error: 'Could not verify payment.' }); }
+  if (pay.status !== 'succeeded') return res.status(402).json({ error: 'Payment was not completed.' });
+  // Real Stripe: the captured amount must match the order we are about to create.
+  if (pay.amount != null && pay.amount !== Math.round(p.total * 100)) {
+    return res.status(409).json({ error: 'Payment amount mismatch. Please start over.' });
+  }
+  // Guard against double-fulfilling the same intent.
+  if (db.prepare(`SELECT id FROM payments WHERE stripe_payment_intent_id=?`).get(intent_id)) {
+    return res.status(409).json({ error: 'This payment was already processed.' });
+  }
+
+  const { location_id, customer_name, customer_phone, customer_email, delivery_address, notes } = req.body;
+  const customerId = customerIdFromReq(req);
+  const code = makeCode('ORD');
+  const receiptCode = makeCode('RCT');
+  let orderId;
+  db.exec('BEGIN');
+  try {
+    const r = db.prepare(`
+      INSERT INTO orders (table_id, location_id, waiter_id, status, notes, order_type, customer_id, customer_name, customer_phone, customer_email, delivery_address, tracking_code)
+      VALUES (NULL, ?, NULL, 'pending', ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(location_id, notes ? String(notes).slice(0, 500) : null, p.type, customerId,
+           String(customer_name).slice(0, 120), String(customer_phone).slice(0, 40),
+           (customer_email || '').trim() || null, p.type === 'delivery' ? String(delivery_address).slice(0, 300) : null, code);
+    orderId = r.lastInsertRowid;
+    const ins = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price) VALUES (?,?,?,?)`);
+    p.resolved.forEach(i => ins.run(orderId, i.name, i.quantity, i.price));
+    db.prepare(`
+      INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, tip, total, method, status, stripe_payment_intent_id, receipt_code, receipt_email)
+      VALUES (?, ?, NULL, ?, ?, ?, ?, ?, 'card', 'paid', ?, ?, ?)
+    `).run(orderId, location_id, p.subtotal, p.service, p.tax, p.tip, p.total, intent_id, receiptCode, (customer_email || '').trim() || null);
+    if (customerId && p.subtotal > 0) awardCustomerPoints(customerId, Math.floor(p.subtotal), `Online order ${code}`);
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    console.error('confirm create error:', e.message);
+    return res.status(500).json({ error: 'Payment captured but the order failed to save. Please contact the restaurant with your code.' });
+  }
+
+  // Now that it's paid, fire to the kitchen.
+  depleteForOrder({}, orderId, Number(location_id));
+  const who = customer_name || 'Online';
+  notify(`New paid ${p.type} order — ${who} (${code})`, { locId: Number(location_id), roles: ['chef', 'manager', 'owner'], kind: 'online_order' });
+  broadcast('order_update', { type: 'new', order_id: orderId, location_id: Number(location_id) }, location_id);
+
+  const locName = (db.prepare(`SELECT name FROM locations WHERE id=?`).get(location_id) || {}).name || 'our restaurant';
+  if (customer_email) {
+    sendEmail(customer_email.trim(),
+      `Payment received — ${code}`,
+      `Hi ${customer_name},\n\nThanks for your ${p.type} order at ${locName}. Your payment was received.\n\n` +
+      p.resolved.map(i => `  ${i.name} x${i.quantity}  $${(i.price * i.quantity).toFixed(2)}`).join('\n') +
+      `\n\nSubtotal: $${p.subtotal.toFixed(2)}\nService: $${p.service.toFixed(2)}\nTax: $${p.tax.toFixed(2)}\nTip: $${p.tip.toFixed(2)}\nTotal paid: $${p.total.toFixed(2)}\n\n` +
+      `Tracking code: ${code}\nReceipt: ${(process.env.ALLOWED_ORIGIN || 'http://localhost:3000')}/receipt.html?code=${receiptCode}\n\nWe'll have it ready soon!`,
+      'online_order');
+  }
+
+  res.json({ success: true, paid: true, tracking_code: code, receipt_code: receiptCode,
+             breakdown: { subtotal: p.subtotal, service: p.service, tax: p.tax, tip: p.tip, total: p.total } });
+});
+
 // Track an online order by code (+ phone to verify).
 router.get('/order', (req, res) => {
   const { code, contact } = req.query;
