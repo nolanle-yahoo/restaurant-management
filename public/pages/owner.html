@@ -1886,6 +1886,17 @@ async function togglePerm(capability, role, allowed) {
   try { await API.setPermission({ capability, role, allowed }); } catch(e) { alert(e.message); loadPermissions(); }
 }
 
+// ── Staff performance ─────────────────────────────────────────
+async function loadStaffPerf() {
+  const params = { location_id: document.getElementById('anLocFilter')?.value || '', start: document.getElementById('anStart')?.value, end: document.getElementById('anEnd')?.value };
+  let d; try { d = await API.staffPerformance(params); } catch(e) { return; }
+  const el = document.getElementById('anStaffPerf'); if (!el) return;
+  el.innerHTML = d.staff.length ? `<table class="data-table"><thead><tr><th>Staff</th><th>Role</th><th>Orders</th><th>Sales</th><th>Avg Ticket</th><th>Tips</th></tr></thead><tbody>${
+    d.staff.map(s => `<tr><td class="fw-700">${s.name}</td><td style="text-transform:capitalize">${s.role}</td><td>${s.orders}</td>
+      <td style="color:var(--success);font-weight:700">${money(s.sales)}</td><td>${money(s.avg_ticket)}</td><td>${money(s.tips)}</td></tr>`).join('')
+  }</tbody></table>` : '<p style="color:var(--muted);padding:12px">No sales in this period.</p>';
+}
+
 // ── Guest feedback ────────────────────────────────────────────
 async function loadOwnerFeedback() {
   let d; try { d = await API.feedback(document.getElementById('anLocFilter')?.value || ''); } catch(e) { return; }
