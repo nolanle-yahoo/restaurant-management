@@ -272,15 +272,11 @@ router.post('/order/intent', orderLimiter, async (req, res) => {
   const meta = { kind: 'online_order', location_id: String(req.body.location_id) };
   const breakdown = { subtotal: p.subtotal, service: p.service, tax: p.tax, tip: p.tip, total: p.total };
   try {
+    // Saved card: no charge here — confirmed (charged) together with order creation.
     if (cid && req.body.card_id) {
-      const card = db.prepare(`SELECT * FROM customer_cards WHERE id=? AND customer_id=?`).get(req.body.card_id, cid);
+      const card = db.prepare(`SELECT id FROM customer_cards WHERE id=? AND customer_id=?`).get(req.body.card_id, cid);
       if (!card) return res.status(404).json({ error: 'Saved card not found.' });
-      const stripeCust = await stripeCustomerFor(cid);
-      const charge = await stripeLib.chargeSavedCard(amountCents, stripeCust, card.stripe_pm_id, meta);
-      if (charge.status !== 'succeeded') {
-        return res.status(402).json({ error: 'Could not charge that card. Please use a new card.' });
-      }
-      return res.json({ intent_id: charge.id, paid_with_saved_card: true, simulated: !!charge.simulated, breakdown });
+      return res.json({ saved_card: true, card_id: card.id, breakdown });
     }
     const stripeCust = cid ? await stripeCustomerFor(cid) : null;
     const intent = await stripeLib.createIntent(amountCents, meta, { customerId: stripeCust, savePm: !!req.body.save_card });
