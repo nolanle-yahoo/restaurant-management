@@ -118,6 +118,16 @@ const API = {
   scheduleCreate(data)   { return this.post('/schedules', data); },
   scheduleDelete(id)     { return this.delete(`/schedules/${id}`); },
 
+  shiftSwaps(params = {}) {
+    const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
+    return this.get('/shift-swaps' + (qs ? '?' + qs : ''));
+  },
+  shiftSwapCreate(data)  { return this.post('/shift-swaps', data); },
+  shiftSwapAccept(id)    { return this.post(`/shift-swaps/${id}/accept`, {}); },
+  shiftSwapApprove(id)   { return this.post(`/shift-swaps/${id}/approve`, {}); },
+  shiftSwapReject(id)    { return this.post(`/shift-swaps/${id}/reject`, {}); },
+  shiftSwapCancel(id)    { return this.delete(`/shift-swaps/${id}`); },
+
   waitlist(locId)        { return this.get('/waitlist' + (locId ? `?location_id=${locId}` : '')); },
   waitlistAdd(data)      { return this.post('/waitlist', data); },
   waitlistUpdate(id, status) { return this.put(`/waitlist/${id}`, { status }); },
