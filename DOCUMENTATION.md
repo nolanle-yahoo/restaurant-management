@@ -158,7 +158,12 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-4.3** Managers/owners manage the floor plan (create/edit/delete areas and tables);
   front-line staff update table statuses.
 - **FR-4.4** Waiters can be assigned to areas; assignments drive each waiter's "My Area" view.
-- **FR-4.5** Table status changes broadcast in real time to all connected clients at that
+- **FR-4.5** **Table-level assignment** — managers/owners assign (or clear) an individual
+  table's staff member directly from the floor plan, independent of area assignments. A waiter
+  (or employee/front-desk) can **claim** any table that nobody has been assigned to yet from the
+  Full Floor, and **release** a table assigned to them. Claiming is a floor operation (the staff
+  member must be clocked in) and is location-scoped; assignment changes broadcast in real time.
+- **FR-4.6** Table status changes broadcast in real time to all connected clients at that
   location.
 - **FR-4.6** **Transfer & merge** — an open order can be moved to another table (transfer), and
   all of a table's open orders can be merged into another table. Table statuses update
