@@ -220,6 +220,7 @@ router.post('/order', orderLimiter, (req, res) => {
 
   const who = type === 'dine_in' ? `Table ${tableRow.table_number}` : (customer_name || 'Online');
   notify(`New ${type === 'dine_in' ? 'table' : type} order — ${who} (${code})`, { locId: Number(location_id), roles: ['chef', 'manager', 'owner'], kind: 'online_order' });
+  tg.sendTelegram(`🧾 New ${type} order ${code} — ${who}, est. $${estimated_total.toFixed(2)} (pay on ${type === 'delivery' ? 'delivery' : 'collection'})`, 'order');
   broadcast('order_update', { type: 'new', order_id: orderId, location_id: Number(location_id) }, location_id);
 
   const locName = (db.prepare(`SELECT name FROM locations WHERE id=?`).get(location_id) || {}).name || 'our restaurant';
