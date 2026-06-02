@@ -405,6 +405,21 @@ function createSchema() {
       depleted_at TEXT
     );
 
+    -- Cross-location staff lending: temporarily reassign a staff member to another
+    -- location. While active the user's location_id points to the borrowing location;
+    -- returning restores their home_location_id.
+    CREATE TABLE IF NOT EXISTS staff_loans (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      from_location_id INTEGER REFERENCES locations(id),
+      to_location_id INTEGER NOT NULL REFERENCES locations(id),
+      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','returned')),
+      note TEXT,
+      created_by INTEGER REFERENCES users(id),
+      created_at TEXT DEFAULT (datetime('now')),
+      returned_at TEXT
+    );
+
     -- Broadcast announcements from owner/manager to staff (location-scoped or global).
     CREATE TABLE IF NOT EXISTS announcements (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
