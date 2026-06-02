@@ -323,6 +323,26 @@ function seed() {
     });
   });
 
+  // ── Schedules (this week's shifts for a few Downtown staff) ──────
+  const insertShift = db.prepare(`INSERT INTO schedules (user_id, location_id, work_date, shift_start, shift_end, created_by) VALUES (?,?,?,?,?,2)`);
+  const dtStaff = db.prepare(`SELECT id FROM users WHERE location_id=1 AND role!='owner' LIMIT 6`).all().map(r => r.id);
+  const shiftTimes = [['09:00', '17:00'], ['11:00', '19:00'], ['16:00', '23:00']];
+  dtStaff.forEach((uid, i) => {
+    for (let d = 0; d < 5; d++) {
+      const t = shiftTimes[(i + d) % shiftTimes.length];
+      insertShift.run(uid, 1, `date('now','+${d} days')`.replace(/.*/, '') || null, t[0], t[1]); // placeholder replaced below
+    }
+  });
+  // The above can't compute dates inline; insert with computed date strings instead.
+  db.prepare(`DELETE FROM schedules`).run();
+  dtStaff.forEach((uid, i) => {
+    for (let d = 0; d < 5; d++) {
+      const dt = new Date(); dt.setDate(dt.getDate() + d);
+      const t = shiftTimes[(i + d) % shiftTimes.length];
+      insertShift.run(uid, 1, dt.toISOString().slice(0, 10), t[0], t[1]);
+    }
+  });
+
   // ── Reservations ────────────────────────────────────────────────
   const insertRes = db.prepare(`
     INSERT INTO reservations (location_id, guest_name, guest_phone, party_size, reservation_date, reservation_time, status, notes, created_by)
