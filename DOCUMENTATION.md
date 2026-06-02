@@ -562,8 +562,11 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/count` | Owner, Manager, Stockroom, Chef | Cycle count an item (records variance + adjustment). |
 | GET | `/counts` | Owner, Manager, Stockroom, Chef | Recent cycle counts (location-scoped). |
 | PUT | `/:id` | Owner, Manager, Stockroom | Update an item's SKU / min level / unit cost. |
-| POST | `/receive` | Owner, Manager, Stockroom | Receive stock by SKU (or item_id) + quantity. |
+| POST | `/receive` | Owner, Manager, Stockroom | Receive stock by SKU (or item_id) + quantity; optional `expiry_date` + `lot_code` create a lot. |
 | GET | `/valuation` | Owner, Manager | Stock value (by category) + consumed cost over a range. |
+| GET | `/lots` | Owner, Manager, Stockroom, Chef | Active lots (remaining > 0), earliest expiry first; optional `item_id`. |
+| GET | `/expiring` | Owner, Manager, Stockroom, Chef | Lots expiring within `days` (default 7), incl. already-expired; counts. |
+| POST | `/lots/:id/discard` | Owner, Manager, Stockroom, Chef | Write a lot off as waste and reduce stock by its remaining qty. |
 
 ### Locations — `/api/locations`
 | Method | Path | Access | Description |
