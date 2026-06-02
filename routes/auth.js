@@ -55,14 +55,14 @@ router.post('/login', loginLimiter, (req, res) => {
   }
 
   const token = jwt.sign(
-    { id: user.id, role: user.role, location_id: user.location_id, name: user.name, tv: user.token_version || 0 },
+    { id: user.id, role: user.role, location_id: user.location_id, region_id: user.region_id || null, name: user.name, tv: user.token_version || 0 },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN }
   );
 
   res.json({
     token,
-    user: { id: user.id, name: user.name, email: user.email, role: user.role, location_id: user.location_id, location_name: user.location_name }
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, location_id: user.location_id, location_name: user.location_name, region_id: user.region_id || null }
   });
 });
 
