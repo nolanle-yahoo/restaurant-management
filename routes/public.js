@@ -405,7 +405,23 @@ router.get('/order', (req, res) => {
   `).get(String(code).trim().toUpperCase());
   if (!o) return res.status(404).json({ error: 'No order found for that code.' });
   const items = db.prepare(`SELECT oi.item_name, oi.quantity, oi.price FROM order_items oi JOIN orders o ON oi.order_id=o.id WHERE o.tracking_code=?`).all(String(code).trim().toUpperCase());
-  res.json({ ...o, items });
+  // Delivery tracking: include driver first name, status, ETA, and last location.
+  let delivery = null;
+  if (o.order_type === 'delivery') {
+    const d = db.prepare(`
+      SELECT d.status, d.eta_minutes, d.driver_lat, d.driver_lng, d.location_updated_at,
+             d.assigned_at, d.picked_up_at, d.delivered_at, u.name AS driver_name
+      FROM deliveries d JOIN orders o2 ON d.order_id=o2.id LEFT JOIN users u ON d.driver_id=u.id
+      WHERE o2.tracking_code=?
+    `).get(String(code).trim().toUpperCase());
+    if (d) delivery = {
+      status: d.status, eta_minutes: d.eta_minutes,
+      driver_name: d.driver_name ? d.driver_name.split(' ')[0] : null,
+      driver_lat: d.driver_lat, driver_lng: d.driver_lng, location_updated_at: d.location_updated_at,
+      assigned_at: d.assigned_at, picked_up_at: d.picked_up_at, delivered_at: d.delivered_at,
+    };
+  }
+  res.json({ ...o, items, delivery });
 });
 
 // Public receipt view by code
