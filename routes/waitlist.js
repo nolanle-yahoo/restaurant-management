@@ -42,4 +42,18 @@ router.put('/:id', requireRole(...HOST), (req, res) => {
   res.json({ success: true });
 });
 
+// Page the guest that their table is ready (texts them if a phone is on file).
+router.post('/:id/notify', requireRole(...HOST), (req, res) => {
+  const w = db.prepare(`SELECT * FROM waitlist WHERE id=?`).get(req.params.id);
+  if (!w) return res.status(404).json({ error: 'Waitlist entry not found' });
+  if (req.user.role !== 'owner' && w.location_id !== req.user.location_id) return res.status(403).json({ error: 'Not your location.' });
+  if (w.status !== 'waiting') return res.status(409).json({ error: 'This party is no longer waiting.' });
+  db.prepare(`UPDATE waitlist SET notified_at=datetime('now') WHERE id=?`).run(w.id);
+  const locName = (db.prepare(`SELECT name FROM locations WHERE id=?`).get(w.location_id) || {}).name || 'your restaurant';
+  if (w.phone) sendSMS(w.phone, `${locName}: your table is ready! Please see the host. 🍽️`, 'waitlist');
+  tg.sendTelegram(`🔔 Paged waitlist guest ${w.guest_name} (party of ${w.party_size}) — table ready at ${locName}`, 'waitlist');
+  broadcast('waitlist_update', { location_id: w.location_id }, w.location_id);
+  res.json({ success: true });
+});
+
 module.exports = router;
