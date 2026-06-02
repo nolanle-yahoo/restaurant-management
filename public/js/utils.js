@@ -200,6 +200,71 @@ function openAccountSettings() {
   showModal('accountSettingsModal');
   loadMyPay();
   loadMySchedule();
+  loadMyMessages();
+  loadMyTimeOff();
+}
+
+async function sendStaffMessage() {
+  const recipient_type = document.getElementById('msgRecipient').value;
+  const subject = document.getElementById('msgSubject').value.trim();
+  const message = document.getElementById('msgBody').value.trim();
+  if (!subject || !message) return showAlert('msgAlert', 'Subject and message are required.');
+  try {
+    await API.messagesSend({ recipient_type, subject, message });
+    document.getElementById('msgSubject').value = '';
+    document.getElementById('msgBody').value = '';
+    showAlert('msgAlert', 'Message sent.', 'success');
+    loadMyMessages();
+  } catch (e) { showAlert('msgAlert', e.message); }
+}
+
+async function loadMyMessages() {
+  const el = document.getElementById('myMessagesInfo'); if (!el) return;
+  try {
+    const rows = await API.messagesMine();
+    el.innerHTML = rows.length ? rows.map(m => {
+      const replies = (m.replies || []).map(r =>
+        `<div style="margin:4px 0 0 12px;padding-left:8px;border-left:2px solid var(--border);color:var(--muted)"><b>${r.sender_name} (${r.sender_role})</b>: ${r.message}</div>`).join('');
+      return `<div style="padding:7px 0;border-bottom:1px solid var(--border)">
+        <div><b>${m.subject}</b> <span style="font-size:11px;color:var(--muted)">→ ${m.recipient_type}</span></div>
+        <div style="color:var(--muted)">${m.message}</div>${replies}</div>`;
+    }).join('') : '<p style="color:var(--muted)">No messages yet.</p>';
+  } catch (e) { el.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`; }
+}
+
+async function submitStaffTimeOff() {
+  const type = document.getElementById('toType').value;
+  const start_date = document.getElementById('toStart').value;
+  const end_date = document.getElementById('toEnd').value;
+  const reason = document.getElementById('toReason').value.trim();
+  if (!start_date || !end_date) return showAlert('toAlert', 'Start and end dates are required.');
+  if (end_date < start_date) return showAlert('toAlert', 'End date cannot be before the start date.');
+  try {
+    await API.timeOffCreate({ type, start_date, end_date, reason });
+    document.getElementById('toReason').value = '';
+    showAlert('toAlert', 'Request submitted.', 'success');
+    loadMyTimeOff();
+  } catch (e) { showAlert('toAlert', e.message); }
+}
+
+async function loadMyTimeOff() {
+  const el = document.getElementById('myTimeOffInfo'); if (!el) return;
+  const colors = { pending:'var(--muted)', approved:'var(--success)', denied:'var(--danger)', cancelled:'var(--muted)' };
+  try {
+    const rows = await API.timeOffList();
+    el.innerHTML = rows.length ? rows.map(t => `
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span>${t.type} · ${t.start_date} → ${t.end_date}</span>
+        <span style="display:flex;gap:8px;align-items:center">
+          <b style="color:${colors[t.status]||'var(--muted)'}">${t.status}</b>
+          ${t.status === 'pending' ? `<button class="btn btn-sm btn-ghost" onclick="cancelMyTimeOff(${t.id})">Cancel</button>` : ''}
+        </span></div>`).join('') : '<p style="color:var(--muted)">No requests yet.</p>';
+  } catch (e) { el.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`; }
+}
+async function cancelMyTimeOff(id) {
+  if (!confirm('Cancel this time-off request?')) return;
+  try { await API.timeOffUpdate(id, { status: 'cancelled' }); loadMyTimeOff(); }
+  catch (e) { showToast(e.message, 'error'); }
 }
 
 async function loadMySchedule() {
