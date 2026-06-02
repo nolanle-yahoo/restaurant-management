@@ -21,7 +21,7 @@ function seed() {
     DELETE FROM inventory_lots;
     DELETE FROM certifications;
     DELETE FROM payments; DELETE FROM email_log; DELETE FROM password_reset_tokens;
-    DELETE FROM loyalty_transactions;
+    DELETE FROM loyalty_transactions; DELETE FROM customer_cards;
     DELETE FROM inventory; DELETE FROM order_items; DELETE FROM orders;
     UPDATE customers SET referred_by=NULL;
     DELETE FROM customers;
