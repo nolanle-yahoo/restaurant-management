@@ -19,6 +19,7 @@ router.post('/waste', requireRole('owner','manager','stockroom','chef'), (req, r
   if (qty > item.quantity) return res.status(400).json({ error: `Only ${item.quantity} ${item.unit} in stock.` });
   const reason = (req.body.reason || '').toString().slice(0, 200) || null;
   db.prepare(`UPDATE inventory SET quantity=quantity-?, last_updated=datetime('now') WHERE id=?`).run(qty, item.id);
+  consumeFIFO(item.id, qty);
   db.prepare(`INSERT INTO waste_log (item_id, location_id, quantity, reason, user_id) VALUES (?,?,?,?,?)`).run(item.id, item.location_id, qty, reason, req.user.id);
   db.prepare(`INSERT INTO inventory_transactions (item_id, from_location_id, quantity, type, user_id, notes) VALUES (?,?,?,'out',?,?)`).run(item.id, item.location_id, qty, req.user.id, `Waste${reason ? ': ' + reason : ''}`);
   auditLog(req, 'waste_logged', 'inventory', item.id, { item: item.item_name, quantity: qty, reason });
