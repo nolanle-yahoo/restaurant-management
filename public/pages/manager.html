@@ -928,24 +928,49 @@ async function saveNewEmp() {
 }
 
 // ── Schedule ──────────────────────────────────────────────
+let schedWeekOffset = 0, schedEmps = [];
+function weekDates() {
+  const t = new Date(); t.setHours(0,0,0,0);
+  const start = new Date(t); start.setDate(t.getDate() - t.getDay() + schedWeekOffset * 7); // Sunday
+  return Array.from({ length: 7 }, (_, d) => { const x = new Date(start); x.setDate(start.getDate() + d); return x; });
+}
+const ymd = d => d.toISOString().slice(0, 10);
+function schedWeek(n) { schedWeekOffset = n === 0 ? 0 : schedWeekOffset + n; loadSchedule(); }
+
 async function loadSchedule() {
-  const emps = await API.employees(user.location_id);
-  const today = new Date();
-  const dateLabels = Array.from({length:7}, (_,d) => {
-    const dt = new Date(today); dt.setDate(dt.getDate() + d);
-    return dt.toLocaleDateString([], { weekday:'short', month:'short', day:'numeric' });
-  });
-  let html = `<div class="sched-head">Employee</div>${dateLabels.map(d=>`<div class="sched-head">${d}</div>`).join('')}`;
-  const shifts = [['08:00','16:00'],['12:00','20:00'],['16:00','00:00']];
-  emps.slice(0,10).forEach((emp, i) => {
+  const days = weekDates();
+  const start = ymd(days[0]), end = ymd(days[6]);
+  document.getElementById('schedWeekLabel').textContent = `${days[0].toLocaleDateString([], {month:'short',day:'numeric'})} – ${days[6].toLocaleDateString([], {month:'short',day:'numeric'})}`;
+  const [emps, shifts] = await Promise.all([API.employees(user.location_id), API.schedules({ location_id: user.location_id, start, end })]);
+  schedEmps = emps;
+  const byKey = {};
+  shifts.forEach(s => { (byKey[s.user_id + '|' + s.work_date] = byKey[s.user_id + '|' + s.work_date] || []).push(s); });
+  let html = `<div class="sched-head">Employee</div>${days.map(d=>`<div class="sched-head">${d.toLocaleDateString([], {weekday:'short'})}<br>${d.getDate()}</div>`).join('')}`;
+  emps.forEach(emp => {
     html += `<div class="sched-name">${emp.name}<br><span class="text-sm text-muted">${emp.role}</span></div>`;
-    for (let d = 0; d < 7; d++) {
-      const s = shifts[(i+d) % shifts.length];
-      html += `<div class="sched-cell"><span class="sched-shift">${s[0]}–${s[1]}</span></div>`;
-    }
+    days.forEach(d => {
+      const list = byKey[emp.id + '|' + ymd(d)] || [];
+      html += `<div class="sched-cell">${list.length ? list.map(s =>
+        `<span class="sched-shift" title="Remove" style="cursor:pointer" onclick="removeShift(${s.id})">${s.shift_start}–${s.shift_end} ✕</span>`).join('<br>')
+        : '<span class="sched-empty">—</span>'}</div>`;
+    });
   });
   document.getElementById('schedGrid').innerHTML = html;
 }
+function openShiftModal() {
+  document.getElementById('shiftAlert').classList.add('hidden');
+  document.getElementById('shiftEmp').innerHTML = schedEmps.map(e => `<option value="${e.id}">${e.name} (${e.role})</option>`).join('');
+  document.getElementById('shiftDate').value = ymd(weekDates()[0]);
+  showModal('shiftModal');
+}
+async function submitShift() {
+  try {
+    await API.scheduleCreate({ user_id: document.getElementById('shiftEmp').value, work_date: document.getElementById('shiftDate').value,
+      shift_start: document.getElementById('shiftStart').value, shift_end: document.getElementById('shiftEnd').value });
+    hideModal('shiftModal'); loadSchedule();
+  } catch(e) { showAlert('shiftAlert', e.message); }
+}
+async function removeShift(id) { if(!confirm('Remove this shift?'))return; try{ await API.scheduleDelete(id); loadSchedule(); }catch(e){ alert(e.message); } }
 
 // ── Timesheets ────────────────────────────────────────────
 function initTimesheets() {
