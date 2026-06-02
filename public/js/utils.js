@@ -215,6 +215,13 @@ function openAccountSettings() {
   if (box) { box.classList.remove('expanded'); box.style.width = ''; box.style.height = ''; }
   const xb = document.getElementById('settingsExpandBtn');
   if (xb) xb.textContent = '⤢';
+  // Always reopen on the Profile tab with only its pane visible.
+  const tabs = document.querySelectorAll('#settingsTabs .tab-btn');
+  tabs.forEach((b, i) => b.classList.toggle('active', i === 0));
+  [...tabs].forEach((b, i) => {
+    const pane = document.getElementById(b.dataset.tab);
+    if (pane) pane.classList.toggle('active', i === 0);
+  });
   showModal('accountSettingsModal');
   loadMyPay();
   loadMySchedule();
