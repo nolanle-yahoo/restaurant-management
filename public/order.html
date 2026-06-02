@@ -243,9 +243,8 @@ function showOAlert(msg, type='danger') {
   e.className = 'alert alert-' + type; e.textContent = msg; e.classList.remove('hidden');
 }
 
-async function placeOrder() {
+function gatherBody() {
   const items = Object.entries(cart).map(([id,c]) => ({ id: Number(id), quantity: c.qty }));
-  if (!items.length) return showOAlert('Your cart is empty.');
   const body = {
     location_id: Number(document.getElementById('locSelect').value),
     order_type: orderType,
@@ -256,25 +255,115 @@ async function placeOrder() {
     delivery_address: document.getElementById('cAddr').value.trim(),
     notes: document.getElementById('cNotes').value.trim(),
   };
-  if (tableMode) {
-    body.table_id = Number(tableId);
-  } else {
-    if (!body.customer_name || !body.customer_phone) return showOAlert('Please enter your name and phone.');
-    if (orderType === 'delivery' && !body.delivery_address) return showOAlert('Please enter a delivery address.');
-  }
+  return body;
+}
+function validateBody(body) {
+  if (!body.items.length) return 'Your cart is empty.';
+  if (tableMode) return null;
+  if (!body.customer_name || !body.customer_phone) return 'Please enter your name and phone.';
+  if (orderType === 'delivery' && !body.delivery_address) return 'Please enter a delivery address.';
+  return null;
+}
+
+// Main checkout button: table (QR) orders pay at the table; pickup/delivery prepay online.
+function checkoutClick() {
+  const body = gatherBody();
+  const err = validateBody(body);
+  if (err) return showOAlert(err);
+  if (tableMode) return placeOrder(body);
+  startPrepay(body);
+}
+
+function orderPlacedView({ tracking_code, paidLine, receipt_code }) {
+  document.querySelector('.order-wrap').innerHTML = `
+    <div class="card" style="grid-column:1/-1;max-width:520px;margin:0 auto;text-align:center;padding:30px">
+      <div style="font-size:46px">✅</div>
+      <h2 style="color:var(--burgundy);margin:10px 0">Order placed!</h2>
+      <p style="font-size:15px">Your tracking code is</p>
+      <p style="font-size:26px;font-weight:800;letter-spacing:1px;color:var(--burgundy);margin:6px 0">${tracking_code}</p>
+      <p style="color:var(--muted)">${paidLine}</p>
+      ${receipt_code ? `<p style="font-size:13px;margin-top:8px"><a href="/receipt.html?code=${receipt_code}">View receipt</a></p>` : ''}
+      <p style="font-size:13px;color:var(--muted);margin-top:14px">Track your order anytime at<br><b>${location.origin}/order.html?code=${tracking_code}</b></p>
+      <a class="btn btn-primary" style="margin-top:16px" href="/order.html?code=${tracking_code}">Track this order</a>
+    </div>`;
+}
+
+// Table (QR) flow — unchanged: order fires now, server settles the bill at the table.
+async function placeOrder(body) {
+  body = body || gatherBody();
+  if (tableMode) body.table_id = Number(tableId);
   try {
     const r = await api('/order', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-    document.querySelector('.order-wrap').innerHTML = `
-      <div class="card" style="grid-column:1/-1;max-width:520px;margin:0 auto;text-align:center;padding:30px">
-        <div style="font-size:46px">✅</div>
-        <h2 style="color:var(--burgundy);margin:10px 0">Order placed!</h2>
-        <p style="font-size:15px">Your tracking code is</p>
-        <p style="font-size:26px;font-weight:800;letter-spacing:1px;color:var(--burgundy);margin:6px 0">${r.tracking_code}</p>
-        <p style="color:var(--muted)">Estimated total (${tableMode ? 'a server will bring your bill' : 'pay on '+(orderType==='delivery'?'delivery':'collection')}): <b>${money(r.estimated_total)}</b></p>
-        <p style="font-size:13px;color:var(--muted);margin-top:14px">Save your code — track your order anytime at<br><b>${location.origin}/order.html?code=${r.tracking_code}</b></p>
-        <a class="btn btn-primary" style="margin-top:16px" href="/order.html?code=${r.tracking_code}">Track this order</a>
-      </div>`;
+    orderPlacedView({ tracking_code: r.tracking_code, paidLine: `Estimated total (a server will bring your bill): <b>${money(r.estimated_total)}</b>` });
   } catch (e) { showOAlert(e.message); }
+}
+
+// ── Prepay flow (pickup/delivery): intent → card → confirm ──
+let payCtx = null, stripeObj = null, cardEl = null;
+async function startPrepay(body) {
+  body.tip = tipAmount();
+  document.getElementById('checkoutBtn').disabled = true;
+  try {
+    const r = await api('/order/intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    payCtx = { ...r, body };
+    const b = r.breakdown;
+    document.getElementById('payBreakdown').innerHTML =
+      `<div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>${money(b.subtotal)}</span></div>
+       <div style="display:flex;justify-content:space-between"><span>Service</span><span>${money(b.service)}</span></div>
+       <div style="display:flex;justify-content:space-between"><span>Tax</span><span>${money(b.tax)}</span></div>
+       <div style="display:flex;justify-content:space-between"><span>Tip</span><span>${money(b.tip)}</span></div>
+       <div style="display:flex;justify-content:space-between;font-weight:800;border-top:1px solid var(--border);margin-top:4px;padding-top:4px"><span>Total</span><span>${money(b.total)}</span></div>`;
+    document.getElementById('doPayBtn').textContent = `Pay ${money(b.total)}`;
+    document.getElementById('checkout').style.display = 'none';
+    document.getElementById('payPanel').style.display = 'block';
+    document.getElementById('payAlert').classList.add('hidden');
+
+    if (r.simulated || !r.publishable_key) {
+      document.getElementById('payMode').textContent = '🔒 Test mode — no real card is charged.';
+      document.getElementById('card-element').style.display = 'none';
+    } else {
+      document.getElementById('payMode').textContent = '🔒 Payments secured by Stripe.';
+      await ensureStripe();
+      stripeObj = Stripe(r.publishable_key);
+      const elements = stripeObj.elements();
+      cardEl = elements.create('card');
+      const ce = document.getElementById('card-element');
+      ce.style.display = 'block'; ce.innerHTML = '';
+      cardEl.mount('#card-element');
+    }
+  } catch (e) { showOAlert(e.message); }
+  finally { document.getElementById('checkoutBtn').disabled = false; }
+}
+
+function ensureStripe() {
+  return new Promise((resolve, reject) => {
+    if (window.Stripe) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://js.stripe.com/v3/'; s.onload = resolve; s.onerror = () => reject(new Error('Could not load payment library.'));
+    document.head.appendChild(s);
+  });
+}
+
+function showPayAlert(msg) { const e = document.getElementById('payAlert'); e.className = 'alert alert-danger'; e.textContent = msg; e.classList.remove('hidden'); }
+function cancelPay() { document.getElementById('payPanel').style.display = 'none'; document.getElementById('checkout').style.display = 'block'; payCtx = null; }
+
+async function doPay() {
+  if (!payCtx) return;
+  const btn = document.getElementById('doPayBtn');
+  btn.disabled = true; btn.textContent = 'Processing…';
+  try {
+    // Real Stripe: confirm the card first; simulated: skip straight to server confirm.
+    if (!payCtx.simulated && payCtx.client_secret && stripeObj && cardEl) {
+      const { error, paymentIntent } = await stripeObj.confirmCardPayment(payCtx.client_secret, { payment_method: { card: cardEl } });
+      if (error) { showPayAlert(error.message); btn.disabled = false; btn.textContent = `Pay ${money(payCtx.breakdown.total)}`; return; }
+      if (!paymentIntent || paymentIntent.status !== 'succeeded') { showPayAlert('Payment was not completed.'); btn.disabled = false; btn.textContent = `Pay ${money(payCtx.breakdown.total)}`; return; }
+    }
+    const r = await api('/order/confirm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ...payCtx.body, intent_id: payCtx.intent_id }) });
+    orderPlacedView({ tracking_code: r.tracking_code, receipt_code: r.receipt_code, paidLine: `Paid online: <b>${money(r.breakdown.total)}</b> (incl. ${money(r.breakdown.tip)} tip)` });
+  } catch (e) {
+    showPayAlert(e.message);
+    btn.disabled = false; btn.textContent = `Pay ${money(payCtx.breakdown.total)}`;
+  }
 }
 
 async function trackOrder() {
