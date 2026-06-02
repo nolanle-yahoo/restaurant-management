@@ -1768,10 +1768,21 @@ async function updateOwnerRes(id, status) {
 
 // ── Menu Management ───────────────────────────────────────────
 let menuCats = [], menuItems = [], editingMenuItemId = null;
+let menuIsCentral = false;
+function menuSel() { return document.getElementById('menuLocFilter')?.value ?? ''; }
+
 async function loadOwnerMenu() {
-  const locId = document.getElementById('menuLocFilter')?.value || (locations[0]?.id || '');
-  if (!locId) { document.getElementById('menuContent').innerHTML = '<p style="padding:20px;color:var(--muted)">Select a location above.</p>'; return; }
-  [menuCats, menuItems] = await Promise.all([API.menuCategories(locId), API.menuItems(locId)]);
+  const sel = menuSel();
+  menuIsCentral = sel === 'central';
+  document.getElementById('applyCentralBtn').classList.toggle('hidden', !menuIsCentral);
+  document.getElementById('centralHint').classList.toggle('hidden', !menuIsCentral);
+  if (menuIsCentral) {
+    [menuCats, menuItems] = await Promise.all([API.centralCategories(), API.centralItems()]);
+  } else {
+    const locId = sel || (locations[0]?.id || '');
+    if (!locId) { document.getElementById('menuContent').innerHTML = '<p style="padding:20px;color:var(--muted)">Select a location above.</p>'; return; }
+    [menuCats, menuItems] = await Promise.all([API.menuCategories(locId), API.menuItems(locId)]);
+  }
   renderMenu();
 }
 function renderMenu() {
@@ -1784,17 +1795,45 @@ function renderMenu() {
         <span class="badge badge-muted">${items.length} items</span>
         <button class="btn btn-sm btn-ghost" style="margin-left:auto;color:var(--danger)" onclick="deleteCategory(${cat.id})">Delete Category</button>
       </div>
-      ${items.length ? `<table class="data-table"><thead><tr><th>Item</th><th>Description</th><th>Price</th><th>Available</th><th>Actions</th></tr></thead>
-      <tbody>${items.map(i => `<tr>
-        <td class="fw-700">${i.name}</td>
-        <td style="color:var(--muted)">${i.description||'—'}</td>
-        <td class="fw-700" style="color:var(--success)">$${i.price.toFixed(2)}</td>
-        <td><button class="btn btn-sm ${i.is_available?'btn-success':'btn-ghost'}" onclick="toggleItemAvail(${i.id},${i.is_available})">${i.is_available?'✓ Yes':'✗ No'}</button></td>
-        <td><button class="btn btn-sm btn-ghost" onclick="openRecipe(${i.id},'${(i.name||'').replace(/'/g,"\\'")}')">🧪 Recipe</button>
-            <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteMenuItem(${i.id})">Delete</button></td>
-      </tr>`).join('')}</tbody></table>` : '<p style="padding:8px;color:var(--muted);font-size:13px">No items in this category.</p>'}
+      ${items.length ? `<table class="data-table"><thead><tr><th>Item</th><th>Description</th><th>Price</th>${menuIsCentral?'<th>Locations</th>':'<th>Source</th><th>Available</th>'}<th>Actions</th></tr></thead>
+      <tbody>${items.map(i => renderMenuRow(i)).join('')}</tbody></table>` : '<p style="padding:8px;color:var(--muted);font-size:13px">No items in this category.</p>'}
     </div>`;
   }).join('');
+}
+function renderMenuRow(i) {
+  const nm = (i.name||'').replace(/'/g,"\\'");
+  if (menuIsCentral) {
+    return `<tr>
+      <td class="fw-700">${i.name}</td>
+      <td style="color:var(--muted)">${i.description||'—'}</td>
+      <td class="fw-700" style="color:var(--success)">$${i.price.toFixed(2)}</td>
+      <td><span class="badge badge-muted">${i.location_count} linked</span></td>
+      <td><button class="btn btn-sm btn-ghost" onclick="openEditMenuItem(${i.id})">Edit</button>
+          <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteMenuItem(${i.id})">Delete</button></td>
+    </tr>`;
+  }
+  const source = i.central_id
+    ? (i.price_overridden ? '<span class="badge" style="background:#fde9c8;color:#8a5a00">price overridden</span>' : '<span class="badge badge-muted">central</span>')
+    : '<span class="badge badge-muted">local</span>';
+  const resetBtn = (i.central_id && i.price_overridden)
+    ? `<button class="btn btn-sm btn-ghost" title="Reset to central price" onclick="resetToCentral(${i.id})">↺ Reset</button>` : '';
+  return `<tr>
+    <td class="fw-700">${i.name}</td>
+    <td style="color:var(--muted)">${i.description||'—'}</td>
+    <td class="fw-700" style="color:var(--success)">$${i.price.toFixed(2)} <button class="btn btn-sm btn-ghost" title="Edit price" onclick="editPrice(${i.id},${i.price})">✎</button></td>
+    <td>${source}</td>
+    <td><button class="btn btn-sm ${i.is_available?'btn-success':'btn-ghost'}" onclick="toggleItemAvail(${i.id},${i.is_available})">${i.is_available?'✓ Yes':'✗ No'}</button></td>
+    <td><button class="btn btn-sm btn-ghost" onclick="openRecipe(${i.id},'${nm}')">🧪 Recipe</button>
+        ${resetBtn}
+        <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteMenuItem(${i.id})">Delete</button></td>
+  </tr>`;
+}
+async function applyCentral() {
+  if (!confirm('Push the central template to ALL active locations? Overridden prices and per-location availability are preserved.')) return;
+  try {
+    const r = await API.centralApply({ location_ids: 'all' });
+    showToast(`Applied to ${r.locations} locations · ${r.created} added, ${r.updated} updated`, 'info');
+  } catch(e) { showAlert('menuAlert', e.message); }
 }
 function openAddCategoryModal() {
   document.getElementById('menuCatName').value = '';
@@ -1805,22 +1844,22 @@ function openAddCategoryModal() {
 async function submitCategory() {
   const name = document.getElementById('menuCatName').value.trim();
   const sort_order = parseInt(document.getElementById('menuCatSort').value)||0;
-  const locId = document.getElementById('menuLocFilter')?.value || locations[0]?.id;
   if (!name) return showAlert('menuCatAlert','Category name required');
   try {
-    await API.menuCategoryCreate({ name, sort_order, location_id: locId });
+    if (menuIsCentral) await API.centralCategoryCreate({ name, sort_order });
+    else await API.menuCategoryCreate({ name, sort_order, location_id: menuSel() || locations[0]?.id });
     hideModal('menuCatModal');
     loadOwnerMenu();
   } catch(e) { showAlert('menuCatAlert', e.message); }
 }
 async function deleteCategory(id) {
   if (!confirm('Delete this category and all its items?')) return;
-  await API.menuCategoryDelete(id);
+  if (menuIsCentral) await API.centralCategoryDelete(id); else await API.menuCategoryDelete(id);
   loadOwnerMenu();
 }
 function openAddMenuItemModal() {
   editingMenuItemId = null;
-  document.getElementById('menuItemModalTitle').textContent = 'Add Menu Item';
+  document.getElementById('menuItemModalTitle').textContent = menuIsCentral ? 'Add Central Item' : 'Add Menu Item';
   document.getElementById('menuItemAlert').classList.add('hidden');
   document.getElementById('menuItemName').value = '';
   document.getElementById('menuItemPrice').value = '';
@@ -1831,8 +1870,24 @@ function openAddMenuItemModal() {
   document.getElementById('menuItemCat').innerHTML = menuCats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   showModal('menuItemModal');
 }
+function openEditMenuItem(id) {
+  const i = menuItems.find(x => x.id === id); if (!i) return;
+  editingMenuItemId = id;
+  document.getElementById('menuItemModalTitle').textContent = menuIsCentral ? 'Edit Central Item' : 'Edit Menu Item';
+  document.getElementById('menuItemAlert').classList.add('hidden');
+  document.getElementById('menuItemName').value = i.name || '';
+  document.getElementById('menuItemPrice').value = i.price ?? '';
+  document.getElementById('menuItemDesc').value = i.description || '';
+  document.getElementById('menuItemImage').value = i.image_url || '';
+  document.getElementById('menuItemAllergens').value = i.allergens || '';
+  const diet = (i.dietary || '').split(',');
+  document.getElementById('dietVeg').checked = diet.includes('vegetarian');
+  document.getElementById('dietVegan').checked = diet.includes('vegan');
+  document.getElementById('dietGf').checked = diet.includes('gluten_free');
+  document.getElementById('menuItemCat').innerHTML = menuCats.map(c=>`<option value="${c.id}" ${c.id===i.category_id?'selected':''}>${c.name}</option>`).join('');
+  showModal('menuItemModal');
+}
 async function submitMenuItem() {
-  const locId = document.getElementById('menuLocFilter')?.value || locations[0]?.id;
   const dietary = ['dietVeg','dietVegan','dietGf'].filter(id => document.getElementById(id).checked)
     .map(id => document.getElementById(id).value).join(',');
   const data = {
@@ -1843,14 +1898,32 @@ async function submitMenuItem() {
     image_url: document.getElementById('menuItemImage').value.trim(),
     allergens: document.getElementById('menuItemAllergens').value.trim(),
     dietary,
-    location_id: locId,
   };
   if (!data.name || isNaN(data.price)) return showAlert('menuItemAlert','Name and price required');
   try {
-    await API.menuItemCreate(data);
+    if (menuIsCentral) {
+      if (editingMenuItemId) await API.centralItemUpdate(editingMenuItemId, data);
+      else await API.centralItemCreate(data);
+    } else {
+      data.location_id = menuSel() || locations[0]?.id;
+      if (editingMenuItemId) await API.menuItemUpdate(editingMenuItemId, data);
+      else await API.menuItemCreate(data);
+    }
     hideModal('menuItemModal');
     loadOwnerMenu();
   } catch(e) { showAlert('menuItemAlert', e.message); }
+}
+async function editPrice(id, current) {
+  const v = prompt('New price ($):', current);
+  if (v === null) return;
+  const price = parseFloat(v);
+  if (isNaN(price) || price < 0) return showToast('Enter a valid price', 'error');
+  try { await API.menuItemUpdate(id, { price }); showToast('Price updated', 'info'); loadOwnerMenu(); }
+  catch(e) { showToast(e.message, 'error'); }
+}
+async function resetToCentral(id) {
+  try { const r = await API.resetItemToCentral(id); showToast(`Reset to central price $${r.price.toFixed(2)}`, 'info'); loadOwnerMenu(); }
+  catch(e) { showToast(e.message, 'error'); }
 }
 async function toggleItemAvail(id, current) {
   await API.menuItemUpdate(id, { is_available: current ? 0 : 1 });
@@ -1858,7 +1931,7 @@ async function toggleItemAvail(id, current) {
 }
 async function deleteMenuItem(id) {
   if (!confirm('Delete this item?')) return;
-  await API.menuItemDelete(id);
+  if (menuIsCentral) await API.centralItemDelete(id); else await API.menuItemDelete(id);
   loadOwnerMenu();
 }
 
