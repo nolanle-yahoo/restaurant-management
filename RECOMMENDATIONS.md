@@ -24,6 +24,7 @@
 > ✅ **Delivered in v1.17.0:** **order edit** (add/change-qty/remove with inventory re-depletion + audit).
 > ✅ **Delivered in v1.18.0:** **cycle counts** · **per-employee performance** · **certification tracking**.
 > ✅ **Delivered in v1.19.0:** **walk-in waitlist** · **SKU/scan-to-receive** · **inventory valuation & COGS**.
+> ✅ **Delivered in v1.20.0:** **staff scheduling** (weekly editor + My Schedule) — unblocks shift swapping.
 
 Each item notes a rough **effort** (XS/S/M/L) and, where applicable, the roadmap tag (**R#**)
 from `DOCUMENTATION.md` §15. These are recommendations for end users across every role
