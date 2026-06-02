@@ -884,10 +884,12 @@ performance** analytics; **certification tracking** with expiry highlighting.
 **Delivered in 1.19.0:** **walk-in waitlist**; **SKU / scan-to-receive**; **inventory valuation
 & COGS**.
 
-**Remaining:** shift swapping *(needs a scheduling backend, which doesn't yet exist)*; expiry/
-lot (FIFO) tracking; regional-manager role & cross-location staff lending; **central menu with
-per-location overrides** and **2FA** (the two larger items). *(Through 1.19.0, everything else in
-the Tier 2–3 backlog is shipped.)*
+**Delivered in 1.20.0:** **staff scheduling** — weekly shift editor (owner/manager) + per-staff
+"My Schedule"; the foundation that unblocks shift swapping.
+
+**Remaining:** shift swapping (now possible on the scheduling base); expiry/lot (FIFO) tracking;
+regional-manager role & cross-location staff lending; **central menu with per-location
+overrides** and **2FA** (the two larger items).
 
 **Tier 4 — High impact:** par levels + auto-reorder; executive multi-location dashboard &
 benchmarking; demand-based scheduling; finance/accounting integration. *(Configurable
