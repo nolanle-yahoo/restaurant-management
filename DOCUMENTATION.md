@@ -443,6 +443,11 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   Twilio when configured, else simulated. `GET /api/public/sms-config` reports the active
   provider and whether it's live. The email-gateway path honestly records `simulated` when SMTP
   isn't configured (so nothing silently "succeeds").
+- **FR-19.7** **Telegram ops notifier (optional)** — a free, reliable business push channel: a
+  Telegram bot posts **new order** (incl. paid) and **reservation request** alerts to one chat
+  your staff are in (set `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`). It's keyed by chat id, not a
+  phone number, so it complements (doesn't replace) guest SMS. Simulated (logged to
+  `telegram_log`) when unconfigured; `GET /api/public/sms-config` reports `telegram_live`.
 
 ### 5.20a Delivery Dispatch & Driver Tracking
 - **FR-21.1** Every **delivery** order gets a delivery record with its own lifecycle —
