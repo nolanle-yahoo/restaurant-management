@@ -235,7 +235,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   value (by category) and the cost of stock consumed over a date range.
 
 ### 5.9 Scheduling
-- **FR-9.1** Weekly staff schedules per location (work date, shift start/end).
+- **FR-9.1** Owners/managers build weekly staff schedules per location — a grid of employees ×
+  days with add/edit/delete of shifts (work date, start/end) and week navigation.
+- **FR-9.2** Staff see their own upcoming shifts under Account Settings → My Schedule.
 
 ### 5.10 Payroll & Timesheets
 - **FR-10.1** Owners and managers generate timesheet reports over a date range (and by
