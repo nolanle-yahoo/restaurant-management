@@ -136,6 +136,7 @@ async function render() {
     document.getElementById('dReferral').textContent = me.referral_code || '—';
     document.getElementById('dOptIn').checked = !!me.marketing_opt_in;
     localStorage.setItem('customer', JSON.stringify(me));
+    loadCards();
     const orders = await api('/account/orders');
     document.getElementById('orderHistory').innerHTML = orders.length ? orders.map(o => `
       <div class="order-row">
