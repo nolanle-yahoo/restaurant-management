@@ -158,5 +158,5 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 14. ✅ **Shift swapping** (offer → claim → owner/manager approval) — **done in v1.21.0**.
 15. ✅ **Expiry / lot (FIFO) tracking** — **done in v1.22.0**.
 16. ✅ **Regions + regional-manager role + cross-location staff lending** — **done in v1.23.0**.
-17. **Next (remaining):** the two larger items — **central menu with per-location overrides**
-    and **2FA**.
+17. ✅ **Central menu with per-location overrides** — **done in v1.24.0**.
+18. **Next (remaining):** **2FA for owner/manager** — the last remaining backlog item.
