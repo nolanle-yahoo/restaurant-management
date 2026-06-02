@@ -642,6 +642,16 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | PUT | `/:id` | Owner, Manager | Update a shift. |
 | DELETE | `/:id` | Owner, Manager | Remove a shift. |
 
+### Shift swaps — `/api/shift-swaps`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/` | Any staff | Swaps relevant to the caller (own/targeted/claimable; owner & manager see their scope). |
+| POST | `/` | Any staff | Offer one of your own upcoming shifts (optional `target_user_id`, `note`). |
+| POST | `/:id/accept` | Any staff | Claim an open offer (or accept one directed to you). |
+| POST | `/:id/approve` | Owner, Manager | Approve an accepted swap — reassigns the shift. |
+| POST | `/:id/reject` | Owner, Manager | Reject an open or accepted swap. |
+| DELETE | `/:id` | Requester / Owner / Manager | Cancel a pending swap. |
+
 ### Waitlist — `/api/waitlist`
 | Method | Path | Access | Description |
 |---|---|---|---|
