@@ -36,6 +36,14 @@ function seed() {
   insertLoc.run('Westside Kitchen',  '321 West Blvd, Westside',   '(555) 100-0004', 'active');
   insertLoc.run('Harbor View',       '654 Harbor Dr, Waterfront', '(555) 100-0005', 'active');
 
+  // ── Regions ──────────────────────────────────────────────────────
+  // East: Downtown(1), Uptown(2), Harbor(5). West: Airport(3), Westside(4).
+  const insertRegion = db.prepare(`INSERT INTO regions (name) VALUES (?)`);
+  const eastId = insertRegion.run('East Region').lastInsertRowid;
+  const westId = insertRegion.run('West Region').lastInsertRowid;
+  const setLocRegion = db.prepare(`UPDATE locations SET region_id=? WHERE id=?`);
+  [[eastId,1],[eastId,2],[eastId,5],[westId,3],[westId,4]].forEach(([r,l]) => setLocRegion.run(r,l));
+
   // ── Users ────────────────────────────────────────────────────────
   const insertUser = db.prepare(`INSERT INTO users (name, email, password_hash, role, location_id, hourly_rate) VALUES (?,?,?,?,?,?)`);
   const h = (pw) => bcrypt.hashSync(pw, 10);
