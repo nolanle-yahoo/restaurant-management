@@ -91,7 +91,7 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 21. **Split the bill** (by guest or item) (R5). *M*
 22. **Order edit/void after sending** with manager approval + audit. *M*
 23. **Vendor master records** (lead time, pricing, history). *M*
-24. **Waste/spoilage logging + expiry/lot (FIFO) tracking**. *M*
+24. ✅ **DONE** — **Waste/spoilage logging** (v1.15.0) + **expiry/lot (FIFO) tracking** (v1.22.0): dated receiving lots, FIFO consumption, an expiring-soon panel, and discard-to-waste.
 25. **Per-employee performance metrics** (sales/waiter, table-turn, tips). *M*
 26. **Discounts / comps / voids** with approval + audit. *M*
 27. ✅ **DONE (v1.21.0)** — **Shift swapping** (R8): staff offer a shift → colleague claims → owner/manager approves the reassignment.
