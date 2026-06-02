@@ -287,7 +287,9 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   one-click links to the relevant review screens.
 
 ### 5.12 Internal Messaging & Feedback
-- **FR-12.1** Employees send messages/feedback addressed to their manager, the owner, or both.
+- **FR-12.1** Employees send messages/feedback addressed to their manager, the owner, or both —
+  available to **every role** from Account Settings → Message (with a thread of their sent
+  messages and any replies), so all staff can reach leadership from any page.
 - **FR-12.2** Managers see messages for their location; owners see all messages across
   locations; messages can be marked read.
 - **FR-12.3** A topbar notification bell shows the unread message count and links to the inbox.
