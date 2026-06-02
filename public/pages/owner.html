@@ -2045,6 +2045,93 @@ function renderAudit() {
 onModalOverlayClick('ownerResModal');
 onModalOverlayClick('menuItemModal');
 onModalOverlayClick('menuCatModal');
+
+// ── Regions & Staff Lending ───────────────────────────────
+let regionsData = [], loansData = [], lendableStaff = [];
+async function loadRegions() {
+  try {
+    const [regions, locs, emps, loans] = await Promise.all([
+      API.regions(), API.locations(), API.allEmployees(), API.staffLoans()
+    ]);
+    regionsData = regions; loansData = loans;
+    lendableStaff = emps.filter(e => e.is_active && !['owner','regional'].includes(e.role));
+    renderRegions(); renderLocRegions(locs); renderRegionalMgrs(emps); renderOwnerLoans();
+  } catch(e) { showAlert('regionsAlert', e.message); }
+}
+function renderRegions() {
+  const el = document.getElementById('regionsList');
+  el.innerHTML = regionsData.length ? regionsData.map(r => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:1px solid var(--border)">
+      <span><b>${r.name}</b> <span class="text-sm text-muted">· ${r.locations.length} locations${r.managers.length ? ' · mgr: ' + r.managers.map(m=>m.name).join(', ') : ''}</span></span>
+      <span style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-ghost" onclick="renameRegion(${r.id},'${r.name.replace(/'/g,"\\'")}')">Rename</button>
+        <button class="btn btn-sm btn-ghost" onclick="deleteRegion(${r.id})">Delete</button>
+      </span></div>`).join('') : '<p class="text-muted">No regions yet.</p>';
+}
+function renderLocRegions(locs) {
+  const opts = id => `<option value="">— none —</option>` + regionsData.map(r => `<option value="${r.id}" ${r.id===id?'selected':''}>${r.name}</option>`).join('');
+  document.getElementById('locRegionList').innerHTML = locs.map(l => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:1px solid var(--border)">
+      <span>${l.name}</span>
+      <select onchange="assignLocRegion(${l.id}, this.value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">${opts(l.region_id)}</select>
+    </div>`).join('');
+}
+function renderRegionalMgrs(emps) {
+  const mgrs = emps.filter(e => e.is_active && ['manager','regional'].includes(e.role));
+  const opts = id => `<option value="">— none —</option>` + regionsData.map(r => `<option value="${r.id}" ${r.id===id?'selected':''}>${r.name}</option>`).join('');
+  document.getElementById('regionalMgrList').innerHTML = mgrs.map(m => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:1px solid var(--border)">
+      <span>${m.name} <span class="text-sm text-muted">· ${m.role}${m.location_name ? ' · ' + m.location_name : ''}</span></span>
+      <select onchange="assignManager(${m.id}, this.value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">${opts(m.role==='regional'?m.region_id:'')}</select>
+    </div>`).join('') || '<p class="text-muted">No managers.</p>';
+}
+function renderOwnerLoans() {
+  document.getElementById('ownerLoansList').innerHTML = loansData.length ? loansData.map(l => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px solid var(--border)">
+      <span><b>${l.user_name}</b> (${l.user_role}) · ${l.from_location_name||'—'} → <b>${l.to_location_name}</b>
+        <span class="badge badge-muted">${l.status}</span>${l.note ? ' · ' + l.note : ''}</span>
+      ${l.status==='active' ? `<button class="btn btn-sm btn-ghost" onclick="ownerReturnStaff(${l.id})">Return</button>` : ''}
+    </div>`).join('') : '<p class="text-muted">No loans yet.</p>';
+}
+async function createRegion() {
+  const name = document.getElementById('newRegionName').value.trim();
+  if (!name) return;
+  try { await API.regionCreate(name); document.getElementById('newRegionName').value=''; loadRegions(); }
+  catch(e) { showAlert('regionsAlert', e.message); }
+}
+async function renameRegion(id, cur) {
+  const name = prompt('Region name:', cur); if (name===null || !name.trim()) return;
+  try { await API.regionRename(id, name.trim()); loadRegions(); } catch(e) { showAlert('regionsAlert', e.message); }
+}
+async function deleteRegion(id) {
+  if (!confirm('Delete this region? Its locations are unassigned and regional managers revert to managers.')) return;
+  try { await API.regionDelete(id); loadRegions(); } catch(e) { showAlert('regionsAlert', e.message); }
+}
+async function assignLocRegion(locId, regionId) {
+  try { await API.regionAssignLocation({ location_id: Number(locId), region_id: regionId ? Number(regionId) : null }); loadRegions(); }
+  catch(e) { showAlert('regionsAlert', e.message); }
+}
+async function assignManager(userId, regionId) {
+  try { await API.regionAssignManager({ user_id: Number(userId), region_id: regionId ? Number(regionId) : null }); showToast('Updated — they must re-sign-in', 'info'); loadRegions(); }
+  catch(e) { showAlert('regionsAlert', e.message); }
+}
+function openOwnerLendModal() {
+  document.getElementById('ownerLendAlert').classList.add('hidden');
+  document.getElementById('ownerLendUser').innerHTML = lendableStaff.map(s => `<option value="${s.id}">${s.name} (${s.role}) — ${s.location_name||'—'}</option>`).join('');
+  document.getElementById('ownerLendLoc').innerHTML = locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  document.getElementById('ownerLendNote').value = '';
+  showModal('ownerLendModal');
+}
+async function submitOwnerLend() {
+  try {
+    await API.lendStaff({ user_id: Number(document.getElementById('ownerLendUser').value), to_location_id: Number(document.getElementById('ownerLendLoc').value), note: document.getElementById('ownerLendNote').value.trim() });
+    hideModal('ownerLendModal'); showToast('Staff lent'); loadRegions();
+  } catch(e) { showAlert('ownerLendAlert', e.message); }
+}
+async function ownerReturnStaff(id) {
+  if (!confirm('Return this staff member to their home location?')) return;
+  try { await API.returnStaff(id); loadRegions(); } catch(e) { showAlert('regionsAlert', e.message); }
+}
 </script>
 </body>
 </html>
