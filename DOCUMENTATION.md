@@ -799,7 +799,7 @@ to scope their subscription. The server broadcasts:
 | `unsubscribe.html` | Public (customers) | One-click marketing unsubscribe via emailed token. |
 | `receipt.html` | Public (customers) | View/print an itemized receipt by receipt code; no login. |
 | `reset.html` | Public | Set a new password from an emailed reset link. |
-| `owner.html` | Owner | Overview, Staff & Locations, Timesheets, Warehouse, Supply, Transfers, Floor Plan, Admin Panel, Reservations, Menu (with recipe editor), Sales Analytics (incl. Tax & Service Charge settings and Payments & Refunds), Audit Log, Time Off, Messages, Marketing. |
+| `owner.html` | Owner | Overview, Staff & Locations, Timesheets, Warehouse, Supply, Transfers, Floor Plan, Admin Panel, Reservations, Menu (recipe editor + **Central Template** with apply-to-locations), Sales Analytics (incl. Tax & Service Charge settings and Payments & Refunds), Audit Log, Time Off, Messages, Marketing, **Regions & Lending**, **Schedule** (per-location assign/adjust). |
 | `manager.html` | Manager / Stockroom | Staff, Schedule, Timesheets, Inventory, Warehouse, Supply, Transfers, Floor Plan (incl. printable table QR codes), Reservations, Menu, Sales Analytics (incl. Payments & Refunds), Time Off, Messages; low-stock banner; Online Orders panel; live toasts. |
 | `waiter.html` | Waiter | My Area, Full Floor, My Orders; take/serve with menu picker + special request; Settle Bill. |
 | `chef.html` | Chef | Kitchen queue (dine-in + online pickup/delivery), inventory quick view, low-stock alert, Menu Availability (86/un-86), and live toasts. |
