@@ -3,6 +3,8 @@ const express = require('express');
 const db = require('../db/database');
 const { verifyToken, requireRole } = require('../middleware/auth');
 const { broadcast } = require('../lib/ws');
+const { sendSMS } = require('../lib/sms');
+const tg = require('../lib/telegram');
 
 const router = express.Router();
 router.use(verifyToken);
