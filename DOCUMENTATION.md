@@ -589,6 +589,18 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/` | Any | List locations. |
 | GET | `/summary` | Any | Per-location KPIs + global totals. |
 
+### Regions & Staff Lending — `/api/regions`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/` | Owner | Regions with their locations + regional managers. |
+| POST · PUT · DELETE | `/[:id]` | Owner | Create / rename / delete a region. |
+| PUT | `/assign-location` | Owner | Set (or clear) a location's region. |
+| POST | `/assign-manager` | Owner | Promote a manager to `regional` for a region (or demote with `region_id: null`). |
+| GET | `/mine` | Regional, Owner | Region overview: locations + KPIs + staff (owner passes `?region_id`). |
+| GET | `/loans` | Owner, Regional | Active + recent staff loans (region-scoped for regional). |
+| POST | `/lend` | Owner, Regional | Lend a staff member to another location. |
+| POST | `/loans/:id/return` | Owner, Regional | Return a lent staff member to their home location. |
+
 ### Timesheets — `/api/timesheets`
 | Method | Path | Access | Description |
 |---|---|---|---|
