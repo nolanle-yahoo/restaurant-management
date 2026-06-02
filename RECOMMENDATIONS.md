@@ -144,5 +144,7 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 9. ✅ **Vendor records** + **self-service My Pay** + **course tagging/grouping** — **done in v1.16.0**.
 10. ✅ **Order edit** (add/remove items with re-depletion + audit) — **done in v1.17.0**.
 11. ✅ **Cycle counts** + **per-employee performance** + **certification tracking** — **done in v1.18.0**.
-12. **Next (remaining):** central menu with per-location overrides; 2FA; shift swapping; barcode
-    receiving; waitlist; expiry/lot (FIFO) tracking; inventory valuation & COGS.
+12. ✅ **Waitlist** + **SKU/scan-to-receive** + **inventory valuation & COGS** — **done in v1.19.0**.
+13. **Next (remaining):** the two larger items — **central menu with per-location overrides**
+    and **2FA**; plus a **scheduling backend** (prerequisite for shift swapping), expiry/lot
+    (FIFO) tracking, and a regional-manager role.
