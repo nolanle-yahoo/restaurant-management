@@ -75,6 +75,12 @@ function seed() {
   insertUser.run('Lucas Silva',    'emp@westside.com',     h('emp123'),  'employee',  4, 13.50);
   insertUser.run('Aisha Diallo',   'emp@harbor.com',       h('emp123'),  'employee',  5, 14.00);
 
+  // Regional manager over the East Region (home base: Downtown).
+  db.prepare(`INSERT INTO users (name, email, password_hash, role, location_id, region_id, hourly_rate) VALUES (?,?,?,?,?,?,?)`)
+    .run('Grace Mbeki', 'regional@east.com', h('region123'), 'regional', 1, eastId, 32.00);
+  // Each user's home location starts as their assigned location.
+  db.prepare(`UPDATE users SET home_location_id=location_id WHERE home_location_id IS NULL`).run();
+
   // ── Demo customer account (loyalty + marketing) ─────────────────
   const crypto = require('crypto');
   db.prepare(`INSERT INTO customers (name, email, phone, password_hash, points, marketing_opt_in, unsubscribe_token) VALUES (?,?,?,?,?,?,?)`)
