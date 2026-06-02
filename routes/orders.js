@@ -5,6 +5,7 @@ const { broadcast, notify } = require('../lib/ws');
 const { auditLog } = require('../lib/audit');
 const { depleteForOrder, adjustForLine } = require('../lib/recipes');
 const { requireCan } = require('../lib/permissions');
+const { sendSMS } = require('../lib/sms');
 
 const router = express.Router();
 router.use(verifyToken);
