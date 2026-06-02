@@ -329,4 +329,60 @@ router.get('/transactions', requireRole('owner','manager','stockroom'), (req, re
   res.json(rows);
 });
 
+// ── SKU / barcode receiving ────────────────────────────────
+// Update item attributes (SKU, min level, unit cost).
+router.put('/:id', requireRole('owner','manager','stockroom'), (req, res) => {
+  const item = db.prepare(`SELECT * FROM inventory WHERE id=?`).get(req.params.id);
+  if (!item) return res.status(404).json({ error: 'Item not found' });
+  if (req.user.role !== 'owner' && item.location_id !== req.user.location_id) return res.status(403).json({ error: 'Not your location.' });
+  const fields = [], vals = [];
+  if (req.body.sku !== undefined)          { fields.push('sku=?');          vals.push(req.body.sku || null); }
+  if (req.body.min_quantity !== undefined) { fields.push('min_quantity=?'); vals.push(parseFloat(req.body.min_quantity) || 0); }
+  if (req.body.unit_cost !== undefined)    { fields.push('unit_cost=?');    vals.push(parseFloat(req.body.unit_cost) || 0); }
+  if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
+  vals.push(item.id);
+  db.prepare(`UPDATE inventory SET ${fields.join(',')} WHERE id=?`).run(...vals);
+  res.json({ success: true });
+});
+
+// Receive stock by scanning/typing a SKU (or item_id) + quantity.
+router.post('/receive', requireRole('owner','manager','stockroom'), (req, res) => {
+  const locId = req.user.role === 'owner' ? (req.body.location_id || null) : req.user.location_id;
+  let item;
+  if (req.body.item_id) item = db.prepare(`SELECT * FROM inventory WHERE id=?`).get(req.body.item_id);
+  else if (req.body.sku) item = db.prepare(`SELECT * FROM inventory WHERE sku=? ${locId ? 'AND location_id=?' : ''}`).get(...(locId ? [String(req.body.sku).trim(), locId] : [String(req.body.sku).trim()]));
+  if (!item) return res.status(404).json({ error: 'No item matches that SKU.' });
+  if (req.user.role !== 'owner' && item.location_id !== req.user.location_id) return res.status(403).json({ error: 'Not your location.' });
+  const qty = Math.max(0, parseFloat(req.body.quantity) || 0);
+  if (qty <= 0) return res.status(400).json({ error: 'Quantity must be greater than 0.' });
+  db.prepare(`UPDATE inventory SET quantity=quantity+?, last_updated=datetime('now') WHERE id=?`).run(qty, item.id);
+  db.prepare(`INSERT INTO inventory_transactions (item_id, to_location_id, quantity, type, user_id, notes) VALUES (?,?,?,'in',?,?)`)
+    .run(item.id, item.location_id, qty, req.user.id, 'Received (scan)');
+  auditLog(req, 'stock_received', 'inventory', item.id, { item: item.item_name, quantity: qty, sku: item.sku });
+  res.json({ success: true, item_name: item.item_name, new_quantity: Math.round((item.quantity + qty) * 1000) / 1000 });
+});
+
+// ── Inventory valuation & COGS ─────────────────────────────
+router.get('/valuation', requireRole('owner','manager'), (req, res) => {
+  const locId = req.user.role === 'owner' ? (req.query.location_id || null) : req.user.location_id;
+  const end   = req.query.end   || new Date().toISOString().slice(0, 10);
+  const start = req.query.start || new Date(Date.now() - 29 * 864e5).toISOString().slice(0, 10);
+  const cond = locId ? 'WHERE location_id=?' : '';
+  const args = locId ? [locId] : [];
+  const byCategory = db.prepare(`
+    SELECT COALESCE(category,'Other') AS category,
+           ROUND(SUM(quantity * unit_cost), 2) AS value
+    FROM inventory ${cond} GROUP BY category ORDER BY value DESC
+  `).all(...args);
+  const totalValue = Math.round(byCategory.reduce((s, c) => s + (c.value || 0), 0) * 100) / 100;
+  // Consumed cost over the range: 'out' transactions × the item's unit cost.
+  const outCond = locId ? 'AND t.from_location_id=?' : '';
+  const consumed = db.prepare(`
+    SELECT ROUND(COALESCE(SUM(t.quantity * i.unit_cost),0), 2) AS cost
+    FROM inventory_transactions t JOIN inventory i ON t.item_id=i.id
+    WHERE t.type='out' AND date(t.created_at) >= ? AND date(t.created_at) <= ? ${outCond}
+  `).get(...[start, end, ...(locId ? [locId] : [])]);
+  res.json({ start, end, total_value: totalValue, by_category: byCategory, consumed_cost: consumed.cost || 0 });
+});
+
 module.exports = router;
