@@ -522,6 +522,10 @@ function createSchema() {
   try { db.exec(`ALTER TABLE order_items ADD COLUMN course TEXT`); } catch {}
   try { db.exec(`ALTER TABLE inventory ADD COLUMN sku TEXT`); } catch {}
   try { db.exec(`ALTER TABLE inventory ADD COLUMN unit_cost REAL NOT NULL DEFAULT 0`); } catch {}
+  // Self-service waitlist (virtual queue): guests join online via a public code,
+  // and staff can "page" them when their table is ready.
+  try { db.exec(`ALTER TABLE waitlist ADD COLUMN public_code TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE waitlist ADD COLUMN notified_at TEXT`); } catch {}
   // Central menu with per-location overrides: location rows link to a central
   // (location_id IS NULL) template via central_id; price_overridden=1 protects a
   // locally-edited price from being reset on the next central sync.
