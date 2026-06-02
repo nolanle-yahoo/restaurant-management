@@ -473,12 +473,17 @@ function statusBadge(status) {
 function initTabs(containerSel) {
   const container = document.querySelector(containerSel);
   if (!container) return;
-  container.querySelectorAll('.tab-btn').forEach(btn => {
+  const btns = [...container.querySelectorAll('.tab-btn')];
+  // Panes are siblings of the button row (not children), so resolve them by the
+  // buttons' data-tab ids rather than querying inside the container.
+  const panes = () => btns.map(b => document.getElementById(b.dataset.tab)).filter(Boolean);
+  btns.forEach(btn => {
     btn.addEventListener('click', () => {
-      container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      container.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      btns.forEach(b => b.classList.remove('active'));
+      panes().forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById(btn.dataset.tab).classList.add('active');
+      const pane = document.getElementById(btn.dataset.tab);
+      if (pane) pane.classList.add('active');
     });
   });
 }
