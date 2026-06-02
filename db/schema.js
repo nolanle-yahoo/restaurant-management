@@ -474,6 +474,7 @@ function createSchema() {
   try { db.exec(`ALTER TABLE orders ADD COLUMN voided INTEGER NOT NULL DEFAULT 0`); } catch {}
   try { db.exec(`ALTER TABLE orders ADD COLUMN void_reason TEXT`); } catch {}
   try { db.exec(`ALTER TABLE customers ADD COLUMN referral_code TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE customers ADD COLUMN stripe_customer_id TEXT`); } catch {}
   try { db.exec(`ALTER TABLE customers ADD COLUMN referred_by INTEGER REFERENCES customers(id)`); } catch {}
   try { db.exec(`ALTER TABLE menu_items ADD COLUMN image_url TEXT`); } catch {}
   try { db.exec(`ALTER TABLE menu_items ADD COLUMN allergens TEXT`); } catch {}
