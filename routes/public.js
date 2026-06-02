@@ -243,9 +243,9 @@ router.post('/order', orderLimiter, (req, res) => {
              message: `Order placed! Your tracking code is ${code}.` });
 });
 
-// Which SMS provider is active (for ops/verification).
+// Active notification channels (for ops/verification).
 router.get('/sms-config', (req, res) => {
-  res.json({ provider: sms.provider, live: sms.enabled });
+  res.json({ provider: sms.provider, live: sms.enabled, telegram_live: tg.enabled });
 });
 
 // ── Online prepayment (Stripe) + tipping ───────────────────
