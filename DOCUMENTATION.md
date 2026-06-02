@@ -790,7 +790,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/pay-config` | Public | Whether card prepayment is enabled + the Stripe publishable key. |
 | POST | `/order/intent` | Public (rate-limited) | Prepay step 1: price the cart (incl. tip) and create a Stripe PaymentIntent; returns client secret/simulated flag + breakdown. No order created yet. |
 | POST | `/order/confirm` | Public (rate-limited) | Prepay step 2: verify the intent succeeded (and amount matches, real mode), then create the **paid** order, fire it to the kitchen, and email a receipt. Idempotent per intent. |
-| GET | `/order` | Public | Track an online order by tracking code (status + items). |
+| GET | `/order` | Public | Track an online order by tracking code (status + items; for delivery: driver first name, status, ETA + live coords). |
 | POST | `/account/register` · `/account/login` | Public (rate-limited) | Customer sign-up / sign-in; returns a customer JWT. |
 | GET | `/account/me` · `/account/orders` · `/account/loyalty` | Customer | Profile, order history, and points + ledger. |
 | GET · DELETE | `/account/cards[/:id]` | Customer | List or remove saved payment cards (brand/last4/expiry only). |
