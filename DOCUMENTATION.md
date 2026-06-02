@@ -559,6 +559,9 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/by-area` | All staff | Tables grouped by area. |
 | POST | `/` | Owner, Manager | Create table. |
 | PUT | `/:id` | All staff (metadata: Owner/Manager) | Update status/metadata; broadcasts. |
+| PUT | `/:id/assign` | Owner, Manager | Assign (or clear) the table's staff member. |
+| POST | `/:id/claim` | Waiter, Employee, Front Desk, Manager, Owner | Claim a table that has no assignee (must be clocked in). |
+| POST | `/:id/release` | Assignee, Manager, Owner | Free a table's assignment. |
 | DELETE | `/:id` | Owner, Manager | Delete table. |
 
 ### Orders — `/api/orders`
