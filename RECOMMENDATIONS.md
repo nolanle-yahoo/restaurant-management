@@ -92,8 +92,8 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 24. **Waste/spoilage logging + expiry/lot (FIFO) tracking**. *M*
 25. **Per-employee performance metrics** (sales/waiter, table-turn, tips). *M*
 26. **Discounts / comps / voids** with approval + audit. *M*
-27. **Shift swapping & availability** (R8). *M*
-28. **Self-service staff portal** (view tips/pay, schedule, swaps). *M*
+27. ✅ **DONE (v1.21.0)** — **Shift swapping** (R8): staff offer a shift → colleague claims → owner/manager approves the reassignment.
+28. ✅ **DONE (v1.21.0)** — **Self-service staff portal**: Account Settings → My Schedule shows upcoming shifts and drives shift offers/claims (alongside My Pay & Tips from v1.16.0).
 29. **Broadcast announcements** (manager/owner → staff). *M*
 30. **Reservation reminders** + real-time availability + **waitlist** (R9). *M*
 31. **Regional grouping + regional-manager role**; **cross-location staff lending**. *M*
