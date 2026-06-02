@@ -233,6 +233,12 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   scanning/typing the SKU + quantity (adds stock + logs a transaction).
 - **FR-8.11** **Valuation & COGS** — items carry a unit cost; owners/managers see current stock
   value (by category) and the cost of stock consumed over a date range.
+- **FR-8.12** **Expiry / lot (FIFO) tracking** — received stock can be recorded as a dated *lot*
+  (expiry date + optional lot #). Consumption (sales depletion, waste, transfers, negative cycle-
+  count variance) draws down lots in **FIFO order** (earliest expiry first). An "Expiring Soon"
+  panel lists lots expiring within a window (7/14/30 days, including already-expired), and a lot
+  can be **discarded** — writing it off as waste and reducing stock. `inventory.quantity` remains
+  the authoritative total; lots are a parallel ledger for expiry and traceability.
 
 ### 5.9 Scheduling
 - **FR-9.1** Owners/managers build weekly staff schedules per location — a grid of employees ×
