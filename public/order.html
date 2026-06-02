@@ -152,6 +152,7 @@ async function init() {
       const cb = document.getElementById('checkoutBtn'); if (cb) cb.textContent = 'Place Order';
       const ch = document.getElementById('checkoutHint'); if (ch) ch.textContent = 'A server will bring your bill.';
     }
+    if (!tableMode && signedIn()) loadSavedCards();
     loadMenu();
     if (qp.get('code')) { document.getElementById('trackCode').value = qp.get('code'); trackOrder(); }
   } catch (e) {
