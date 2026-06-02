@@ -268,6 +268,17 @@ body {
 }
 .modal-title { font-size: 17px; font-weight: 800; color: var(--burgundy); margin-bottom: 18px; }
 
+/* Account Settings modal: user-resizable (drag bottom-right) + expand toggle. */
+#accountSettingsBox {
+  width: 460px; min-width: 320px; max-width: 96vw;
+  min-height: 300px; max-height: 90vh;
+  resize: both; overflow: auto;
+}
+#accountSettingsBox.expanded { width: 860px; height: 86vh; }
+#settingsExpandBtn { border: 1px solid var(--border); background: none; border-radius: 8px;
+  cursor: pointer; font-size: 14px; padding: 4px 9px; line-height: 1; color: var(--muted); }
+#settingsExpandBtn:hover { background: rgba(0,0,0,.05); }
+
 .form-group { margin-bottom: 14px; }
 .form-group label { display: block; font-size: 12.5px; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .3px; }
 .form-group input,
