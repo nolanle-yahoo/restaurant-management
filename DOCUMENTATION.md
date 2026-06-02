@@ -238,6 +238,10 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-9.1** Owners/managers build weekly staff schedules per location — a grid of employees ×
   days with add/edit/delete of shifts (work date, start/end) and week navigation.
 - **FR-9.2** Staff see their own upcoming shifts under Account Settings → My Schedule.
+- **FR-9.3** **Shift swapping** — staff offer an upcoming shift to colleagues at their location
+  (open to anyone, or directed to a named colleague). A colleague claims it, and an owner or
+  manager approves the hand-over, which reassigns the shift. Requesters can cancel a pending
+  offer; owners/managers can reject. Managers review pending swaps from the Schedule tab.
 
 ### 5.10 Payroll & Timesheets
 - **FR-10.1** Owners and managers generate timesheet reports over a date range (and by
