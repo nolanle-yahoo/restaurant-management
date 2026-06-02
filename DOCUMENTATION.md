@@ -360,7 +360,13 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-17.2** Anyone can submit an online reservation request (name, contact, party size,
   date, time, notes); requests are created as **pending** for staff confirmation and are
   rate-limited to deter abuse.
-- **FR-17.3** The public pages are linked from the staff login screen and require no account.
+- **FR-17.3** **Path split** — the guest site is the front door at `/` (a landing page with
+  Order / Reserve / Menu calls-to-action, account/loyalty + reservation-lookup links, and a live
+  list of locations from the public API). The **staff app** lives at `/staff` (login → role
+  dashboards). Both run on the **same back-end and API**; only the entry point differs. Staff
+  auth redirects (sign-out, expired session, unauthorized page) return to `/staff`, and a
+  "Staff Login" link sits discreetly on the home page. *(Subdomains — `www.` vs `app.` — are a
+  drop-in upgrade once a custom domain is attached; no back-end change required.)*
 - **FR-17.4** **Online ordering** — anyone can place a **pickup or delivery** order from a
   location's menu without logging in. Prices are taken from the server; the order enters the
   kitchen queue as a normal order (no table/waiter), inventory auto-depletes, and staff are
