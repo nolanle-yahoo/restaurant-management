@@ -77,7 +77,13 @@ router.put('/items/:id', requireRole('owner','manager','waiter','chef'), (req, r
   const fields = [], vals = [];
   if (name !== undefined)         { fields.push('name=?');         vals.push(name); }
   if (description !== undefined)  { fields.push('description=?');  vals.push(description); }
-  if (price !== undefined)        { fields.push('price=?');         vals.push(price); }
+  if (price !== undefined)        {
+    fields.push('price=?'); vals.push(price);
+    // Editing the price of a central-linked item marks it as a local override so
+    // the next central sync won't reset it.
+    const linked = db.prepare(`SELECT central_id FROM menu_items WHERE id=?`).get(req.params.id);
+    if (linked && linked.central_id) { fields.push('price_overridden=1'); }
+  }
   if (is_available !== undefined) { fields.push('is_available=?'); vals.push(is_available ? 1 : 0); }
   if (sort_order !== undefined)   { fields.push('sort_order=?');   vals.push(sort_order); }
   if (category_id !== undefined)  { fields.push('category_id=?'); vals.push(category_id); }
