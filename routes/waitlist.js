@@ -1,0 +1,49 @@
+// Walk-in waitlist — a host queue alongside reservations.
+const express = require('express');
+const db = require('../db/database');
+const { verifyToken, requireRole } = require('../middleware/auth');
+const { broadcast } = require('../lib/ws');
+
+const router = express.Router();
+router.use(verifyToken);
+const HOST = ['owner', 'manager', 'frontdesk'];
+
+// Current (waiting) parties, plus recently seated/left for context.
+router.get('/', requireRole(...HOST), (req, res) => {
+  const locId = req.user.role === 'owner' ? (req.query.location_id || null) : req.user.location_id;
+  const cond = locId ? 'WHERE location_id=?' : '';
+  const args = locId ? [locId] : [];
+  const rows = db.prepare(`
+    SELECT * FROM waitlist ${cond}
+    AND status='waiting'`.replace('WHERE location_id=? AND', locId ? 'WHERE location_id=? AND' : 'WHERE')
+  // fall through handled below
+  ).all ? [] : []; // placeholder (replaced just below)
+  const waiting = db.prepare(`SELECT * FROM waitlist ${locId ? 'WHERE location_id=? AND' : 'WHERE'} status='waiting' ORDER BY created_at`).all(...args);
+  res.json(waiting);
+});
+
+router.post('/', requireRole(...HOST), (req, res) => {
+  const locId = req.user.role === 'owner' ? req.body.location_id : req.user.location_id;
+  const { guest_name, party_size, phone, quoted_minutes, notes } = req.body;
+  if (!locId || !guest_name) return res.status(400).json({ error: 'Location and guest name are required.' });
+  const size = Math.max(1, Math.min(50, parseInt(party_size) || 2));
+  const r = db.prepare(`INSERT INTO waitlist (location_id, guest_name, party_size, phone, quoted_minutes, notes) VALUES (?,?,?,?,?,?)`)
+    .run(locId, String(guest_name).slice(0, 120), size, phone || null, parseInt(quoted_minutes) || null, notes ? String(notes).slice(0, 300) : null);
+  broadcast('waitlist_update', { location_id: Number(locId) }, locId);
+  res.json({ success: true, id: r.lastInsertRowid });
+});
+
+// Update status: seat or remove (left).
+router.put('/:id', requireRole(...HOST), (req, res) => {
+  const w = db.prepare(`SELECT * FROM waitlist WHERE id=?`).get(req.params.id);
+  if (!w) return res.status(404).json({ error: 'Waitlist entry not found' });
+  if (req.user.role !== 'owner' && w.location_id !== req.user.location_id) return res.status(403).json({ error: 'Not your location.' });
+  const status = ['waiting', 'seated', 'left'].includes(req.body.status) ? req.body.status : null;
+  if (!status) return res.status(400).json({ error: 'Invalid status' });
+  const seatedAt = status === 'seated' ? "datetime('now')" : 'seated_at';
+  db.prepare(`UPDATE waitlist SET status=?, seated_at=${seatedAt} WHERE id=?`).run(status, w.id);
+  broadcast('waitlist_update', { location_id: w.location_id }, w.location_id);
+  res.json({ success: true });
+});
+
+module.exports = router;
