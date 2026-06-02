@@ -106,9 +106,12 @@ function _injectAccountSettingsModal() {
   const div = document.createElement('div');
   div.innerHTML = `
   <div class="modal-overlay" id="accountSettingsModal">
-    <div class="modal" style="width:420px">
-      <div class="modal-title">⚙️ Account Settings</div>
-      <div class="tabs" id="settingsTabs" style="margin-bottom:18px">
+    <div class="modal" id="accountSettingsBox">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:10px">
+        <div class="modal-title" style="margin:0">⚙️ Account Settings</div>
+        <button id="settingsExpandBtn" title="Expand / shrink (drag the bottom-right corner to resize)" onclick="toggleAccountSettingsSize()">⤢</button>
+      </div>
+      <div class="tabs" id="settingsTabs" style="margin-bottom:18px;flex-wrap:wrap">
         <button class="tab-btn active" data-tab="tabProfile">Profile</button>
         <button class="tab-btn" data-tab="tabPassword">Change Password</button>
         <button class="tab-btn" data-tab="tabPay">My Pay</button>
