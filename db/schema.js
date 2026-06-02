@@ -299,6 +299,20 @@ function createSchema() {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
+    -- Saved payment methods for signed-in customers (card brand/last4 + the Stripe
+    -- PaymentMethod id; the actual card data lives in Stripe, never here).
+    CREATE TABLE IF NOT EXISTS customer_cards (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL REFERENCES customers(id),
+      stripe_pm_id TEXT NOT NULL,
+      brand TEXT,
+      last4 TEXT,
+      exp_month INTEGER,
+      exp_year INTEGER,
+      created_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(customer_id, stripe_pm_id)
+    );
+
     -- Loyalty ledger: points earned/redeemed, linked to the order that earned them.
     CREATE TABLE IF NOT EXISTS loyalty_transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
