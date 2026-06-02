@@ -383,6 +383,20 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-19.4** Users can request a **password reset**; a one-time, expiring link is emailed and
   consumed on the reset page. Requests never reveal whether an email is registered.
 
+### 5.20 Multi-Location: Regions & Staff Lending
+- **FR-20.1** Owners group locations into **regions** (create / rename / delete; assign each
+  location to a region). Deleting a region unassigns its locations and reverts its regional
+  managers to plain managers.
+- **FR-20.2** Owners promote a manager to a **regional manager** (role `regional`) over one
+  region. The change bumps the user's token version so it takes effect on next sign-in. A
+  regional manager lands on a dedicated dashboard scoped to their region.
+- **FR-20.3** The **regional overview** shows each region location with live KPIs (on-duty staff,
+  open orders, occupancy, low-stock count) plus the staff working across the region.
+- **FR-20.4** **Cross-location staff lending** — owners (anywhere) and regional managers (within
+  their region) temporarily lend a staff member to another location. While on loan the user's
+  working location is the borrowing location; **returning** restores their home location. A staff
+  member can be on only one active loan at a time; managers cannot lend.
+
 ---
 
 ## 6. Role × Capability Matrix
