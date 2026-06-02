@@ -113,6 +113,8 @@ function _injectAccountSettingsModal() {
         <button class="tab-btn" data-tab="tabPassword">Change Password</button>
         <button class="tab-btn" data-tab="tabPay">My Pay</button>
         <button class="tab-btn" data-tab="tabSchedule">My Schedule</button>
+        <button class="tab-btn" data-tab="tabMessage">Message</button>
+        <button class="tab-btn" data-tab="tabTimeOff">Time Off</button>
       </div>
       <div id="tabProfile" class="tab-pane active">
         <div id="profileAlert" class="alert hidden"></div>
