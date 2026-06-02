@@ -954,6 +954,28 @@ async function loadInventory() {
   invData = await API.inventory(user.location_id);
   renderInv(invData);
   loadWasteLog();
+  loadCountLog();
+}
+
+async function countFor(id, name, sys) {
+  const counted = prompt(`Cycle count for ${name} — system shows ${sys}. Enter the counted quantity:`, sys);
+  if (counted === null) return;
+  try { const r = await API.cycleCount({ item_id: id, counted_quantity: parseFloat(counted) });
+    showToast(`Counted ${name}: variance ${r.variance>0?'+':''}${r.variance}`, 'info'); loadInventory();
+  } catch(e) { alert(e.message); }
+}
+async function loadCountLog() {
+  let rows = []; try { rows = await API.cycleCounts(user.location_id); } catch(e) { return; }
+  const el = document.getElementById('countLog'); if (!el) return;
+  el.innerHTML = rows.length ? `<table class="data-table"><thead><tr><th>When</th><th>Item</th><th>System</th><th>Counted</th><th>Variance</th><th>By</th></tr></thead><tbody>${
+    rows.slice(0,50).map(c => `<tr>
+      <td>${new Date((c.created_at||'').replace(' ','T')+'Z').toLocaleString()}</td>
+      <td class="fw-700">${c.item_name}</td>
+      <td>${c.system_qty} ${c.unit||''}</td>
+      <td>${c.counted_qty} ${c.unit||''}</td>
+      <td style="color:${c.variance<0?'var(--danger)':c.variance>0?'var(--success)':'var(--muted)'}">${c.variance>0?'+':''}${c.variance}</td>
+      <td>${c.user_name||'—'}</td>
+    </tr>`).join('')}</tbody></table>` : '<p style="color:var(--muted);padding:12px">No counts yet.</p>';
 }
 
 async function logWasteFor(id, name, stock) {
