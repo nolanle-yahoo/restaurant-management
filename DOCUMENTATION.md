@@ -1,6 +1,6 @@
 # Restaurant Management System — Functional & Technical Documentation
 
-**Version:** 1.25.0
+**Version:** 1.26.0
 **Document status:** Official reference
 **Platform:** Web application (desktop + mobile responsive)
 
