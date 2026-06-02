@@ -8,18 +8,12 @@ const router = express.Router();
 router.use(verifyToken);
 const HOST = ['owner', 'manager', 'frontdesk'];
 
-// Current (waiting) parties, plus recently seated/left for context.
+// Current (waiting) parties for the location.
 router.get('/', requireRole(...HOST), (req, res) => {
   const locId = req.user.role === 'owner' ? (req.query.location_id || null) : req.user.location_id;
-  const cond = locId ? 'WHERE location_id=?' : '';
+  const where = locId ? 'WHERE location_id=? AND status=\'waiting\'' : 'WHERE status=\'waiting\'';
   const args = locId ? [locId] : [];
-  const rows = db.prepare(`
-    SELECT * FROM waitlist ${cond}
-    AND status='waiting'`.replace('WHERE location_id=? AND', locId ? 'WHERE location_id=? AND' : 'WHERE')
-  // fall through handled below
-  ).all ? [] : []; // placeholder (replaced just below)
-  const waiting = db.prepare(`SELECT * FROM waitlist ${locId ? 'WHERE location_id=? AND' : 'WHERE'} status='waiting' ORDER BY created_at`).all(...args);
-  res.json(waiting);
+  res.json(db.prepare(`SELECT * FROM waitlist ${where} ORDER BY created_at`).all(...args));
 });
 
 router.post('/', requireRole(...HOST), (req, res) => {
