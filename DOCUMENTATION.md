@@ -748,7 +748,10 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/reservations` | Public (rate-limited) | Submit an online reservation request; created as **pending**, returns a confirmation code, emails the guest. |
 | GET | `/reservations/lookup` | Public | Look up a reservation by confirmation code + matching email/phone. |
 | POST | `/reservations/cancel` | Public | Cancel a reservation by confirmation code + matching email/phone. |
-| POST | `/order` | Public (rate-limited) | Place a dine-in (QR), pickup, or delivery order (server-priced); links the customer if signed in; returns a tracking code. |
+| POST | `/order` | Public (rate-limited) | Place a dine-in (QR) order, or a pickup/delivery order to pay on collection (server-priced); links the customer if signed in; returns a tracking code. |
+| GET | `/pay-config` | Public | Whether card prepayment is enabled + the Stripe publishable key. |
+| POST | `/order/intent` | Public (rate-limited) | Prepay step 1: price the cart (incl. tip) and create a Stripe PaymentIntent; returns client secret/simulated flag + breakdown. No order created yet. |
+| POST | `/order/confirm` | Public (rate-limited) | Prepay step 2: verify the intent succeeded (and amount matches, real mode), then create the **paid** order, fire it to the kitchen, and email a receipt. Idempotent per intent. |
 | GET | `/order` | Public | Track an online order by tracking code (status + items). |
 | POST | `/account/register` · `/account/login` | Public (rate-limited) | Customer sign-up / sign-in; returns a customer JWT. |
 | GET | `/account/me` · `/account/orders` · `/account/loyalty` | Customer | Profile, order history, and points + ledger. |
