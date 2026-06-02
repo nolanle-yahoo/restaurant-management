@@ -147,7 +147,8 @@ router.post('/reservations/cancel', (req, res) => {
 const PER_PARTY_MIN = 12; // rough per-party turnover estimate for ETA
 function waitPosition(row) {
   if (row.status !== 'waiting') return { position: null, estimated_wait: null };
-  const ahead = db.prepare(`SELECT COUNT(*) c FROM waitlist WHERE location_id=? AND status='waiting' AND created_at < ?`).get(row.location_id, row.created_at).c;
+  // Order by id (monotonic) so parties added in the same second still rank stably.
+  const ahead = db.prepare(`SELECT COUNT(*) c FROM waitlist WHERE location_id=? AND status='waiting' AND id < ?`).get(row.location_id, row.id).c;
   const position = ahead + 1;
   const estimated_wait = row.quoted_minutes != null ? row.quoted_minutes : position * PER_PARTY_MIN;
   return { position, estimated_wait };
