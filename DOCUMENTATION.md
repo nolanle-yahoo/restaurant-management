@@ -433,6 +433,22 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-19.4** Users can request a **password reset**; a one-time, expiring link is emailed and
   consumed on the reset page. Requests never reveal whether an email is registered.
 
+### 5.20a Delivery Dispatch & Driver Tracking
+- **FR-21.1** Every **delivery** order gets a delivery record with its own lifecycle —
+  `pending → assigned → picked_up → delivered` (or `failed`) — separate from the kitchen order
+  status.
+- **FR-21.2** **Dispatch** — owners/managers see a delivery board (customer, address, order
+  total, status) and assign a delivery to an active **driver** with an optional ETA; reassignment
+  is allowed until it's delivered.
+- **FR-21.3** **Driver app** — a driver (role `driver`) signs in to a dedicated page listing
+  their assigned deliveries with the address (map link), customer phone (tap-to-call), and order
+  total; they advance status (**Picked up → Delivered**, or mark **failed**). Delivering also
+  closes the kitchen order (served). Drivers must clock in like other staff.
+- **FR-21.4** **Live tracking** — the driver can opt to share GPS location (periodic pings); the
+  customer's order-tracking page shows the delivery timeline, assigned driver's first name, ETA,
+  and a **live map** of the driver's position (OpenStreetMap/Leaflet), auto-refreshing while the
+  delivery is in motion. The map is best-effort; the status timeline always works.
+
 ### 5.20 Multi-Location: Regions & Staff Lending
 - **FR-20.1** Owners group locations into **regions** (create / rename / delete; assign each
   location to a region). Deleting a region unassigns its locations and reverts its regional
