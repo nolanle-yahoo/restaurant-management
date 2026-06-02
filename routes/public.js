@@ -10,6 +10,7 @@ const { broadcast, notify } = require('../lib/ws');
 const { sendEmail } = require('../lib/email');
 const sms = require('../lib/sms');
 const { sendSMS } = sms;
+const tg = require('../lib/telegram');
 const { depleteForOrder } = require('../lib/recipes');
 const { getRates } = require('../lib/settings');
 const stripeLib = require('../lib/stripe');
