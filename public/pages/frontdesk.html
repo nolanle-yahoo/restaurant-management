@@ -177,8 +177,11 @@ async function loadWaitlist() {
   el.innerHTML = rows.length ? rows.map((w, i) => `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
       <div><span style="font-weight:800;color:var(--burgundy)">#${i+1}</span> <b>${w.guest_name}</b> · ${w.party_size} 👤
+        ${w.public_code ? '<span class="badge badge-muted" style="font-size:10px">online</span>' : ''}
+        ${w.notified_at ? '<span class="badge" style="font-size:10px;background:var(--success);color:#fff">paged</span>' : ''}
         <div style="font-size:12px;color:var(--muted)">waiting ${timeAgo(w.created_at)}${w.quoted_minutes?` · quoted ${w.quoted_minutes}m`:''}${w.phone?` · ${w.phone}`:''}</div></div>
       <div style="display:flex;gap:6px">
+        ${w.notified_at ? '' : `<button class="btn btn-sm btn-gold" onclick="waitlistNotify(${w.id})" title="Text the guest their table is ready">🔔 Page</button>`}
         <button class="btn btn-sm btn-success" onclick="waitlistSet(${w.id},'seated')">Seat</button>
         <button class="btn btn-sm btn-ghost" onclick="waitlistSet(${w.id},'left')">Remove</button>
       </div>
