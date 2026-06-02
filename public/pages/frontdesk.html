@@ -305,6 +305,7 @@ setInterval(loadAll, 5000);
 connectWebSocket(user?.location_id, {
   table_update: () => loadAll(),
   reservation_update: () => { if (document.getElementById('sec-reservations')?.classList.contains('hidden') === false) loadFdReservations(); },
+  waitlist_update: () => { if (document.getElementById('sec-waitlist')?.classList.contains('hidden') === false) loadWaitlist(); },
 });
 
 // Reservations
