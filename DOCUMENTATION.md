@@ -197,6 +197,15 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-6.6** Items can carry a **photo**, **allergens**, and **dietary** tags
   (vegetarian/vegan/gluten-free), shown on the public menu/ordering pages (with a dietary
   filter) and surfaced as allergen flags on kitchen tickets.
+- **FR-6.7** **Central menu with per-location overrides** — owners maintain a single **central
+  template** (categories + items). "Apply to locations" pushes it to every active location,
+  upserting each location's menu (matched by a `central_id` link). Names, descriptions,
+  allergens, dietary tags, sort order, and category are always synced; **price** is synced only
+  where a location hasn't overridden it, and **availability** is always left to the location.
+  Editing a central-linked item's price marks it as a **local override** (protected from future
+  syncs); a **"reset to central"** action clears the override and restores the template price.
+  Locations may still have purely local items. Only owners manage the central template; managers
+  manage their own location's menu and overrides.
 
 ### 5.7 Reservations
 - **FR-7.1** Owners, managers, and front desk create and manage reservations (guest name,
