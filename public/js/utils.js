@@ -4,7 +4,7 @@ function getUser() {
 
 function requireAuth(allowedRoles) {
   const user = getUser();
-  if (!user || !localStorage.getItem('token')) { location.href = '/'; return null; }
+  if (!user || !localStorage.getItem('token')) { location.href = '/staff'; return null; }
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     redirectByRole(user.role);
     return null;
