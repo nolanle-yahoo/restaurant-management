@@ -335,8 +335,8 @@ function renderCardChooser() {
 function setCard(v) { selectedCardId = (v === 'new') ? 'new' : Number(v); updateSaveWrap(); }
 function updateSaveWrap() {
   // Offer "save card" only to signed-in customers paying with a new card.
-  const show = signedIn() && (selectedCardId === 'new' || selectedCardId === null && !savedCards.length || savedCards.length === 0);
-  document.getElementById('saveCardWrap').style.display = (signedIn() && (selectedCardId === 'new' || !savedCards.length)) ? 'flex' : 'none';
+  const newCard = (selectedCardId === 'new' || !savedCards.length);
+  document.getElementById('saveCardWrap').style.display = (signedIn() && newCard) ? 'flex' : 'none';
 }
 
 // ── Prepay flow (pickup/delivery): intent → card → confirm ──
