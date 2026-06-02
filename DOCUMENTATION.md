@@ -277,7 +277,8 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 
 ### 5.11 Time Off Requests
 - **FR-11.1** Any employee submits time-off requests (vacation, sick, personal, other) with a
-  date range and reason.
+  date range and reason — available to **every role** from Account Settings → Time Off (and on
+  the role dashboards that surface it), so staff can request and track requests from any page.
 - **FR-11.2** Managers approve/deny requests for their location; owners across all locations;
   reviewers may attach a note.
 - **FR-11.3** Employees can cancel their own pending requests and track status.
