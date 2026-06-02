@@ -56,6 +56,18 @@ router.post('/', requireRole('owner'), (req, res) => {
   res.json({ success: true, id: r.lastInsertRowid });
 });
 
+// Assign (or clear) a location's region. Registered before `/:id` so the literal
+// path isn't captured by the rename route.
+router.put('/assign-location', requireRole('owner'), (req, res) => {
+  const { location_id, region_id } = req.body;
+  const loc = db.prepare(`SELECT id FROM locations WHERE id=?`).get(location_id);
+  if (!loc) return res.status(404).json({ error: 'Location not found.' });
+  if (region_id && !db.prepare(`SELECT id FROM regions WHERE id=?`).get(region_id)) return res.status(404).json({ error: 'Region not found.' });
+  db.prepare(`UPDATE locations SET region_id=? WHERE id=?`).run(region_id || null, location_id);
+  auditLog(req, 'region_assign_location', 'location', location_id, { region_id: region_id || null });
+  res.json({ success: true });
+});
+
 router.put('/:id', requireRole('owner'), (req, res) => {
   const name = (req.body.name || '').toString().trim();
   if (!name) return res.status(400).json({ error: 'Region name required.' });
