@@ -468,6 +468,10 @@ function createSchema() {
   try { db.exec(`ALTER TABLE order_items ADD COLUMN course TEXT`); } catch {}
   try { db.exec(`ALTER TABLE inventory ADD COLUMN sku TEXT`); } catch {}
   try { db.exec(`ALTER TABLE inventory ADD COLUMN unit_cost REAL NOT NULL DEFAULT 0`); } catch {}
+  // Regions & cross-location staff lending.
+  try { db.exec(`ALTER TABLE locations ADD COLUMN region_id INTEGER REFERENCES regions(id)`); } catch {}
+  try { db.exec(`ALTER TABLE users ADD COLUMN region_id INTEGER REFERENCES regions(id)`); } catch {}
+  try { db.exec(`ALTER TABLE users ADD COLUMN home_location_id INTEGER REFERENCES locations(id)`); } catch {}
 
   // Seed default permissions (idempotent): managers may refund/void/discount;
   // owner is always allowed in code. Other roles default to not allowed.
