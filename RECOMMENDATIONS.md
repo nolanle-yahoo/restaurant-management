@@ -126,8 +126,11 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 44. ✅ **DONE (v1.10.0)** — **Operational + real-time notifications**: role-targeted toasts for
     order-ready, needs-help, low-stock, new online orders, plus reservation reminders.
 45. ✅ **DONE (v1.10.0)** — **Online ordering (pickup/delivery)**: public order page with cart +
-    tracking, server-priced, kitchen-integrated, manager fulfillment panel. Pay-on-collection;
-    online prepayment + delivery dispatch remain follow-ups.
+    tracking, server-priced, kitchen-integrated, manager fulfillment panel.
+46. ✅ **DONE (v1.29.0)** — **Online prepayment + tipping (Stripe)**: card prepay at checkout with
+    tip presets/custom and a full breakdown; two-step intent→confirm flow creates the paid order
+    only after payment succeeds (idempotent, amount-verified); simulated without keys. *(Delivery
+    dispatch/driver tracking remains a follow-up.)*
 
 ---
 
