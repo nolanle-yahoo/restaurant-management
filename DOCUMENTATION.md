@@ -627,6 +627,13 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/:id/confirm` | Order-handling staff | Confirm a card payment after the client completes the Stripe flow. |
 | POST | `/:id/refund` | Staff with `refund` permission | Refund a paid payment. |
 
+### Waitlist — `/api/waitlist`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/` | Owner, Manager, Front Desk | Current waiting parties (location-scoped). |
+| POST | `/` | Owner, Manager, Front Desk | Add a walk-in party. |
+| PUT | `/:id` | Owner, Manager, Front Desk | Seat or remove a party (status). |
+
 ### Public (customer-facing, no authentication) — `/api/public`
 | Method | Path | Access | Description |
 |---|---|---|---|
