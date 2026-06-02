@@ -110,6 +110,11 @@ router.put('/:id', requireRole('owner','manager','waiter','chef','employee','fro
     const t = order.table_id ? db.prepare(`SELECT table_number FROM tables WHERE id=?`).get(order.table_id) : null;
     const where = t ? `Table ${t.table_number}` : 'an online order';
     notify(`Order ready — ${where}`, { locId: order.location_id, roles: ['waiter','employee','manager','frontdesk'], kind: 'order_ready' });
+    // Text the guest when a pickup order is ready.
+    if (order.order_type === 'pickup' && order.customer_phone) {
+      const locName = (db.prepare(`SELECT name FROM locations WHERE id=?`).get(order.location_id) || {}).name || 'your restaurant';
+      sendSMS(order.customer_phone, `${locName}: your order ${order.tracking_code} is ready for pickup! 🥡`, 'order_ready');
+    }
   }
   res.json({ success: true });
 });
