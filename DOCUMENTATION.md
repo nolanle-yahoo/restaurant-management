@@ -432,6 +432,12 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   and viewable/printable at a public receipt page via its receipt code.
 - **FR-19.4** Users can request a **password reset**; a one-time, expiring link is emailed and
   consumed on the reset page. Requests never reveal whether an email is registered.
+- **FR-19.5** **SMS notifications** — time-sensitive guest updates are also texted (when a phone
+  is on file): online **order received**, **payment received** (prepaid), **ready for pickup**,
+  delivery **on the way** / **delivered**, and **reservation request** confirmation. Texts are
+  sent via **Twilio** when `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` + `TWILIO_FROM` are set;
+  otherwise the system runs in **simulated mode** (recorded in `sms_log`, nothing leaves the
+  server) so flows stay testable — mirroring the email layer. Numbers are normalized to E.164.
 
 ### 5.20a Delivery Dispatch & Driver Tracking
 - **FR-21.1** Every **delivery** order gets a delivery record with its own lifecycle —
