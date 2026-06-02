@@ -381,6 +381,17 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   to take real card payments; without them the system runs in **simulated mode** (no external
   call, intents auto-"succeed") so the full flow works for demos. This mirrors the email layer's
   real-or-simulated behavior and applies to staff card payments too.
+- **FR-17.4b** **Apple Pay / Google Pay** — the checkout uses the Stripe **Payment Element**,
+  which automatically offers Apple Pay and Google Pay (alongside card entry) on supported
+  devices/browsers when real keys are configured. No separate buttons to maintain; wallets ride
+  the same PaymentIntent (`automatic_payment_methods`). *(Apple Pay also requires Stripe domain
+  verification + HTTPS in production.)*
+- **FR-17.4c** **Saved cards (signed-in customers)** — a signed-in customer can tick "save this
+  card" at checkout; the card is stored on a Stripe **Customer** (only brand/last4/expiry are
+  kept locally in `customer_cards`, never the PAN). On a later order they pick a saved card and
+  it's charged off-session — no re-entry. Saved cards are listed and removable under **My Account
+  → Payment Methods**. In simulated mode a representative card is recorded so the flow is
+  demonstrable end-to-end.
 - **FR-17.5** **QR-code table ordering** — each table has a QR code (printable from the manager
   Floor Plan) that opens the menu in "table mode"; guests order **dine-in** straight to the
   kitchen, the table flips to *ordered*, and a server settles the bill at the table (tip handled
