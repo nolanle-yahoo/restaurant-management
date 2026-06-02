@@ -434,10 +434,15 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   consumed on the reset page. Requests never reveal whether an email is registered.
 - **FR-19.5** **SMS notifications** — time-sensitive guest updates are also texted (when a phone
   is on file): online **order received**, **payment received** (prepaid), **ready for pickup**,
-  delivery **on the way** / **delivered**, and **reservation request** confirmation. Texts are
-  sent via **Twilio** when `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` + `TWILIO_FROM` are set;
-  otherwise the system runs in **simulated mode** (recorded in `sms_log`, nothing leaves the
-  server) so flows stay testable — mirroring the email layer. Numbers are normalized to E.164.
+  delivery **on the way** / **delivered**, and **reservation request** confirmation. Numbers are
+  normalized to E.164; every message is recorded in `sms_log`.
+- **FR-19.6** **Pluggable SMS provider** — `SMS_PROVIDER` selects the channel: `simulated`
+  (default; logged only), `twilio` (paid), `textbelt` (free 1/day on the default key, or free
+  unlimited self-hosted via `TEXTBELT_URL`), or `email_gateway` (free carrier email-to-SMS, e.g.
+  `vtext.com` / `txt.att.net` / `tmomail.net` — reuses the SMTP email layer). Unset/`auto` uses
+  Twilio when configured, else simulated. `GET /api/public/sms-config` reports the active
+  provider and whether it's live. The email-gateway path honestly records `simulated` when SMTP
+  isn't configured (so nothing silently "succeeds").
 
 ### 5.20a Delivery Dispatch & Driver Tracking
 - **FR-21.1** Every **delivery** order gets a delivery record with its own lifecycle —
