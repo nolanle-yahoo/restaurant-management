@@ -913,8 +913,11 @@ performance** analytics; **certification tracking** with expiry highlighting.
 **Delivered in 1.21.0:** **shift swapping** — staff offer a shift (open or to a named
 colleague), a colleague claims it, and an owner/manager approves the reassignment.
 
-**Remaining:** expiry/lot (FIFO) tracking; regional-manager role & cross-location staff lending;
-**central menu with per-location overrides** and **2FA** (the two larger items).
+**Delivered in 1.22.0:** **expiry / lot (FIFO) tracking** — dated receiving lots, FIFO
+consumption, an "Expiring Soon" panel, and lot discard-to-waste.
+
+**Remaining:** regional-manager role & cross-location staff lending; **central menu with
+per-location overrides** and **2FA** (the two larger items).
 
 **Tier 4 — High impact:** par levels + auto-reorder; executive multi-location dashboard &
 benchmarking; demand-based scheduling; finance/accounting integration. *(Configurable
