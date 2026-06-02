@@ -168,16 +168,54 @@ function openAccountSettings() {
 
 async function loadMySchedule() {
   const el = document.getElementById('myScheduleInfo'); if (!el) return;
+  const me = JSON.parse(localStorage.getItem('user') || '{}');
   el.textContent = 'Loading…';
   try {
-    const rows = await API.mySchedule();
-    el.innerHTML = rows.length ? rows.map(s => {
-      const d = new Date(s.work_date + 'T00:00:00');
-      return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
-        <span>${d.toLocaleDateString([], { weekday:'short', month:'short', day:'numeric' })}</span>
-        <span class="fw-700">${s.shift_start}–${s.shift_end}</span></div>`;
+    const [rows, swaps] = await Promise.all([API.mySchedule(), API.shiftSwaps().catch(() => [])]);
+    const fmt = wd => new Date(wd + 'T00:00:00').toLocaleDateString([], { weekday:'short', month:'short', day:'numeric' });
+    const swapByShift = {};
+    swaps.forEach(sw => { if (sw.status === 'open' || sw.status === 'accepted') swapByShift[sw.shift_id] = sw; });
+
+    const shiftsHtml = rows.length ? rows.map(s => {
+      const sw = swapByShift[s.id];
+      let action = `<button class="btn btn-sm" onclick="offerSwap(${s.id})">Offer swap</button>`;
+      if (sw) action = sw.status === 'accepted'
+        ? `<span style="font-size:12px;color:var(--muted)">Swap pending approval</span> <button class="btn btn-sm" onclick="cancelSwap(${sw.id})">Cancel</button>`
+        : `<span style="font-size:12px;color:var(--gold,#b8860b)">Offered</span> <button class="btn btn-sm" onclick="cancelSwap(${sw.id})">Cancel</button>`;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span>${fmt(s.work_date)} <span class="fw-700">${s.shift_start}–${s.shift_end}</span></span>
+        <span>${action}</span></div>`;
     }).join('') : '<p style="color:var(--muted);padding:8px 0">No upcoming shifts scheduled.</p>';
+
+    // Open offers from colleagues that the caller can pick up.
+    const claimable = swaps.filter(sw => sw.status === 'open' && sw.requester_id !== me.id);
+    const claimHtml = claimable.length ? claimable.map(sw =>
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span>${sw.requester_name} · ${fmt(sw.work_date)} <span class="fw-700">${sw.shift_start}–${sw.shift_end}</span></span>
+        <button class="btn btn-gold btn-sm" onclick="acceptSwap(${sw.id})">Take it</button></div>`
+    ).join('') : '<p style="color:var(--muted);padding:8px 0">No open shifts to pick up.</p>';
+
+    el.innerHTML =
+      shiftsHtml +
+      `<div style="font-size:12.5px;color:var(--muted);margin:14px 0 4px;font-weight:700">Open shifts you can take</div>` +
+      claimHtml;
   } catch(e) { el.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`; }
+}
+
+async function offerSwap(shiftId) {
+  if (!confirm('Offer this shift to colleagues at your location? A manager must approve once someone takes it.')) return;
+  try { await API.shiftSwapCreate({ shift_id: shiftId }); toast('Shift offered for swap'); loadMySchedule(); }
+  catch(e) { showToast ? showToast(e.message, 'error') : alert(e.message); }
+}
+async function acceptSwap(id) {
+  if (!confirm('Take this shift? Your manager will approve the swap.')) return;
+  try { await API.shiftSwapAccept(id); toast('Shift claimed — pending approval'); loadMySchedule(); }
+  catch(e) { showToast ? showToast(e.message, 'error') : alert(e.message); }
+}
+async function cancelSwap(id) {
+  if (!confirm('Cancel this swap?')) return;
+  try { await API.shiftSwapCancel(id); toast('Swap cancelled'); loadMySchedule(); }
+  catch(e) { showToast ? showToast(e.message, 'error') : alert(e.message); }
 }
 
 async function loadMyPay() {
