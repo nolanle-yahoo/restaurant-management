@@ -1125,19 +1125,47 @@ async function loadInventory() {
   loadWasteLog();
   loadCountLog();
   loadValuation();
+  loadExpiring();
 }
 
 async function receiveStock() {
   const sku = document.getElementById('recvSku').value.trim();
   const qty = document.getElementById('recvQty').value;
+  const expiry_date = document.getElementById('recvExpiry').value || undefined;
+  const lot_code = document.getElementById('recvLot').value.trim() || undefined;
   if (!sku || !(parseFloat(qty) > 0)) return showAlert('recvAlert', 'Enter a SKU and a quantity.');
   try {
-    const r = await API.receiveStock({ sku, quantity: qty });
-    showAlert('recvAlert', `Received ${qty} — ${r.item_name} now ${r.new_quantity}.`, 'success');
-    document.getElementById('recvSku').value = ''; document.getElementById('recvQty').value = '';
+    const r = await API.receiveStock({ sku, quantity: qty, expiry_date, lot_code });
+    showAlert('recvAlert', `Received ${qty} — ${r.item_name} now ${r.new_quantity}.${expiry_date ? ' Lot expires ' + expiry_date + '.' : ''}`, 'success');
+    ['recvSku','recvQty','recvExpiry','recvLot'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('recvSku').focus();
     loadInventory();
   } catch(e) { showAlert('recvAlert', e.message); }
+}
+
+async function loadExpiring() {
+  const el = document.getElementById('expiringList'); if (!el) return;
+  const days = document.getElementById('expDays')?.value || 7;
+  try {
+    const d = await API.expiringLots({ location_id: user.location_id, days });
+    if (!d.lots.length) { el.innerHTML = '<p style="color:var(--muted)">Nothing expiring in this window.</p>'; return; }
+    const head = `<div style="font-size:12px;color:var(--muted);margin-bottom:8px">${d.expired} expired · ${d.soon} expiring soon</div>`;
+    el.innerHTML = head + d.lots.map(lo => {
+      const overdue = lo.days_left < 0;
+      const label = overdue ? `expired ${-lo.days_left}d ago` : (lo.days_left === 0 ? 'expires today' : `in ${lo.days_left}d`);
+      const color = overdue ? 'var(--danger)' : (lo.days_left <= 3 ? 'var(--gold,#b8860b)' : 'var(--muted)');
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:1px solid var(--border)">
+        <span><b>${lo.item_name}</b> · ${lo.quantity} ${lo.unit||''}${lo.lot_code ? ' · lot ' + lo.lot_code : ''}
+          <span style="color:${color};font-size:12.5px"> (${lo.expiry_date}, ${label})</span></span>
+        <button class="btn btn-sm btn-ghost" onclick="discardLot(${lo.id})">Discard</button></div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`; }
+}
+async function discardLot(id) {
+  const reason = prompt('Discard this lot as waste. Reason:', 'Expired');
+  if (reason === null) return;
+  try { await API.discardLot(id, reason); showToast('Lot discarded', 'info'); loadInventory(); }
+  catch(e) { showToast(e.message, 'error'); }
 }
 async function loadValuation() {
   let d; try { d = await API.valuation({ location_id: user.location_id }); } catch(e) { return; }
