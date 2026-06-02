@@ -191,6 +191,16 @@ function _injectAccountSettingsModal() {
   onModalOverlayClick('accountSettingsModal');
 }
 
+function toggleAccountSettingsSize() {
+  const box = document.getElementById('accountSettingsBox');
+  if (!box) return;
+  box.classList.toggle('expanded');
+  // Clear any manual drag-resize so the expanded/normal preset applies cleanly.
+  box.style.width = ''; box.style.height = '';
+  const btn = document.getElementById('settingsExpandBtn');
+  if (btn) btn.textContent = box.classList.contains('expanded') ? '⤡' : '⤢';
+}
+
 function openAccountSettings() {
   const user = getUser();
   document.getElementById('settingsName').value  = user?.name  || '';
