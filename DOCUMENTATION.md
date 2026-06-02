@@ -165,7 +165,7 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   member must be clocked in) and is location-scoped; assignment changes broadcast in real time.
 - **FR-4.6** Table status changes broadcast in real time to all connected clients at that
   location.
-- **FR-4.6** **Transfer & merge** — an open order can be moved to another table (transfer), and
+- **FR-4.7** **Transfer & merge** — an open order can be moved to another table (transfer), and
   all of a table's open orders can be merged into another table. Table statuses update
   automatically (freed tables return to empty), changes broadcast, and the action is audited.
 
