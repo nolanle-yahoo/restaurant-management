@@ -192,6 +192,21 @@
 
       <!-- ── Inventory tab ── -->
       <div id="tab-inventory" class="hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">📦 Quick Receive (scan SKU)</div></div>
+            <div id="recvAlert" class="alert hidden" style="margin-bottom:8px"></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="recvSku" placeholder="Scan or type SKU" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter')document.getElementById('recvQty').focus()">
+              <input id="recvQty" type="number" min="0" step="0.01" placeholder="Qty" style="width:90px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter')receiveStock()">
+              <button class="btn btn-primary btn-sm" onclick="receiveStock()">Receive</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">💰 Stock Valuation</div></div>
+            <div id="valuation"><p style="color:var(--muted)">Loading…</p></div>
+          </div>
+        </div>
         <div class="card">
           <div class="card-header">
             <div class="card-title">Inventory — <span id="invLocName"></span></div>
