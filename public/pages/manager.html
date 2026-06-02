@@ -210,11 +210,16 @@
           <div class="card">
             <div class="card-header"><div class="card-title">📦 Quick Receive (scan SKU)</div></div>
             <div id="recvAlert" class="alert hidden" style="margin-bottom:8px"></div>
-            <div style="display:flex;gap:8px;align-items:center">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
               <input id="recvSku" placeholder="Scan or type SKU" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter')document.getElementById('recvQty').focus()">
               <input id="recvQty" type="number" min="0" step="0.01" placeholder="Qty" style="width:90px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter')receiveStock()">
               <button class="btn btn-primary btn-sm" onclick="receiveStock()">Receive</button>
             </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="recvExpiry" type="date" title="Expiry date (optional)" style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+              <input id="recvLot" placeholder="Lot # (optional)" style="width:140px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:5px">Add an expiry date to track lots and FIFO usage.</div>
           </div>
           <div class="card">
             <div class="card-header"><div class="card-title">💰 Stock Valuation</div></div>
