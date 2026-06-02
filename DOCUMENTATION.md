@@ -848,11 +848,14 @@ approvals dashboard** (owner + manager).
 **Delivered in 1.17.0:** **order edit** (add/change-qty/remove items with inventory
 re-depletion + audit, blocked once paid).
 
-**Tier 2–3 — Operational depth (remaining):** certification tracking; cycle counts / barcode
-receiving; expiry/lot (FIFO) tracking; per-employee performance; shift swapping; waitlist;
-regional-manager role & cross-location staff lending; central menu with overrides; 2FA;
-inventory valuation & COGS. *(Through 1.17.0: messaging, discounts/comps/voids, split-the-bill,
-transfer/merge, waste, approvals, vendors, self-service pay, courses, and order edit shipped.)*
+**Delivered in 1.18.0:** **cycle counts** (inventory reconciliation); **per-employee
+performance** analytics; **certification tracking** with expiry highlighting.
+
+**Tier 2–3 — Operational depth (remaining):** barcode receiving; expiry/lot (FIFO) tracking;
+shift swapping; waitlist; regional-manager role & cross-location staff lending; central menu
+with overrides; 2FA; inventory valuation & COGS. *(Through 1.18.0: messaging, discounts/comps/
+voids, split-the-bill, transfer/merge, waste, approvals, vendors, self-service pay, courses,
+order edit, cycle counts, staff performance, and certifications shipped.)*
 
 **Tier 4 — High impact:** par levels + auto-reorder; executive multi-location dashboard &
 benchmarking; demand-based scheduling; finance/accounting integration. *(Configurable
