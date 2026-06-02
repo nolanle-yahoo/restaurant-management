@@ -920,7 +920,8 @@ data-deletion workflows.
 | 1.14.0 | Split-the-bill via partial payments (proportional tax/service, settle once fully covered); menu photos + allergens + dietary tags with a public dietary filter and kitchen allergen flags; post-visit guest feedback (ratings/comments) with an owner dashboard. |
 | 1.15.0 | Table transfer (move an order) & merge (combine a table's open orders); waste/spoilage logging with reasons (deducts stock + audit); consolidated pending-approvals dashboard for owners & managers. |
 | 1.16.0 | Vendor master records (linked to supply orders); self-service "My Pay & Tips" for all staff (hours/gross/net/tips, last 7 days); course tagging with kitchen-ticket grouping (Appetizers/Mains/Desserts/Drinks). |
-| 1.17.0 | **Order edit: add items, change quantities, and remove items on an unpaid order — inventory re-depletes/restocks the delta (with auto-86) and every change is audited; blocked once a payment exists.** |
+| 1.17.0 | Order edit: add items, change quantities, and remove items on an unpaid order — inventory re-depletes/restocks the delta (with auto-86) and every change is audited; blocked once a payment exists. |
+| 1.18.0 | **Cycle counts (reconcile to a physical count with variance + adjustment); per-employee performance analytics (orders/sales/avg-ticket/tips); staff certification tracking with expiry highlighting.** |
 
 ---
 
