@@ -355,7 +355,7 @@ router.post('/order/confirm', orderLimiter, async (req, res) => {
     db.prepare(`
       INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, tip, total, method, status, stripe_payment_intent_id, receipt_code, receipt_email)
       VALUES (?, ?, NULL, ?, ?, ?, ?, ?, 'card', 'paid', ?, ?, ?)
-    `).run(orderId, location_id, p.subtotal, p.service, p.tax, p.tip, p.total, intent_id, receiptCode, (customer_email || '').trim() || null);
+    `).run(orderId, location_id, p.subtotal, p.service, p.tax, p.tip, p.total, intentId, receiptCode, (customer_email || '').trim() || null);
     if (customerId && p.subtotal > 0) awardCustomerPoints(customerId, Math.floor(p.subtotal), `Online order ${code}`);
     db.exec('COMMIT');
   } catch (e) {
