@@ -149,6 +149,16 @@ async function loadAll() {
     API.tablesByArea(user.location_id),
   ]);
   renderMyArea();
+  if (currentView === 'floor') renderFullFloor();
+}
+
+async function claimTable(id) {
+  try { await API.claimTable(id); showToast('Table claimed'); await loadAll(); }
+  catch(e) { showToast(e.message, 'error'); }
+}
+async function releaseTable(id) {
+  try { await API.releaseTable(id); showToast('Table released'); await loadAll(); }
+  catch(e) { showToast(e.message, 'error'); }
 }
 
 // ── My Area ────────────────────────────────────────────────
