@@ -223,6 +223,8 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-8.8** **Vendor master records** — owners/managers maintain a vendor list (contact, phone,
   email, lead time); supply orders can be placed against a vendor, and vendor names appear on
   the supply-order history.
+- **FR-8.9** **Cycle counts** — staff reconcile an item to a physically-counted quantity; the
+  variance is recorded, stock is updated to the count, and an adjustment transaction is logged.
 
 ### 5.9 Scheduling
 - **FR-9.1** Weekly staff schedules per location (work date, shift start/end).
