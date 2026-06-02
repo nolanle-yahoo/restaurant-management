@@ -153,5 +153,6 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 12. ✅ **Waitlist** + **SKU/scan-to-receive** + **inventory valuation & COGS** — **done in v1.19.0**.
 13. ✅ **Staff scheduling backend + UI** — **done in v1.20.0** (unblocks shift swapping).
 14. ✅ **Shift swapping** (offer → claim → owner/manager approval) — **done in v1.21.0**.
-15. **Next (remaining):** the two larger items — **central menu with per-location overrides**
-    and **2FA**; plus expiry/lot (FIFO) tracking and a regional-manager role.
+15. ✅ **Expiry / lot (FIFO) tracking** — **done in v1.22.0**.
+16. **Next (remaining):** **regional-manager role & cross-location staff lending**; then the two
+    larger items — **central menu with per-location overrides** and **2FA**.
