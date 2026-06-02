@@ -852,7 +852,8 @@ async function loadSummary() {
     const pre = ['tsLocFilter','supplyLocFilter','adminLocFilter','toLocFilter','msgLocFilter','resLocFilter','menuLocFilter','auditLocFilter'].includes(el.id)
       ? '<option value="">All Locations</option>'
       : el.id === 'empLocation' || el.id === 'reassignLoc' ? '<option value="">— none —</option>' : '<option value="">— select —</option>';
-    el.innerHTML = pre + locOpts;
+    const extra = el.id === 'menuLocFilter' ? '<option value="central">🌐 Central Template</option>' : '';
+    el.innerHTML = pre + extra + locOpts;
   });
 
   document.getElementById('globalStats').innerHTML = `
