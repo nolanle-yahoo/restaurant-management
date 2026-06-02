@@ -131,7 +131,15 @@
       <!-- ── Schedule tab ── -->
       <div id="tab-schedule" class="hidden">
         <div class="card">
-          <div class="card-header"><div class="card-title">Weekly Schedule</div></div>
+          <div class="card-header">
+            <div class="card-title">Weekly Schedule — <span id="schedWeekLabel"></span></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn btn-ghost btn-sm" onclick="schedWeek(-1)">‹ Prev</button>
+              <button class="btn btn-ghost btn-sm" onclick="schedWeek(0)">This week</button>
+              <button class="btn btn-ghost btn-sm" onclick="schedWeek(1)">Next ›</button>
+              <button class="btn btn-primary btn-sm" onclick="openShiftModal()">+ Add Shift</button>
+            </div>
+          </div>
           <div style="overflow-x:auto">
             <div class="sched-grid" id="schedGrid"></div>
           </div>
