@@ -92,17 +92,6 @@ router.delete('/:id', requireRole('owner'), (req, res) => {
   res.json({ success: true });
 });
 
-// Assign (or clear) a location's region.
-router.put('/assign-location', requireRole('owner'), (req, res) => {
-  const { location_id, region_id } = req.body;
-  const loc = db.prepare(`SELECT id FROM locations WHERE id=?`).get(location_id);
-  if (!loc) return res.status(404).json({ error: 'Location not found.' });
-  if (region_id && !db.prepare(`SELECT id FROM regions WHERE id=?`).get(region_id)) return res.status(404).json({ error: 'Region not found.' });
-  db.prepare(`UPDATE locations SET region_id=? WHERE id=?`).run(region_id || null, location_id);
-  auditLog(req, 'region_assign_location', 'location', location_id, { region_id: region_id || null });
-  res.json({ success: true });
-});
-
 // Promote a manager to regional manager of a region (or, with region_id null, demote).
 router.post('/assign-manager', requireRole('owner'), (req, res) => {
   const { user_id, region_id } = req.body;
