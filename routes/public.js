@@ -261,21 +261,50 @@ function priceOnlineOrder(body) {
   return { type, resolved, subtotal, service, tax, tip, total };
 }
 
-// Step 1: create a PaymentIntent for the priced cart (no order created yet).
+// Step 1: prepare payment for the priced cart (no order created yet).
+//  • Saved card (signed-in): charge it off-session now and return paid_with_saved_card.
+//  • New card: create a PaymentIntent; Stripe.js Payment Element handles card + wallets.
 router.post('/order/intent', orderLimiter, async (req, res) => {
   const p = priceOnlineOrder(req.body);
   if (p.error) return res.status(400).json({ error: p.error });
+  const cid = customerIdFromReq(req);
+  const amountCents = Math.round(p.total * 100);
+  const meta = { kind: 'online_order', location_id: String(req.body.location_id) };
+  const breakdown = { subtotal: p.subtotal, service: p.service, tax: p.tax, tip: p.tip, total: p.total };
   try {
-    const intent = await stripeLib.createIntent(Math.round(p.total * 100), { kind: 'online_order', location_id: String(req.body.location_id) });
+    if (cid && req.body.card_id) {
+      const card = db.prepare(`SELECT * FROM customer_cards WHERE id=? AND customer_id=?`).get(req.body.card_id, cid);
+      if (!card) return res.status(404).json({ error: 'Saved card not found.' });
+      const stripeCust = await stripeCustomerFor(cid);
+      const charge = await stripeLib.chargeSavedCard(amountCents, stripeCust, card.stripe_pm_id, meta);
+      if (charge.status !== 'succeeded') {
+        return res.status(402).json({ error: 'Could not charge that card. Please use a new card.' });
+      }
+      return res.json({ intent_id: charge.id, paid_with_saved_card: true, simulated: !!charge.simulated, breakdown });
+    }
+    const stripeCust = cid ? await stripeCustomerFor(cid) : null;
+    const intent = await stripeLib.createIntent(amountCents, meta, { customerId: stripeCust, savePm: !!req.body.save_card });
     res.json({
       intent_id: intent.id, client_secret: intent.client_secret, simulated: !!intent.simulated,
-      publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || null,
-      breakdown: { subtotal: p.subtotal, service: p.service, tax: p.tax, tip: p.tip, total: p.total },
+      publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || null, can_save: !!cid,
+      breakdown,
     });
   } catch (e) {
     console.error('public intent error:', e.message);
     res.status(502).json({ error: 'Could not start payment. Please try again.' });
   }
+});
+
+// Saved payment methods for the signed-in customer.
+router.get('/account/cards', requireCustomer, (req, res) => {
+  res.json(db.prepare(`SELECT id, brand, last4, exp_month, exp_year FROM customer_cards WHERE customer_id=? ORDER BY created_at DESC`).all(req.customerId));
+});
+router.delete('/account/cards/:id', requireCustomer, async (req, res) => {
+  const card = db.prepare(`SELECT * FROM customer_cards WHERE id=? AND customer_id=?`).get(req.params.id, req.customerId);
+  if (!card) return res.status(404).json({ error: 'Card not found.' });
+  try { await stripeLib.detachCard(card.stripe_pm_id); } catch (e) { console.error('detach failed:', e.message); }
+  db.prepare(`DELETE FROM customer_cards WHERE id=?`).run(card.id);
+  res.json({ success: true });
 });
 
 // Step 2: after the card is confirmed client-side, verify the intent succeeded,
