@@ -148,6 +148,13 @@ const API = {
   createTransferRequest(data)    { return this.post('/inventory/transfer-request', data); },
   updateTransferRequest(id, data){ return this.put(`/inventory/transfer-request/${id}`, data); },
 
+  deliveries(locId)        { return this.get('/deliveries' + (locId ? `?location_id=${locId}` : '')); },
+  deliveryDrivers(locId)   { return this.get('/deliveries/drivers' + (locId ? `?location_id=${locId}` : '')); },
+  assignDriver(id, driver_id, eta_minutes) { return this.post(`/deliveries/${id}/assign`, { driver_id, eta_minutes }); },
+  myDeliveries()           { return this.get('/deliveries/mine'); },
+  deliveryStatus(id, status) { return this.post(`/deliveries/${id}/status`, { status }); },
+  driverLocation(id, lat, lng) { return this.post(`/deliveries/${id}/location`, { lat, lng }); },
+
   locations()        { return this.get('/locations'); },
   locationsSummary() { return this.get('/locations/summary'); },
 
