@@ -1139,7 +1139,8 @@ data-deletion workflows.
 | 1.30.0 | Apple Pay / Google Pay + saved cards: checkout now uses the Stripe Payment Element (auto-offers Apple/Google Pay on supported devices). Signed-in customers can save a card (Stripe Customer; only brand/last4/expiry stored locally) and reuse it off-session on later orders, or manage cards under My Account → Payment Methods. Fully functional in simulated mode. |
 | 1.31.0 | Delivery dispatch + driver tracking: new `driver` role + app; managers dispatch delivery orders to drivers with an ETA; drivers advance status (picked up → delivered/failed) and can share live GPS. Customers track the delivery timeline with driver name, ETA, and a live map. Deliveries have their own lifecycle; completing one closes the kitchen order. |
 | 1.32.0 | SMS notifications (Twilio, simulated without keys): guests are texted on order received, payment received, ready for pickup, delivery on-the-way/delivered, and reservation request — whenever a phone is on file. Numbers normalized to E.164; simulated messages recorded in `sms_log`. |
-| 1.33.0 | **Pluggable SMS provider via `SMS_PROVIDER`: `simulated` (default), `twilio`, free **TextBelt**, or free **email-to-SMS carrier gateway** (reuses SMTP). `GET /api/public/sms-config` reports the active provider; `.env.example` documents all options. Real texts now possible without Twilio.** |
+| 1.33.0 | Pluggable SMS provider via `SMS_PROVIDER`: `simulated` (default), `twilio`, free **TextBelt**, or free **email-to-SMS carrier gateway** (reuses SMTP). `GET /api/public/sms-config` reports the active provider; `.env.example` documents all options. Real texts now possible without Twilio. |
+| 1.34.0 | **Optional Telegram ops notifier: a free bot posts new-order (incl. paid) and reservation alerts to a staff chat (`TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`); simulated to `telegram_log` when unconfigured; surfaced in `/api/public/sms-config` as `telegram_live`.** |
 
 ---
 
