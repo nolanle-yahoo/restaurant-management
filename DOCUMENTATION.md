@@ -256,9 +256,12 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   the authoritative total; lots are a parallel ledger for expiry and traceability.
 
 ### 5.9 Scheduling
-- **FR-9.1** Owners/managers build weekly staff schedules per location — a grid of employees ×
-  days with add/edit/delete of shifts (work date, start/end) and week navigation.
-- **FR-9.2** Staff see their own upcoming shifts under Account Settings → My Schedule.
+- **FR-9.1** Owners and managers build weekly staff schedules — a grid of **every role's** staff
+  (chef, waiter, front desk, employee, stockroom, manager, …) × days, with add/edit/delete of
+  shifts (work date, start/end) and week navigation. Managers manage their own location;
+  **owners review and assign/adjust any location** via a location picker on the Schedule screen.
+- **FR-9.2** Every staff member sees their own upcoming shifts under Account Settings → My
+  Schedule (available on all role dashboards).
 - **FR-9.3** **Shift swapping** — staff offer an upcoming shift to colleagues at their location
   (open to anyone, or directed to a named colleague). A colleague claims it, and an owner or
   manager approves the hand-over, which reassigns the shift. Requesters can cancel a pending
