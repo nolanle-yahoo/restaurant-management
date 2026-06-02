@@ -39,6 +39,42 @@ router.get('/waste', requireRole('owner','manager','stockroom','chef'), (req, re
   res.json(rows);
 });
 
+// ── Cycle counts (physical reconciliation) ─────────────────
+router.post('/count', requireRole('owner','manager','stockroom','chef'), (req, res) => {
+  const item = db.prepare(`SELECT * FROM inventory WHERE id=?`).get(req.body.item_id);
+  if (!item) return res.status(404).json({ error: 'Inventory item not found' });
+  if (req.user.role !== 'owner' && item.location_id !== req.user.location_id) {
+    return res.status(403).json({ error: 'You can only count items at your location.' });
+  }
+  const counted = parseFloat(req.body.counted_quantity);
+  if (!Number.isFinite(counted) || counted < 0) return res.status(400).json({ error: 'Enter a valid counted quantity (≥ 0).' });
+  const systemQty = item.quantity;
+  const variance = Math.round((counted - systemQty) * 1000) / 1000;
+  db.prepare(`UPDATE inventory SET quantity=?, last_updated=datetime('now') WHERE id=?`).run(counted, item.id);
+  db.prepare(`INSERT INTO cycle_counts (item_id, location_id, system_qty, counted_qty, variance, user_id) VALUES (?,?,?,?,?,?)`)
+    .run(item.id, item.location_id, systemQty, counted, variance, req.user.id);
+  if (variance !== 0) {
+    const type = variance > 0 ? 'in' : 'out';
+    const col = variance > 0 ? 'to_location_id' : 'from_location_id';
+    db.prepare(`INSERT INTO inventory_transactions (item_id, ${col}, quantity, type, user_id, notes) VALUES (?,?,?,?,?,?)`)
+      .run(item.id, item.location_id, Math.abs(variance), type, req.user.id, `Cycle count adjustment (${variance > 0 ? '+' : ''}${variance})`);
+  }
+  auditLog(req, 'cycle_count', 'inventory', item.id, { item: item.item_name, system: systemQty, counted, variance });
+  res.json({ success: true, system_qty: systemQty, counted_qty: counted, variance });
+});
+
+router.get('/counts', requireRole('owner','manager','stockroom','chef'), (req, res) => {
+  const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
+  const cond = locId ? 'WHERE cc.location_id=?' : '';
+  const args = locId ? [locId] : [];
+  const rows = db.prepare(`
+    SELECT cc.*, i.item_name, i.unit, u.name as user_name
+    FROM cycle_counts cc JOIN inventory i ON cc.item_id=i.id LEFT JOIN users u ON cc.user_id=u.id
+    ${cond} ORDER BY cc.created_at DESC LIMIT 100
+  `).all(...args);
+  res.json(rows);
+});
+
 // ── Vendors (master records) ───────────────────────────────
 router.get('/vendors', requireRole('owner','manager','stockroom','chef'), (req, res) => {
   res.json(db.prepare(`SELECT * FROM vendors WHERE is_active=1 ORDER BY name`).all());
