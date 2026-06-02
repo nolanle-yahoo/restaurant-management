@@ -88,6 +88,7 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 |---|---|---|
 | **Owner** | All locations | Full oversight: staff, payroll, inventory, menu, reservations, audit log, cross-location reporting, regions & staff lending. |
 | **Regional** | Own region | Oversee a region's locations (KPI overview) and lend staff between them. Scoped to the assigned region. |
+| **Driver** | Own location | Delivery driver: see assigned deliveries, advance their status (picked up / delivered / failed), and share live location for customer tracking. |
 | **Manager** | Own location | Run a single location: staff, schedule, timesheets, inventory, supply, transfers, floor plan, reservations, menu, approvals. |
 | **Stockroom** | Own location | Inventory and supply-chain operations (uses the manager dashboard). |
 | **Chef** | Own location | Kitchen order queue, inventory quick view. |
