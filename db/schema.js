@@ -383,6 +383,22 @@ function createSchema() {
       UNIQUE(capability, role)
     );
 
+    -- Inventory lots: received batches with expiry dates. Stock is consumed FIFO
+    -- (earliest expiry first) so older stock is used before it spoils.
+    CREATE TABLE IF NOT EXISTS inventory_lots (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_id INTEGER NOT NULL REFERENCES inventory(id),
+      location_id INTEGER REFERENCES locations(id),
+      lot_code TEXT,
+      received_qty REAL NOT NULL,
+      quantity REAL NOT NULL,
+      unit_cost REAL NOT NULL DEFAULT 0,
+      expiry_date TEXT,
+      received_by INTEGER REFERENCES users(id),
+      received_at TEXT DEFAULT (datetime('now')),
+      depleted_at TEXT
+    );
+
     -- Broadcast announcements from owner/manager to staff (location-scoped or global).
     CREATE TABLE IF NOT EXISTS announcements (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
