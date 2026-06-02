@@ -367,7 +367,7 @@ router.post('/order/confirm', orderLimiter, async (req, res) => {
   // Save the card for reuse if the signed-in customer asked us to.
   if (req.body.save_card && customerId) {
     try {
-      const c = await stripeLib.cardFromIntent(intent_id);
+      const c = await stripeLib.cardFromIntent(intentId);
       if (c) db.prepare(`INSERT OR IGNORE INTO customer_cards (customer_id, stripe_pm_id, brand, last4, exp_month, exp_year) VALUES (?,?,?,?,?,?)`)
         .run(customerId, c.stripe_pm_id, c.brand, c.last4, c.exp_month, c.exp_year);
     } catch (e) { console.error('save card failed:', e.message); }
