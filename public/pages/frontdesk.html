@@ -87,6 +87,24 @@
           <div id="fdResList"></div>
         </div>
       </div>
+
+      <div id="sec-waitlist" class="hidden">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">Add to Waitlist</div></div>
+          <div id="wlAlert" class="alert hidden" style="margin-bottom:10px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+            <input id="wlName" placeholder="Guest name *" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+            <input id="wlParty" type="number" min="1" value="2" style="width:80px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px" title="Party size">
+            <input id="wlPhone" placeholder="Phone" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+            <input id="wlQuote" type="number" min="0" placeholder="Quote (min)" style="width:110px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+            <button class="btn btn-primary btn-sm" onclick="addToWaitlist()">+ Add Party</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Waiting (<span id="wlCount">0</span>)</div></div>
+          <div id="wlList"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
