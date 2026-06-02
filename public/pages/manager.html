@@ -1779,6 +1779,42 @@ async function refreshBell() {
   } catch {}
 }
 
+// ── Delivery Dispatch ─────────────────────────────────────
+let dispatchDrivers = [];
+const DELIV_STATUS = { pending:'⏳ Unassigned', assigned:'🧭 Assigned', picked_up:'🚗 En route', delivered:'✅ Delivered', failed:'⚠ Failed' };
+async function loadDeliveries() {
+  const el = document.getElementById('dispatchList');
+  try {
+    const [list, drivers] = await Promise.all([API.deliveries(user.location_id), API.deliveryDrivers(user.location_id)]);
+    dispatchDrivers = drivers;
+    if (!list.length) { el.innerHTML = '<p style="color:var(--muted)">No delivery orders yet.</p>'; return; }
+    const driverOpts = sel => `<option value="">— driver —</option>` +
+      drivers.map(d => `<option value="${d.id}" ${sel===d.id?'selected':''}>${d.name}${d.on_duty?' (on duty)':''}</option>`).join('');
+    const noDrivers = drivers.length ? '' : '<div style="font-size:12px;color:var(--danger);margin-bottom:8px">No drivers yet — add a staff member with the <b>Driver</b> role to dispatch.</div>';
+    el.innerHTML = noDrivers + `<table class="data-table">
+      <thead><tr><th>Order</th><th>Customer</th><th>Address</th><th>Status</th><th>Driver</th><th>ETA</th><th></th></tr></thead>
+      <tbody>${list.map(d => {
+        const closed = d.status === 'delivered' || d.status === 'failed';
+        return `<tr>
+          <td class="fw-700">${d.tracking_code}<br><span class="text-sm text-muted">$${(d.subtotal||0).toFixed(2)}</span></td>
+          <td>${d.customer_name||'—'}<br><span class="text-sm text-muted">${d.customer_phone||''}</span></td>
+          <td style="max-width:200px;font-size:12.5px">${d.delivery_address||'—'}</td>
+          <td>${DELIV_STATUS[d.status]||d.status}</td>
+          <td>${closed ? (d.driver_name||'—') : `<select id="dvD_${d.id}" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12.5px">${driverOpts(d.driver_id)}</select>`}</td>
+          <td>${closed ? (d.eta_minutes!=null?d.eta_minutes+'m':'—') : `<input id="dvE_${d.id}" type="number" min="0" max="240" value="${d.eta_minutes!=null?d.eta_minutes:30}" style="width:58px;padding:5px;border:1.5px solid var(--border);border-radius:7px;font-size:12.5px">`}</td>
+          <td>${closed ? '' : `<button class="btn btn-sm btn-primary" onclick="assignDelivery(${d.id})">${d.status==='pending'?'Assign':'Reassign'}</button>`}</td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+  } catch(e) { el.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`; }
+}
+async function assignDelivery(id) {
+  const driver_id = parseInt(document.getElementById('dvD_'+id).value);
+  const eta = parseInt(document.getElementById('dvE_'+id).value);
+  if (!driver_id) return showAlert('dispatchAlert', 'Pick a driver to assign.');
+  try { await API.assignDriver(id, driver_id, isNaN(eta)?undefined:eta); showToast('Driver assigned'); loadDeliveries(); }
+  catch(e) { showAlert('dispatchAlert', e.message); }
+}
+
 // Stockroom shares this dashboard but only has inventory/supply-chain access.
 // Hide the manager-only tabs and skip the manager-only boot calls so the page
 // never fires requests it isn't allowed to make (no 403 noise in the console).
