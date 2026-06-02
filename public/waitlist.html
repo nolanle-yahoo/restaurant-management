@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Join the Waitlist — Nolan Restaurant Group</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--cream, #faf7f2); }
+    .pub-header { background: var(--burgundy); color: #fff; padding: 22px 20px; text-align: center; }
+    .pub-header .logo { font-size: 34px; }
+    .pub-header h1 { font-size: 24px; font-weight: 800; margin-top: 6px; }
+    .pub-nav { display: flex; gap: 10px; justify-content: center; padding: 14px; background: #fff; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .wl-wrap { max-width: 480px; margin: 0 auto; padding: 24px 18px 60px; }
+    .field { width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 10px; }
+    .big-num { font-size: 46px; font-weight: 800; color: var(--burgundy); line-height: 1; }
+    .ready-box { background: var(--success); color: #fff; border-radius: 14px; padding: 22px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="pub-header">
+    <div class="logo">🍷</div>
+    <h1>Join the Waitlist</h1>
+    <p>Add your name to the queue and we'll text you when your table is ready.</p>
+  </div>
+  <div class="pub-nav">
+    <a class="btn btn-ghost" href="/">← Home</a>
+    <a class="btn btn-ghost" href="/reserve.html">📅 Reserve Instead</a>
+    <a class="btn btn-ghost" href="/menu.html">🍽️ Menu</a>
+  </div>
+
+  <div class="wl-wrap">
+    <div id="joinCard" class="card">
+      <div class="card-header"><div class="card-title">Add Your Party</div></div>
+      <div id="wlAlert" class="alert hidden" style="margin-bottom:10px"></div>
+      <label style="font-size:12.5px;color:var(--muted)">Location</label>
+      <select class="field" id="wlLoc"></select>
+      <input class="field" id="wlName" placeholder="Your name *">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label style="font-size:12.5px;color:var(--muted)">Party size</label>
+          <input class="field" id="wlParty" type="number" min="1" max="50" value="2"></div>
+        <div style="flex:2"><label style="font-size:12.5px;color:var(--muted)">Mobile (for the ready text)</label>
+          <input class="field" id="wlPhone" placeholder="(555) 000-0000"></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="joinWaitlist()">Join the Queue</button>
+    </div>
+
+    <div id="statusCard" class="card hidden" style="text-align:center">
+      <div id="readyBox" class="ready-box hidden">
+        <div style="font-size:40px">🍽️</div>
+        <div style="font-size:20px;font-weight:800;margin-top:6px">Your table is ready!</div>
+        <div style="margin-top:4px">Please see the host. See you inside!</div>
+      </div>
+      <div id="waitingBox">
+        <div style="color:var(--muted);font-size:13px">You're in line at <b id="stLoc"></b></div>
+        <div style="margin:14px 0">
+          <div class="big-num" id="stPos">—</div>
+          <div style="color:var(--muted);font-size:13px">position in line</div>
+        </div>
+        <div style="font-size:15px">Estimated wait: <b id="stEta">—</b></div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin:14px 0 6px">Your code: <b id="stCode"></b> · keep this page open for live updates</div>
+      <div id="stClosed" class="hidden" style="color:var(--muted);margin:8px 0"></div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:8px">
+        <button class="btn btn-ghost btn-sm" onclick="refreshStatus()">↻ Refresh</button>
+        <button class="btn btn-ghost btn-sm" id="leaveBtn" onclick="leaveQueue()" style="color:var(--danger)">Leave the queue</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+let code = localStorage.getItem('wl_code') || null;
+let pollTimer = null;
+async function api(path, opts = {}) {
+  const r = await fetch('/api/public' + path, opts);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Request failed');
+  return d;
+}
+function showAlert(m) { const e = document.getElementById('wlAlert'); e.className = 'alert alert-danger'; e.textContent = m; e.classList.remove('hidden'); }
+const minLabel = m => m == null ? '—' : (m < 60 ? `${m} min` : `${Math.floor(m/60)}h ${m%60}m`);
+
+async function init() {
+  try {
+    const locs = await api('/locations');
+    const sel = document.getElementById('wlLoc');
+    sel.innerHTML = locs.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+    const qp = new URLSearchParams(location.search);
+    if (qp.get('location') && locs.some(l => String(l.id) === qp.get('location'))) sel.value = qp.get('location');
+  } catch {}
+  if (code) { showStatusCard(); refreshStatus(); }
+}
+
+async function joinWaitlist() {
+  const guest_name = document.getElementById('wlName').value.trim();
+  if (!guest_name) return showAlert('Please enter your name.');
+  try {
+    const r = await api('/waitlist', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
+      location_id: Number(document.getElementById('wlLoc').value),
+      guest_name, party_size: document.getElementById('wlParty').value,
+      phone: document.getElementById('wlPhone').value.trim(),
+    })});
+    code = r.public_code; localStorage.setItem('wl_code', code);
+    showStatusCard(); refreshStatus();
+  } catch (e) { showAlert(e.message); }
+}
+
+function showStatusCard() {
+  document.getElementById('joinCard').classList.add('hidden');
+  document.getElementById('statusCard').classList.remove('hidden');
+  document.getElementById('stCode').textContent = code;
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(refreshStatus, 15000);
+}
+
+async function refreshStatus() {
+  if (!code) return;
+  let s; try { s = await api('/waitlist?code=' + encodeURIComponent(code)); }
+  catch (e) { return; }
+  document.getElementById('stLoc').textContent = s.location_name || '';
+  const ready = document.getElementById('readyBox'), waiting = document.getElementById('waitingBox');
+  const closed = document.getElementById('stClosed'), leaveBtn = document.getElementById('leaveBtn');
+  if (s.status === 'waiting' && s.ready) {
+    ready.classList.remove('hidden'); waiting.classList.add('hidden'); closed.classList.add('hidden');
+  } else if (s.status === 'waiting') {
+    ready.classList.add('hidden'); waiting.classList.remove('hidden'); closed.classList.add('hidden');
+    document.getElementById('stPos').textContent = '#' + s.position;
+    document.getElementById('stEta').textContent = minLabel(s.estimated_wait);
+  } else {
+    // seated or left — stop here.
+    ready.classList.add('hidden'); waiting.classList.add('hidden');
+    closed.classList.remove('hidden'); leaveBtn.classList.add('hidden');
+    closed.textContent = s.status === 'seated' ? 'You have been seated — enjoy your meal! 🍽️' : 'You have left the queue.';
+    if (pollTimer) clearInterval(pollTimer);
+    if (s.status === 'left') localStorage.removeItem('wl_code');
+  }
+}
+
+async function leaveQueue() {
+  if (!confirm('Leave the waitlist?')) return;
+  try { await api('/waitlist/cancel', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code }) }); }
+  catch {}
+  localStorage.removeItem('wl_code'); if (pollTimer) clearInterval(pollTimer);
+  location.reload();
+}
+init();
+</script>
+</body>
+</html>
