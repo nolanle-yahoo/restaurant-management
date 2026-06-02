@@ -19,7 +19,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Path split (shared back-end + API): the customer site lives at '/', the staff
+// app at '/staff'. Register these before express.static so the static directory
+// index doesn't claim '/'.
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'home.html')));
+app.get(['/staff', '/staff/'], (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 const { createSchema } = require('./db/schema');
 createSchema();
