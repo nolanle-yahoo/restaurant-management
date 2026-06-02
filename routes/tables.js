@@ -14,11 +14,13 @@ router.get('/', requireRole('owner','manager','frontdesk','waiter','chef','emplo
   if (!locId) return res.status(400).json({ error: 'location_id required' });
   const rows = db.prepare(`
     SELECT t.*, a.name as area_name, a.color as area_color,
-           u.name as waiter_name, u.id as waiter_id
+           u.name as waiter_name, u.id as waiter_id,
+           au.name as assigned_to_name
     FROM tables t
     LEFT JOIN areas a ON t.area_id = a.id
     LEFT JOIN waiter_assignments wa ON wa.area_id = t.area_id
     LEFT JOIN users u ON wa.user_id = u.id
+    LEFT JOIN users au ON t.assigned_to = au.id
     WHERE t.location_id = ?
     ORDER BY a.sort_order, t.table_number
   `).all(locId);
