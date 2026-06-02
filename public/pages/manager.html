@@ -806,10 +806,46 @@ async function loadStaff() {
         <select style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;" onchange="API.updateEmployee(${e.id},{role:this.value})">
           ${['stockroom','chef','waiter','frontdesk','employee'].map(r=>`<option ${r===e.role?'selected':''}>${r}</option>`).join('')}
         </select>
+        <button class="btn btn-sm btn-ghost" onclick="openCerts(${e.id},'${e.name.replace(/'/g,"\\'")}')">📜 Certs</button>
       </td>
     </tr>
   `).join('');
 }
+
+// ── Certifications ────────────────────────────────────────────
+let _certEmpId = null;
+async function openCerts(empId, name) {
+  _certEmpId = empId;
+  document.getElementById('certTitle').textContent = `Certifications — ${name}`;
+  document.getElementById('certAlert').classList.add('hidden');
+  ['certName','certIssued','certExpiry'].forEach(id => document.getElementById(id).value = '');
+  await renderCerts();
+  showModal('certModal');
+}
+async function renderCerts() {
+  let rows = []; try { rows = await API.employeeCerts(_certEmpId); } catch(e) { return; }
+  const today = new Date().toISOString().slice(0,10);
+  const soon = new Date(Date.now()+30*864e5).toISOString().slice(0,10);
+  document.getElementById('certList').innerHTML = rows.length ? rows.map(c => {
+    const expired = c.expiry_date && c.expiry_date < today;
+    const expiring = c.expiry_date && !expired && c.expiry_date <= soon;
+    const tag = expired ? '<span class="badge badge-danger">Expired</span>' : expiring ? '<span class="badge badge-gold">Expiring soon</span>' : '';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div><b>${c.name}</b> ${tag}<div style="font-size:12px;color:var(--muted)">${c.issued_date?('Issued '+c.issued_date):''}${c.expiry_date?(' · Expires '+c.expiry_date):''}</div></div>
+      <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteCert(${c.id})">Remove</button>
+    </div>`;
+  }).join('') : '<p style="color:var(--muted);padding:8px">No certifications on file.</p>';
+}
+async function addCert() {
+  const name = document.getElementById('certName').value.trim();
+  if (!name) return showAlert('certAlert', 'Certification name required');
+  try {
+    await API.certCreate(_certEmpId, { name, issued_date: document.getElementById('certIssued').value || null, expiry_date: document.getElementById('certExpiry').value || null });
+    document.getElementById('certName').value = '';
+    renderCerts();
+  } catch(e) { showAlert('certAlert', e.message); }
+}
+async function deleteCert(id) { try { await API.certDelete(_certEmpId, id); renderCerts(); } catch(e) { alert(e.message); } }
 
 function openAddEmp() {
   ['aeName','aeEmail','aePassword','aeRate'].forEach(id => document.getElementById(id).value = '');
