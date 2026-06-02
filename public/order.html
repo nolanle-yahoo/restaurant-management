@@ -312,14 +312,44 @@ async function placeOrder(body) {
   } catch (e) { showOAlert(e.message); }
 }
 
+// ── Saved cards (signed-in customers) ──────────────────────
+async function loadSavedCards() {
+  try { savedCards = await api('/account/cards'); } catch { savedCards = []; }
+  renderCardChooser();
+}
+function renderCardChooser() {
+  const box = document.getElementById('payMethodBox');
+  const list = document.getElementById('savedCards');
+  if (!signedIn() || !savedCards.length) { box.style.display = 'none'; selectedCardId = null; updateSaveWrap(); return; }
+  if (selectedCardId === null) selectedCardId = savedCards[0].id;
+  box.style.display = 'block';
+  const opt = (id, label, checked) =>
+    `<label style="display:flex;gap:8px;align-items:center;font-size:13px;padding:5px 0">
+       <input type="radio" name="pm" value="${id}" ${checked?'checked':''} onchange="setCard(${id})"> ${label}
+     </label>`;
+  list.innerHTML =
+    savedCards.map(c => opt(c.id, `${(c.brand||'card').toUpperCase()} ••${c.last4} <span style="color:var(--muted)">exp ${String(c.exp_month).padStart(2,'0')}/${String(c.exp_year).slice(-2)}</span>`, selectedCardId === c.id)).join('') +
+    opt('new', '➕ Use a new card', selectedCardId === 'new');
+  updateSaveWrap();
+}
+function setCard(v) { selectedCardId = (v === 'new') ? 'new' : Number(v); updateSaveWrap(); }
+function updateSaveWrap() {
+  // Offer "save card" only to signed-in customers paying with a new card.
+  const show = signedIn() && (selectedCardId === 'new' || selectedCardId === null && !savedCards.length || savedCards.length === 0);
+  document.getElementById('saveCardWrap').style.display = (signedIn() && (selectedCardId === 'new' || !savedCards.length)) ? 'flex' : 'none';
+}
+
 // ── Prepay flow (pickup/delivery): intent → card → confirm ──
-let payCtx = null, stripeObj = null, cardEl = null;
+let payCtx = null, stripeObj = null, payElements = null;
 async function startPrepay(body) {
   body.tip = tipAmount();
+  const usingSaved = signedIn() && savedCards.length && selectedCardId && selectedCardId !== 'new';
+  if (usingSaved) body.card_id = selectedCardId;
+  if (signedIn() && !usingSaved && document.getElementById('saveCard').checked) body.save_card = true;
   document.getElementById('checkoutBtn').disabled = true;
   try {
     const r = await api('/order/intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-    payCtx = { ...r, body };
+    payCtx = { ...r, body, usingSaved };
     const b = r.breakdown;
     document.getElementById('payBreakdown').innerHTML =
       `<div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>${money(b.subtotal)}</span></div>
@@ -331,21 +361,24 @@ async function startPrepay(body) {
     document.getElementById('checkout').style.display = 'none';
     document.getElementById('payPanel').style.display = 'block';
     document.getElementById('payAlert').classList.add('hidden');
+    const ce = document.getElementById('card-element');
+    ce.style.display = 'none'; ce.innerHTML = '';
 
-    if (r.simulated || !r.publishable_key) {
+    if (usingSaved) {
+      const c = savedCards.find(x => x.id === selectedCardId);
+      document.getElementById('payMode').textContent = `Paying with ${(c.brand||'card').toUpperCase()} ••${c.last4}.`;
+    } else if (r.simulated || !r.publishable_key) {
       document.getElementById('payMode').textContent = '🔒 Test mode — no real card is charged.';
-      document.getElementById('card-element').style.display = 'none';
     } else {
-      document.getElementById('payMode').textContent = '🔒 Payments secured by Stripe.';
+      document.getElementById('payMode').textContent = '🔒 Card, Apple Pay & Google Pay — secured by Stripe.';
       await ensureStripe();
       stripeObj = Stripe(r.publishable_key);
-      const elements = stripeObj.elements();
-      cardEl = elements.create('card');
-      const ce = document.getElementById('card-element');
-      ce.style.display = 'block'; ce.innerHTML = '';
-      cardEl.mount('#card-element');
+      // The Payment Element automatically offers Apple Pay / Google Pay when available.
+      payElements = stripeObj.elements({ clientSecret: r.client_secret });
+      payElements.create('payment').mount('#card-element');
+      ce.style.display = 'block';
     }
-  } catch (e) { showOAlert(e.message); }
+  } catch (e) { cancelPay(); showOAlert(e.message); }
   finally { document.getElementById('checkoutBtn').disabled = false; }
 }
 
@@ -364,20 +397,18 @@ function cancelPay() { document.getElementById('payPanel').style.display = 'none
 async function doPay() {
   if (!payCtx) return;
   const btn = document.getElementById('doPayBtn');
+  const resetBtn = () => { btn.disabled = false; btn.textContent = `Pay ${money(payCtx.breakdown.total)}`; };
   btn.disabled = true; btn.textContent = 'Processing…';
   try {
-    // Real Stripe: confirm the card first; simulated: skip straight to server confirm.
-    if (!payCtx.simulated && payCtx.client_secret && stripeObj && cardEl) {
-      const { error, paymentIntent } = await stripeObj.confirmCardPayment(payCtx.client_secret, { payment_method: { card: cardEl } });
-      if (error) { showPayAlert(error.message); btn.disabled = false; btn.textContent = `Pay ${money(payCtx.breakdown.total)}`; return; }
-      if (!paymentIntent || paymentIntent.status !== 'succeeded') { showPayAlert('Payment was not completed.'); btn.disabled = false; btn.textContent = `Pay ${money(payCtx.breakdown.total)}`; return; }
+    // New card via real Stripe: confirm the Payment Element (card/Apple Pay/Google Pay) first.
+    if (!payCtx.usingSaved && !payCtx.simulated && payCtx.client_secret && stripeObj && payElements) {
+      const { error, paymentIntent } = await stripeObj.confirmPayment({ elements: payElements, redirect: 'if_required' });
+      if (error) { showPayAlert(error.message); return resetBtn(); }
+      if (!paymentIntent || paymentIntent.status !== 'succeeded') { showPayAlert('Payment was not completed.'); return resetBtn(); }
     }
     const r = await api('/order/confirm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ...payCtx.body, intent_id: payCtx.intent_id }) });
     orderPlacedView({ tracking_code: r.tracking_code, receipt_code: r.receipt_code, paidLine: `Paid online: <b>${money(r.breakdown.total)}</b> (incl. ${money(r.breakdown.tip)} tip)` });
-  } catch (e) {
-    showPayAlert(e.message);
-    btn.disabled = false; btn.textContent = `Pay ${money(payCtx.breakdown.total)}`;
-  }
+  } catch (e) { showPayAlert(e.message); resetBtn(); }
 }
 
 async function trackOrder() {
