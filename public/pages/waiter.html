@@ -201,12 +201,20 @@ function renderFullFloor() {
       <div class="floor-grid">
         ${area.tables.map(t => {
           const info = tableStatusInfo(t.status);
-          const isMyTable = area.waiters?.some(w => w.id === user.id);
+          const mine = t.assigned_to === user.id;
+          const isMyTable = mine || area.waiters?.some(w => w.id === user.id);
+          const assignLine = t.assigned_to
+            ? `<div style="font-size:10px;color:var(--burgundy);margin-top:2px">👤 ${mine ? 'You' : t.assigned_to_name}</div>`
+            : '<div style="font-size:10px;color:var(--muted);margin-top:2px">unassigned</div>';
+          const claimBtn = !t.assigned_to
+            ? `<button class="badge badge-gold" style="border:none;cursor:pointer;margin-top:3px" onclick="event.stopPropagation();claimTable(${t.id})">+ Claim</button>`
+            : (mine ? `<button class="badge" style="border:none;cursor:pointer;margin-top:3px;background:#eee;color:#555" onclick="event.stopPropagation();releaseTable(${t.id})">Release</button>` : '');
           return `<div class="table-card ts-${t.status}" style="background:${info.bg};border-color:${info.border};border-width:${isMyTable?'3':'2'}px;${isMyTable?'box-shadow:0 0 0 2px '+info.border+';':''}" onclick="tableClick(${t.id})">
             <div class="table-num" style="color:${info.border}">T${t.table_number}</div>
             <div class="table-cap">${t.capacity} seats</div>
             <div style="font-size:18px;margin:4px 0">${info.emoji}</div>
             <div class="table-stat" style="color:${info.text};font-size:11px">${info.label}</div>
+            ${assignLine}${claimBtn}
           </div>`;
         }).join('')}
       </div>
