@@ -160,12 +160,40 @@ function switchView(v) {
   document.getElementById('view-map').classList.toggle('hidden', v !== 'map');
   document.getElementById('view-areas').classList.toggle('hidden', v !== 'areas');
   document.getElementById('sec-reservations').classList.toggle('hidden', v !== 'reservations');
-  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', ['map','areas','reservations'][i] === v));
-  document.getElementById('pageTitle').textContent = v === 'map' ? 'Floor Map' : v === 'areas' ? 'Areas & Staff' : 'Reservations';
+  document.getElementById('sec-waitlist').classList.toggle('hidden', v !== 'waitlist');
+  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', ['map','areas','reservations','waitlist'][i] === v));
+  document.getElementById('pageTitle').textContent = { map:'Floor Map', areas:'Areas & Staff', reservations:'Reservations', waitlist:'Waitlist' }[v] || 'Floor Map';
   currentView = v;
   if (v === 'areas') loadAreas();
   if (v === 'reservations') loadFdReservations();
+  if (v === 'waitlist') loadWaitlist();
 }
+
+// ── Waitlist ──────────────────────────────────────────────────
+async function loadWaitlist() {
+  let rows = []; try { rows = await API.waitlist(user.location_id); } catch(e) { return; }
+  document.getElementById('wlCount').textContent = rows.length;
+  const el = document.getElementById('wlList');
+  el.innerHTML = rows.length ? rows.map((w, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div><span style="font-weight:800;color:var(--burgundy)">#${i+1}</span> <b>${w.guest_name}</b> · ${w.party_size} 👤
+        <div style="font-size:12px;color:var(--muted)">waiting ${timeAgo(w.created_at)}${w.quoted_minutes?` · quoted ${w.quoted_minutes}m`:''}${w.phone?` · ${w.phone}`:''}</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-success" onclick="waitlistSet(${w.id},'seated')">Seat</button>
+        <button class="btn btn-sm btn-ghost" onclick="waitlistSet(${w.id},'left')">Remove</button>
+      </div>
+    </div>`).join('') : '<p style="color:var(--muted);padding:16px;text-align:center">No parties waiting.</p>';
+}
+async function addToWaitlist() {
+  const guest_name = document.getElementById('wlName').value.trim();
+  if (!guest_name) return showAlert('wlAlert', 'Guest name required');
+  try {
+    await API.waitlistAdd({ guest_name, party_size: document.getElementById('wlParty').value, phone: document.getElementById('wlPhone').value.trim(), quoted_minutes: document.getElementById('wlQuote').value });
+    ['wlName','wlPhone','wlQuote'].forEach(id => document.getElementById(id).value = ''); document.getElementById('wlParty').value = 2;
+    loadWaitlist();
+  } catch(e) { showAlert('wlAlert', e.message); }
+}
+async function waitlistSet(id, status) { try { await API.waitlistUpdate(id, status); loadWaitlist(); } catch(e) { alert(e.message); } }
 
 function setFilter(status, btn) {
   filterStatus = status;
