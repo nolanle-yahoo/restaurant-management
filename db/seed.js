@@ -11,6 +11,7 @@ function seed() {
     DELETE FROM announcements;
     DELETE FROM employee_messages; DELETE FROM time_off_requests;
     DELETE FROM reservations;
+    DELETE FROM waitlist;
     DELETE FROM recipes; DELETE FROM settings;
     DELETE FROM menu_items; DELETE FROM menu_categories;
     DELETE FROM waiter_assignments; DELETE FROM schedules;
