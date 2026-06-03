@@ -512,7 +512,7 @@ router.get('/order', (req, res) => {
     WHERE o.tracking_code=?
   `).get(String(code).trim().toUpperCase());
   if (!o) return res.status(404).json({ error: 'No order found for that code.' });
-  const items = db.prepare(`SELECT oi.item_name, oi.quantity, oi.price FROM order_items oi JOIN orders o ON oi.order_id=o.id WHERE o.tracking_code=?`).all(String(code).trim().toUpperCase());
+  const items = db.prepare(`SELECT oi.item_name, oi.quantity, oi.price, oi.modifiers FROM order_items oi JOIN orders o ON oi.order_id=o.id WHERE o.tracking_code=?`).all(String(code).trim().toUpperCase());
   // Delivery tracking: include driver first name, status, ETA, and last location.
   let delivery = null;
   if (o.order_type === 'delivery') {
@@ -546,7 +546,7 @@ router.get('/receipt', (req, res) => {
     WHERE p.receipt_code=?
   `).get(code.trim().toUpperCase());
   if (!p) return res.status(404).json({ error: 'Receipt not found' });
-  const items = db.prepare(`SELECT item_name, quantity, price FROM order_items WHERE order_id=?`).all(p.order_id);
+  const items = db.prepare(`SELECT item_name, quantity, price, modifiers FROM order_items WHERE order_id=?`).all(p.order_id);
   res.json({ ...p, items });
 });
 
@@ -614,7 +614,7 @@ router.get('/account/orders', requireCustomer, (req, res) => {
     FROM orders WHERE customer_id=? ORDER BY created_at DESC LIMIT 50
   `).all(req.customerId);
   const itemsBy = {};
-  orders.forEach(o => { itemsBy[o.id] = db.prepare(`SELECT item_name, quantity, price FROM order_items WHERE order_id=?`).all(o.id); });
+  orders.forEach(o => { itemsBy[o.id] = db.prepare(`SELECT item_name, quantity, price, modifiers FROM order_items WHERE order_id=?`).all(o.id); });
   res.json(orders.map(o => ({ ...o, items: itemsBy[o.id] || [] })));
 });
 
