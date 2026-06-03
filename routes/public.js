@@ -574,8 +574,8 @@ router.post('/order/confirm', orderLimiter, async (req, res) => {
     return res.status(500).json({ error: 'Payment captured but the order failed to save. Please contact the restaurant with your code.' });
   }
 
-  // Save the card for reuse if the signed-in customer asked us to.
-  if (req.body.save_card && customerId) {
+  // Save the card for reuse if the signed-in customer asked us to (skip when no card was charged).
+  if (req.body.save_card && customerId && dueCents >= 50) {
     try {
       const c = await stripeLib.cardFromIntent(intentId);
       if (c) db.prepare(`INSERT OR IGNORE INTO customer_cards (customer_id, stripe_pm_id, brand, last4, exp_month, exp_year) VALUES (?,?,?,?,?,?)`)
