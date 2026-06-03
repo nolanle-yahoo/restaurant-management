@@ -546,6 +546,8 @@ function createSchema() {
   // and staff can "page" them when their table is ready.
   try { db.exec(`ALTER TABLE waitlist ADD COLUMN public_code TEXT`); } catch {}
   try { db.exec(`ALTER TABLE waitlist ADD COLUMN notified_at TEXT`); } catch {}
+  // Chosen modifiers summary for an order line (human-readable).
+  try { db.exec(`ALTER TABLE order_items ADD COLUMN modifiers TEXT`); } catch {}
   // Central menu with per-location overrides: location rows link to a central
   // (location_id IS NULL) template via central_id; price_overridden=1 protects a
   // locally-edited price from being reset on the next central sync.
