@@ -528,7 +528,8 @@ router.get('/order', (req, res) => {
   const { code, contact } = req.query;
   if (!code) return res.status(400).json({ error: 'Tracking code required' });
   const o = db.prepare(`
-    SELECT o.tracking_code, o.status, o.order_type, o.customer_name, o.delivery_address, o.created_at, l.name as location_name
+    SELECT o.tracking_code, o.status, o.order_type, o.customer_name, o.delivery_address, o.created_at, l.name as location_name,
+           o.scheduled_for, o.curbside, o.vehicle, o.arrived_at
     FROM orders o JOIN locations l ON o.location_id=l.id
     WHERE o.tracking_code=?
   `).get(String(code).trim().toUpperCase());
