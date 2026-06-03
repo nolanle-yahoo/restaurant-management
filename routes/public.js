@@ -303,6 +303,7 @@ router.post('/order', orderLimiter, (req, res) => {
            customer_name ? String(customer_name).slice(0, 120) : null, customer_phone ? String(customer_phone).slice(0, 40) : null,
            (customer_email || '').trim() || null, type === 'delivery' ? String(delivery_address).slice(0, 300) : null, code);
     orderId = r.lastInsertRowid;
+    db.prepare(`UPDATE orders SET scheduled_for=?, curbside=?, vehicle=? WHERE id=?`).run(sched.scheduled_for, sched.curbside, sched.vehicle, orderId);
     const ins = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, modifiers) VALUES (?,?,?,?,?)`);
     resolved.forEach(i => ins.run(orderId, i.name, i.quantity, i.price, i.modifiers || null));
     db.exec('COMMIT');
