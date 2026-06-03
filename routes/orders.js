@@ -51,6 +51,8 @@ router.post('/', requireRole('waiter','manager','employee','chef','frontdesk','s
     const cat = (catFor.get(table.location_id, i.name) || {}).name || '';
     insertItem.run(orderId, i.name, i.quantity || 1, i.price || 0, i.notes||null, courseFromCategory(cat));
   });
+  // Assign prep targets and fire the opening course (dine-in holds later courses).
+  applyCoursing(orderId, table.location_id, true);
   db.prepare(`UPDATE tables SET status='ordered' WHERE id=?`).run(table_id);
   // Consume recipe ingredients from inventory and auto-86 anything now short.
   depleteForOrder(req, orderId, table.location_id);
