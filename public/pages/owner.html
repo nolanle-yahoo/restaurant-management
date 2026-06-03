@@ -2161,6 +2161,58 @@ onModalOverlayClick('ownerResModal');
 onModalOverlayClick('menuItemModal');
 onModalOverlayClick('menuCatModal');
 onModalOverlayClick('ownerShiftModal');
+onModalOverlayClick('modMgrModal');
+
+// ── Menu modifiers manager ────────────────────────────────
+let modMgrItemId = null;
+function openModifiers(itemId, name) {
+  modMgrItemId = itemId;
+  document.getElementById('modMgrTitle').textContent = 'Options — ' + name;
+  document.getElementById('modMgrModal').classList.add('open');
+  loadModifiers();
+}
+async function loadModifiers() {
+  const el = document.getElementById('modMgrBody');
+  try {
+    const groups = await API.itemModifiers(modMgrItemId);
+    el.innerHTML = groups.length ? groups.map(g => `
+      <div style="border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <b>${g.name}</b>
+          <span style="display:flex;gap:6px;align-items:center">
+            <span class="text-sm text-muted">${g.min_select>=1?'required':'optional'} · max ${g.max_select}</span>
+            <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="delModGroup(${g.id})">✕</button>
+          </span>
+        </div>
+        <div style="margin:6px 0">${g.options.map(o => `
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid var(--border)">
+            <span>${o.name} ${o.price_delta?`<span class="text-muted">+$${o.price_delta.toFixed(2)}</span>`:''}</span>
+            <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="delModOption(${o.id})">remove</button>
+          </div>`).join('') || '<span class="text-sm text-muted">No options yet.</span>'}</div>
+        <div style="display:flex;gap:6px">
+          <input id="optName_${g.id}" placeholder="Option name" style="flex:1;padding:6px 9px;border:1.5px solid var(--border);border-radius:7px;font-size:13px">
+          <input id="optDelta_${g.id}" type="number" step="0.01" placeholder="+$" style="width:70px;padding:6px;border:1.5px solid var(--border);border-radius:7px;font-size:13px">
+          <button class="btn btn-sm btn-primary" onclick="addModOption(${g.id})">Add option</button>
+        </div>
+      </div>`).join('') : '<p class="text-muted">No option groups yet. Add one below (e.g., "Size", "Add-ons", "Choose a side").</p>';
+  } catch(e) { el.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`; }
+}
+async function addModGroup() {
+  const name = document.getElementById('newGroupName').value.trim();
+  const min = parseInt(document.getElementById('newGroupMin').value) || 0;
+  const max = parseInt(document.getElementById('newGroupMax').value) || 1;
+  if (!name) return;
+  try { await API.modGroupCreate(modMgrItemId, { name, min_select: min, max_select: max }); document.getElementById('newGroupName').value=''; loadModifiers(); }
+  catch(e) { alert(e.message); }
+}
+async function delModGroup(id) { if(!confirm('Delete this option group and its options?'))return; try { await API.modGroupDelete(id); loadModifiers(); } catch(e){ alert(e.message); } }
+async function addModOption(gid) {
+  const name = document.getElementById('optName_'+gid).value.trim();
+  const delta = parseFloat(document.getElementById('optDelta_'+gid).value) || 0;
+  if (!name) return;
+  try { await API.modOptionCreate(gid, { name, price_delta: delta }); loadModifiers(); } catch(e){ alert(e.message); }
+}
+async function delModOption(id) { try { await API.modOptionDelete(id); loadModifiers(); } catch(e){ alert(e.message); } }
 
 // ── Schedule (owner: review + assign/adjust per location) ──
 let ownerSchedWeekOffset = 0, ownerSchedEmps = [];
