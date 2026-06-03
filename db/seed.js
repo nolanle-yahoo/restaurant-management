@@ -344,6 +344,30 @@ function seed() {
   const setDiet = db.prepare(`UPDATE menu_items SET allergens=?, dietary=? WHERE name=?`);
   Object.entries(dietMap).forEach(([name, [allerg, diet]]) => setDiet.run(allerg || null, diet || null, name));
 
+  // ── Demo menu modifiers (Downtown items) ─────────────────────────
+  // Shows optional add-ons + a required choice ("combo"-style).
+  const insGroup = db.prepare(`INSERT INTO modifier_groups (menu_item_id, name, min_select, max_select, sort_order) VALUES (?,?,?,?,?)`);
+  const insOpt = db.prepare(`INSERT INTO modifier_options (group_id, name, price_delta, sort_order) VALUES (?,?,?,?)`);
+  const dItem = name => (db.prepare(`SELECT id FROM menu_items WHERE location_id=1 AND name=?`).get(name) || {}).id;
+  function addMods(itemName, groups) {
+    const id = dItem(itemName); if (!id) return;
+    groups.forEach((g, gi) => {
+      const gid = insGroup.run(id, g.name, g.min, g.max, gi).lastInsertRowid;
+      g.options.forEach((o, oi) => insOpt.run(gid, o[0], o[1], oi));
+    });
+  }
+  addMods('Caesar Salad', [
+    { name: 'Add a protein', min: 0, max: 1, options: [['Grilled Chicken', 6], ['Grilled Shrimp', 8], ['Salmon', 9]] },
+    { name: 'Extras',        min: 0, max: 3, options: [['Extra dressing', 0.5], ['Avocado', 2.5], ['Bacon bits', 2]] },
+  ]);
+  addMods('Grilled Salmon', [
+    { name: 'Choose a side', min: 1, max: 1, options: [['Garlic mashed', 0], ['House salad', 0], ['Seasonal veg', 0], ['Truffle fries', 3]] },
+    { name: 'Sauce',         min: 0, max: 1, options: [['Lemon butter', 0], ['Chimichurri', 0], ['Hollandaise', 1.5]] },
+  ]);
+  addMods('House Red Wine', [
+    { name: 'Size', min: 1, max: 1, options: [['Glass', 0], ['Bottle', 36]] },
+  ]);
+
   // ── Recipes (bill of materials) — drive auto-depletion & auto-86 ──
   // Map menu item name -> [[inventory item name, qty per serving], ...]. Seeded
   // for every location by resolving ids by (location, name) so demos show stock
