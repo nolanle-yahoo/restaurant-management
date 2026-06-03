@@ -763,6 +763,9 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/items/:id/recipe` | Owner, Manager, Chef | Item's ingredient list with current stock. |
 | PUT | `/items/:id/recipe` | Owner, Manager | Replace the item's recipe (ingredients + quantities). |
 | POST | `/items/:id/reset-central` | Owner, Manager | Clear a price override and restore the central template price. |
+| GET | `/items/:id/modifiers` | Owner, Manager, Chef | An item's modifier groups + options. |
+| POST · PUT · DELETE | `/items/:id/modifier-groups`, `/modifier-groups/:id` | Owner, Manager | Manage option groups (name, min/max). |
+| POST · PUT · DELETE | `/modifier-groups/:id/options`, `/modifier-options/:id` | Owner, Manager | Manage options (name, price delta, availability). |
 | GET · POST · PUT · DELETE | `/central/categories[/:id]` | Owner | Manage the central menu's categories. |
 | GET · POST · PUT · DELETE | `/central/items[/:id]` | Owner | Manage the central menu's items (with linked-location counts). |
 | POST | `/central/apply` | Owner | Push the central template to locations (`location_ids: 'all'` or `[ids]`); returns created/updated counts. |
