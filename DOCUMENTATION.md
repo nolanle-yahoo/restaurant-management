@@ -469,6 +469,17 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   phone number, so it complements (doesn't replace) guest SMS. Simulated (logged to
   `telegram_log`) when unconfigured; `GET /api/public/sms-config` reports `telegram_live`.
 
+### 5.16a Promo Codes & Gift Cards
+- **FR-16.10** **Promo codes** — owners/managers create discount codes (% or $ off), with an
+  optional minimum subtotal, usage limit, validity window, and location scope. Online guests
+  enter a code at checkout; the server validates it (active, in-window, under limit, meets
+  minimum) and applies the discount to the subtotal before tax/service. `used_count` increments
+  on a completed order; codes can be toggled active/inactive.
+- **FR-16.11** **Gift cards** — anyone can buy a stored-value gift card (Stripe; simulated
+  without keys); a code is issued and emailed to the recipient. At online checkout a guest
+  applies a gift card, which draws down its balance toward the total — if it covers the order
+  fully, no card is charged. Balances + a redemption ledger are tracked; owners see issued cards.
+
 ### 5.7a Reservation Deposits & Guest CRM
 - **FR-7.5** **Reservation deposits** — owners set a flat **deposit** and a **minimum party size**
   (Settings). Public bookings that meet the threshold must pay the deposit (Stripe; simulated
