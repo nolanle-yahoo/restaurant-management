@@ -268,15 +268,10 @@ router.post('/order', orderLimiter, (req, res) => {
     if (type === 'delivery' && !delivery_address) return res.status(400).json({ error: 'A delivery address is required for delivery orders.' });
   }
 
-  // Resolve each requested item to a real, available menu item at this location.
-  const lookup = db.prepare(`SELECT id, name, price FROM menu_items WHERE id=? AND location_id=? AND is_available=1`);
-  const resolved = [];
-  for (const it of items) {
-    const mi = lookup.get(it.id, location_id);
-    if (!mi) return res.status(400).json({ error: 'One or more items are unavailable. Please refresh the menu.' });
-    const qty = Math.max(1, Math.min(50, parseInt(it.quantity) || 1));
-    resolved.push({ name: mi.name, price: mi.price, quantity: qty });
-  }
+  // Resolve + server-price the cart (applies menu modifiers).
+  const rc = resolveCart(items, location_id);
+  if (rc.error) return res.status(400).json({ error: rc.error });
+  const resolved = rc.resolved;
 
   const customerId = customerIdFromReq(req); // null unless signed in as a customer
   const code = makeCode('ORD');
