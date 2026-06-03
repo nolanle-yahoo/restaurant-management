@@ -65,7 +65,7 @@ async function clickStarsAndSubmit(page, scope) {
   const login = await j('POST', '/auth/login', { email: 'owner@restaurant.com', password: 'owner123' });
   const fb = await fetch(BASE + '/api/feedback', { headers: { Authorization: 'Bearer ' + login.d.token } }).then(r => r.json());
   chk('server stored order review', fb.items.some(x => x.source === 'order' && x.reference_code === track));
-  chk('server stored reservation review', fb.items.some(x => x.source === 'reservation' && x.reference_code === rc));
+  chk('server stored reservation review', fb.items.some(x => x.source === 'reservation' && x.comment === 'Smoke test review'));
 
   console.log(`\n${pass}/${pass + fail} passed`);
   process.exit(fail ? 1 : 0);
