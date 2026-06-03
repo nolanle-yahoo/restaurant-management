@@ -2306,6 +2306,42 @@ async function saveCrm(id) {
   } catch(e) { alert(e.message); }
 }
 
+// ── Promotions & gift cards ───────────────────────────────
+async function loadPromos() {
+  try {
+    const [promos, cards] = await Promise.all([API.promos(), API.giftCardsList()]);
+    const pl = document.getElementById('promoList');
+    pl.innerHTML = promos.length ? `<table class="data-table">
+      <thead><tr><th>Code</th><th>Discount</th><th>Min</th><th>Used</th><th>Active</th><th></th></tr></thead>
+      <tbody>${promos.map(p => `<tr>
+        <td class="fw-700">${p.code}</td>
+        <td>${p.kind==='percent'?p.value+'%':'$'+p.value.toFixed(2)} off</td>
+        <td>$${(p.min_subtotal||0).toFixed(2)}</td>
+        <td>${p.used_count}${p.usage_limit!=null?' / '+p.usage_limit:''}</td>
+        <td><button class="btn btn-sm ${p.is_active?'btn-success':'btn-ghost'}" onclick="togglePromo(${p.id},${p.is_active})">${p.is_active?'✓ On':'Off'}</button></td>
+        <td><button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deletePromo(${p.id})">Delete</button></td>
+      </tr>`).join('')}</tbody></table>` : '<p style="color:var(--muted)">No promo codes yet.</p>';
+    const gl = document.getElementById('gcList');
+    gl.innerHTML = cards.length ? `<table class="data-table">
+      <thead><tr><th>Code</th><th>Initial</th><th>Balance</th><th>Status</th><th>Issued</th></tr></thead>
+      <tbody>${cards.map(c => `<tr><td class="fw-700">${c.code}</td><td>$${c.initial_amount.toFixed(2)}</td>
+        <td class="fw-700" style="color:var(--success)">$${c.balance.toFixed(2)}</td><td>${c.status}</td>
+        <td class="text-sm text-muted">${new Date((c.created_at||'').replace(' ','T')+'Z').toLocaleDateString()}</td></tr>`).join('')}</tbody></table>` : '<p style="color:var(--muted)">No gift cards issued yet.</p>';
+  } catch(e) { document.getElementById('promoList').innerHTML = `<p style="color:var(--danger)">${e.message}</p>`; }
+}
+async function createPromo() {
+  const code = document.getElementById('pCode').value.trim();
+  if (!code) return showAlert('promoAlert', 'Enter a code.');
+  try {
+    await API.promoCreate({ code, kind: document.getElementById('pKind').value, value: parseFloat(document.getElementById('pValue').value)||0,
+      min_subtotal: parseFloat(document.getElementById('pMin').value)||0, usage_limit: document.getElementById('pLimit').value || null });
+    document.getElementById('pCode').value=''; document.getElementById('pValue').value='';
+    loadPromos();
+  } catch(e) { showAlert('promoAlert', e.message); }
+}
+async function togglePromo(id, on) { try { await API.promoUpdate(id, { is_active: on?0:1 }); loadPromos(); } catch(e){ showAlert('promoAlert', e.message); } }
+async function deletePromo(id) { if(!confirm('Delete this promo code?'))return; try { await API.promoDelete(id); loadPromos(); } catch(e){ showAlert('promoAlert', e.message); } }
+
 // ── Menu modifiers manager ────────────────────────────────
 let modMgrItemId = null;
 function openModifiers(itemId, name) {
