@@ -23,6 +23,7 @@ function seed() {
     DELETE FROM certifications;
     DELETE FROM payments; DELETE FROM email_log; DELETE FROM password_reset_tokens;
     DELETE FROM loyalty_transactions; DELETE FROM customer_cards; DELETE FROM deliveries;
+    DELETE FROM gift_card_txns; DELETE FROM gift_cards; DELETE FROM promo_codes;
     DELETE FROM inventory; DELETE FROM order_items; DELETE FROM orders;
     UPDATE customers SET referred_by=NULL;
     DELETE FROM customers;
