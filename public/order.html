@@ -457,20 +457,25 @@ async function startPrepay(body) {
     const r = await api('/order/intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
     payCtx = { ...r, body, usingSaved };
     const b = r.breakdown;
+    const due = b.amount_due != null ? b.amount_due : b.total;
+    const line = (lbl, val, opt) => opt && !val ? '' : `<div style="display:flex;justify-content:space-between"><span>${lbl}</span><span>${money(val)}</span></div>`;
     document.getElementById('payBreakdown').innerHTML =
-      `<div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>${money(b.subtotal)}</span></div>
-       <div style="display:flex;justify-content:space-between"><span>Service</span><span>${money(b.service)}</span></div>
-       <div style="display:flex;justify-content:space-between"><span>Tax</span><span>${money(b.tax)}</span></div>
-       <div style="display:flex;justify-content:space-between"><span>Tip</span><span>${money(b.tip)}</span></div>
-       <div style="display:flex;justify-content:space-between;font-weight:800;border-top:1px solid var(--border);margin-top:4px;padding-top:4px"><span>Total</span><span>${money(b.total)}</span></div>`;
-    document.getElementById('doPayBtn').textContent = `Pay ${money(b.total)}`;
+      line('Subtotal', b.subtotal) +
+      (b.promo_discount ? `<div style="display:flex;justify-content:space-between;color:var(--success)"><span>Promo discount</span><span>−${money(b.promo_discount)}</span></div>` : '') +
+      line('Service', b.service, true) + line('Tax', b.tax) + line('Tip', b.tip, true) +
+      `<div style="display:flex;justify-content:space-between;font-weight:700;border-top:1px solid var(--border);margin-top:4px;padding-top:4px"><span>Total</span><span>${money(b.total)}</span></div>` +
+      (b.gift_applied ? `<div style="display:flex;justify-content:space-between;color:var(--success)"><span>Gift card</span><span>−${money(b.gift_applied)}</span></div>
+       <div style="display:flex;justify-content:space-between;font-weight:800"><span>Amount due</span><span>${money(due)}</span></div>` : '');
+    document.getElementById('doPayBtn').textContent = r.fully_covered ? 'Place order (paid by gift card)' : `Pay ${money(due)}`;
     document.getElementById('checkout').style.display = 'none';
     document.getElementById('payPanel').style.display = 'block';
     document.getElementById('payAlert').classList.add('hidden');
     const ce = document.getElementById('card-element');
     ce.style.display = 'none'; ce.innerHTML = '';
 
-    if (usingSaved) {
+    if (r.fully_covered) {
+      document.getElementById('payMode').textContent = '🎁 Covered by your gift card — no card needed.';
+    } else if (usingSaved) {
       const c = savedCards.find(x => x.id === selectedCardId);
       document.getElementById('payMode').textContent = `Paying with ${(c.brand||'card').toUpperCase()} ••${c.last4}.`;
     } else if (r.simulated || !r.publishable_key) {
