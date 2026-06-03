@@ -119,6 +119,9 @@ function showDone(msg) {
   document.getElementById('resDeposit').classList.add('hidden');
   document.getElementById('resDoneMsg').textContent = msg || 'The restaurant will confirm shortly.';
   document.getElementById('resDone').classList.remove('hidden');
+  if (window.FeedbackWidget && lastResCode) {
+    FeedbackWidget.mount(document.getElementById('resFb'), { reservation_code: lastResCode, prompt: 'How was booking with us?' });
+  }
 }
 
 let depCtx = null, depStripe = null, depElements = null;
