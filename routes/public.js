@@ -556,6 +556,8 @@ router.post('/order/confirm', orderLimiter, async (req, res) => {
     if (!sched.error) db.prepare(`UPDATE orders SET scheduled_for=?, curbside=?, vehicle=? WHERE id=?`).run(sched.scheduled_for, sched.curbside, sched.vehicle, orderId);
     const ins = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, modifiers) VALUES (?,?,?,?,?)`);
     p.resolved.forEach(i => ins.run(orderId, i.name, i.quantity, i.price, i.modifiers || null));
+    // Prepaid online orders are to-go — tag courses/prep targets and fire everything.
+    applyCoursing(orderId, Number(location_id), false);
     const discount = round2(p.promo_discount + p.gift_applied);
     const discountReason = [p.promo ? `promo ${p.promo.code}` : null, p.gift ? `gift ${p.gift.code}` : null].filter(Boolean).join(' + ') || null;
     db.prepare(`
