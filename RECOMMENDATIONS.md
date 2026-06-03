@@ -149,6 +149,8 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
     curbside with vehicle and an "I'm here" arrival alert.
 53. ✅ **DONE (v1.38.0)** — **Reservation deposits + guest CRM**: configurable deposit (card hold)
     for larger parties with staff refund; searchable Guests CRM with VIP/tags/notes + history.
+54. ✅ **DONE (v1.39.0)** — **Promo codes + gift cards**: %/$ codes (min/limit/window/location) applied
+    at online checkout; buyable stored-value gift cards with balances, ledger, and redemption.
 
 ---
 
