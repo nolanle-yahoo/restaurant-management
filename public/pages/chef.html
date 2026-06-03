@@ -156,15 +156,51 @@ async function loadQueue() {
 }
 
 const COURSE_ORDER = ['Appetizers', 'Mains', 'Desserts', 'Drinks'];
-function renderCourses(items) {
+// Fallback cook-time target (minutes) when a menu item has none configured.
+const DEFAULT_PREP = { Appetizers: 8, Mains: 15, Desserts: 6, Drinks: 3 };
+
+// Render a ticket's items grouped by course. Fired courses show a live prep timer
+// (counting from when they were fired, against the slowest item's target); held
+// courses are dimmed with a "Fire" button so the kitchen paces the meal.
+function renderCourses(o) {
+  const items = o.items || [];
   const itemRow = i => `<div class="order-item-row">• ${i.item_name} <span style="color:var(--muted)">×${i.quantity}</span>${allergenMap[i.item_name]?` <span class="badge badge-danger" style="font-size:10px">⚠ ${allergenMap[i.item_name]}</span>`:''}${i.modifiers?`<div style="font-size:11px;color:var(--gold,#b8860b);margin-left:12px">↳ ${i.modifiers}</div>`:''}</div>`;
   const groups = {};
   items.forEach(i => { const c = i.course || 'Mains'; (groups[c] = groups[c] || []).push(i); });
   const order = [...COURSE_ORDER, ...Object.keys(groups).filter(c => !COURSE_ORDER.includes(c))];
-  // If everything is one course, don't bother with headings.
   const used = order.filter(c => groups[c] && groups[c].length);
-  if (used.length <= 1) return items.map(itemRow).join('');
-  return used.map(c => `<div style="font-size:10.5px;font-weight:800;color:var(--burgundy);text-transform:uppercase;letter-spacing:.4px;margin:6px 0 2px">${c}</div>${groups[c].map(itemRow).join('')}`).join('');
+  return used.map(c => {
+    const g = groups[c];
+    const firedItem = g.find(i => i.fired_at);
+    const target = Math.max(...g.map(i => i.prep_minutes != null ? i.prep_minutes : (DEFAULT_PREP[c] || 12)));
+    const ctrl = firedItem
+      ? `<span class="prep-chip badge" data-fired="${firedItem.fired_at}" data-target="${target}" style="font-size:10.5px"></span>`
+      : `<button class="btn btn-sm fire-btn" style="background:var(--gold,#C9A84C);color:#fff;padding:2px 10px;font-size:11px" onclick="fireCourse(${o.id},'${c}')">🔥 Fire</button>
+         <span style="font-size:10.5px;color:var(--muted)">held · target ${target}m</span>`;
+    return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 2px">
+        <span style="font-size:10.5px;font-weight:800;color:var(--burgundy);text-transform:uppercase;letter-spacing:.4px">${c}</span>${ctrl}
+      </div>
+      <div style="${firedItem ? '' : 'opacity:.5'}">${g.map(itemRow).join('')}</div>`;
+  }).join('');
+}
+
+async function fireCourse(orderId, course) {
+  try { await API.fireCourse(orderId, course); loadQueue(); }
+  catch (e) { alert(e.message); }
+}
+
+// Live-update every fired course's prep timer (1s tick, independent of the 5s reload).
+function tickTimers() {
+  document.querySelectorAll('.prep-chip').forEach(el => {
+    const fired = el.dataset.fired; if (!fired) return;
+    const target = parseInt(el.dataset.target) || 12;
+    const secs = Math.max(0, Math.floor((Date.now() - new Date(fired + 'Z')) / 1000));
+    const m = Math.floor(secs / 60), s = secs % 60;
+    const overdue = secs > target * 60;
+    const warn = !overdue && secs > target * 60 * 0.8;
+    el.textContent = `⏱ ${m}:${String(s).padStart(2, '0')} / ${target}m${overdue ? ' · LATE' : ''}`;
+    el.className = 'prep-chip badge ' + (overdue ? 'badge-danger' : warn ? 'badge-warning' : 'badge-success');
+  });
 }
 
 function orderLabel(o) {
