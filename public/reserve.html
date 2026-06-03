@@ -106,9 +106,60 @@ async function submitReservation() {
     if (!r.ok) return showResAlert(data.error || 'Could not submit reservation.');
     document.getElementById('resForm').classList.add('hidden');
     document.getElementById('resAlert').classList.add('hidden');
-    document.getElementById('resDoneMsg').textContent = data.message || 'The restaurant will confirm shortly.';
-    document.getElementById('resDone').classList.remove('hidden');
+    if (data.deposit_required) return startDeposit(data.confirmation_code, data.deposit_amount);
+    showDone(data.message);
   } catch (e) { showResAlert('Network error. Please try again.'); }
+}
+
+function showDone(msg) {
+  document.getElementById('resDeposit').classList.add('hidden');
+  document.getElementById('resDoneMsg').textContent = msg || 'The restaurant will confirm shortly.';
+  document.getElementById('resDone').classList.remove('hidden');
+}
+
+let depCtx = null, depStripe = null, depElements = null;
+const money = n => '$' + (Number(n)||0).toFixed(2);
+function ensureStripe() {
+  return new Promise((resolve, reject) => {
+    if (window.Stripe) return resolve();
+    const s = document.createElement('script'); s.src = 'https://js.stripe.com/v3/'; s.onload = resolve; s.onerror = () => reject(new Error('payment lib')); document.head.appendChild(s);
+  });
+}
+async function startDeposit(code, amount) {
+  document.getElementById('resDeposit').classList.remove('hidden');
+  document.getElementById('depMsg').textContent = `A ${money(amount)} deposit is required to confirm this booking.`;
+  document.getElementById('depPayBtn').textContent = `Pay ${money(amount)} deposit`;
+  try {
+    const r = await fetch('/api/public/reservations/deposit/intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code }) });
+    const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not start payment.');
+    depCtx = { code, ...d };
+    if (d.simulated || !d.publishable_key) {
+      document.getElementById('depMode').textContent = '🔒 Test mode — no real card is charged.';
+    } else {
+      document.getElementById('depMode').textContent = '🔒 Secured by Stripe.';
+      await ensureStripe();
+      depStripe = Stripe(d.publishable_key);
+      depElements = depStripe.elements({ clientSecret: d.client_secret });
+      const ce = document.getElementById('dep-card'); ce.style.display = 'block'; ce.innerHTML = '';
+      depElements.create('payment').mount('#dep-card');
+    }
+  } catch (e) { document.getElementById('depAlert').className='alert alert-danger'; document.getElementById('depAlert').textContent = e.message; document.getElementById('depAlert').classList.remove('hidden'); }
+}
+async function payDeposit() {
+  if (!depCtx) return;
+  const btn = document.getElementById('depPayBtn'); btn.disabled = true; btn.textContent = 'Processing…';
+  try {
+    if (!depCtx.simulated && depCtx.client_secret && depStripe && depElements) {
+      const { error, paymentIntent } = await depStripe.confirmPayment({ elements: depElements, redirect: 'if_required' });
+      if (error || !paymentIntent || paymentIntent.status !== 'succeeded') { throw new Error(error ? error.message : 'Payment was not completed.'); }
+    }
+    const r = await fetch('/api/public/reservations/deposit/confirm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code: depCtx.code, intent_id: depCtx.intent_id }) });
+    const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not confirm payment.');
+    showDone('Deposit received — your table is held. The restaurant will confirm shortly.');
+  } catch (e) {
+    const a = document.getElementById('depAlert'); a.className='alert alert-danger'; a.textContent = e.message; a.classList.remove('hidden');
+    btn.disabled = false; btn.textContent = `Pay ${money(depCtx.amount)} deposit`;
+  }
 }
 init();
 </script>
