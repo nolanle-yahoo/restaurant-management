@@ -61,6 +61,14 @@ router.get('/menu', (req, res) => {
     FROM menu_items WHERE location_id=? AND is_available=1
     ORDER BY sort_order, name
   `).all(locId);
+  // Attach modifier groups (with their available options) to each item.
+  const groupsFor = db.prepare(`SELECT id, name, min_select, max_select FROM modifier_groups WHERE menu_item_id=? ORDER BY sort_order, id`);
+  const optsFor = db.prepare(`SELECT id, name, price_delta FROM modifier_options WHERE group_id=? AND is_available=1 ORDER BY sort_order, id`);
+  items.forEach(i => {
+    i.modifier_groups = groupsFor.all(i.id)
+      .map(g => ({ ...g, options: optsFor.all(g.id) }))
+      .filter(g => g.options.length);
+  });
   const menu = categories.map(c => ({ ...c, items: items.filter(i => i.category_id === c.id) }))
                          .filter(c => c.items.length);
   res.json({ location, menu });
