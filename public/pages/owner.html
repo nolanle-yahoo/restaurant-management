@@ -2233,6 +2233,56 @@ onModalOverlayClick('menuItemModal');
 onModalOverlayClick('menuCatModal');
 onModalOverlayClick('ownerShiftModal');
 onModalOverlayClick('modMgrModal');
+onModalOverlayClick('crmModal');
+
+// ── Guest CRM ─────────────────────────────────────────────
+let crmTimer = null;
+function crmSearch() { clearTimeout(crmTimer); crmTimer = setTimeout(loadCrm, 250); }
+async function loadCrm() {
+  const el = document.getElementById('crmList');
+  const q = document.getElementById('crmSearch')?.value.trim() || '';
+  try {
+    const rows = await API.customersList(q);
+    el.innerHTML = rows.length ? `<table class="data-table">
+      <thead><tr><th>Guest</th><th>Tier</th><th>Points</th><th>Orders</th><th>Spend</th><th>Tags</th><th></th></tr></thead>
+      <tbody>${rows.map(c => `<tr>
+        <td class="fw-700">${c.vip?'⭐ ':''}${c.name}<br><span class="text-sm text-muted">${c.email}</span></td>
+        <td>${c.tier}</td><td>${c.points}</td><td style="text-align:center">${c.orders}</td>
+        <td class="fw-700" style="color:var(--success)">$${(c.spend||0).toFixed(2)}</td>
+        <td style="max-width:160px;font-size:12px;color:var(--muted)">${c.tags||'—'}</td>
+        <td><button class="btn btn-sm btn-ghost" onclick="openCrm(${c.id})">View</button></td>
+      </tr>`).join('')}</tbody></table>` : '<p style="color:var(--muted);padding:14px">No guests found.</p>';
+  } catch(e) { el.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`; }
+}
+async function openCrm(id) {
+  document.getElementById('crmModal').classList.add('open');
+  const body = document.getElementById('crmProfile');
+  body.innerHTML = '<p class="text-muted">Loading…</p>';
+  try {
+    const c = await API.customerProfile(id);
+    document.getElementById('crmName').textContent = (c.vip?'⭐ ':'') + c.name;
+    const ords = c.orders.length ? c.orders.map(o => `<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;border-bottom:1px solid var(--border)"><span>${o.order_type} · ${o.status} · ${new Date((o.created_at||'').replace(' ','T')+'Z').toLocaleDateString()}</span><span>$${(o.total||o.subtotal||0).toFixed(2)}</span></div>`).join('') : '<span class="text-muted">No orders.</span>';
+    const res = c.reservations.length ? c.reservations.map(r => `<div style="font-size:12.5px;padding:3px 0;border-bottom:1px solid var(--border)">${r.reservation_date} ${r.reservation_time} · party ${r.party_size} · ${r.status}</div>`).join('') : '<span class="text-muted">No reservations.</span>';
+    body.innerHTML = `
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;margin-bottom:12px">
+        <div><b>${c.tier}</b> · ${c.points} pts</div><div>${c.visit_count} orders</div>
+        <div>Lifetime spend: <b>$${(c.total_spend||0).toFixed(2)}</b></div>
+        <div>${c.email||''} ${c.phone?'· '+c.phone:''}</div>
+      </div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin-bottom:8px"><input type="checkbox" id="crmVip" ${c.vip?'checked':''}> VIP</label>
+      <div class="form-group"><label>Tags (comma-separated)</label><input id="crmTags" value="${(c.tags||'').replace(/"/g,'&quot;')}" placeholder="allergy: nuts, regular, window seat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px"></div>
+      <div class="form-group"><label>Private notes</label><textarea id="crmNotes" rows="3" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;resize:vertical">${(c.notes||'').replace(/</g,'&lt;')}</textarea></div>
+      <button class="btn btn-primary btn-sm" onclick="saveCrm(${c.id})">Save guest</button>
+      <div style="font-weight:700;font-size:13px;margin:14px 0 4px">Recent orders</div>${ords}
+      <div style="font-weight:700;font-size:13px;margin:14px 0 4px">Reservations</div>${res}`;
+  } catch(e) { body.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`; }
+}
+async function saveCrm(id) {
+  try {
+    await API.customerUpdate(id, { vip: document.getElementById('crmVip').checked, tags: document.getElementById('crmTags').value.trim(), notes: document.getElementById('crmNotes').value.trim() });
+    showToast('Guest saved', 'info'); loadCrm();
+  } catch(e) { alert(e.message); }
+}
 
 // ── Menu modifiers manager ────────────────────────────────
 let modMgrItemId = null;
