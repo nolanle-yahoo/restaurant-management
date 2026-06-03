@@ -345,6 +345,11 @@ function seed() {
   const setDiet = db.prepare(`UPDATE menu_items SET allergens=?, dietary=? WHERE name=?`);
   Object.entries(dietMap).forEach(([name, [allerg, diet]]) => setDiet.run(allerg || null, diet || null, name));
 
+  // ── Demo settings: reservation deposit for larger parties ────────
+  const setSetting = db.prepare(`INSERT INTO settings (key, value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value`);
+  setSetting.run('reservation_deposit', '20');
+  setSetting.run('reservation_deposit_min_party', '4');
+
   // ── Demo menu modifiers (Downtown items) ─────────────────────────
   // Shows optional add-ons + a required choice ("combo"-style).
   const insGroup = db.prepare(`INSERT INTO modifier_groups (menu_item_id, name, min_select, max_select, sort_order) VALUES (?,?,?,?,?)`);
