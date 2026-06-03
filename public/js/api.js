@@ -185,6 +185,12 @@ const API = {
   announcementCreate(data) { return this.post('/announcements', data); },
   announcementDelete(id)   { return this.delete(`/announcements/${id}`); },
 
+  promos()                { return this.get('/promos'); },
+  promoCreate(data)       { return this.post('/promos', data); },
+  promoUpdate(id, data)   { return this.put(`/promos/${id}`, data); },
+  promoDelete(id)         { return this.delete(`/promos/${id}`); },
+  giftCardsList()         { return this.get('/promos/giftcards'); },
+
   customersList(q)        { return this.get('/customers' + (q ? `?q=${encodeURIComponent(q)}` : '')); },
   customerProfile(id)     { return this.get(`/customers/${id}`); },
   customerUpdate(id, data){ return this.put(`/customers/${id}`, data); },
