@@ -506,14 +506,18 @@ router.post('/order/confirm', orderLimiter, async (req, res) => {
   if (p.error) return res.status(400).json({ error: p.error });
   const customerId = customerIdFromReq(req);
   let intentId = req.body.intent_id;
+  const dueCents = Math.round(p.amount_due * 100);
 
-  if (customerId && req.body.card_id) {
+  if (dueCents < 50) {
+    // Fully covered by a gift card (or $0 due) — no card charge.
+    intentId = 'gift_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  } else if (customerId && req.body.card_id) {
     // Saved-card flow: charge now, alongside order creation.
     const card = db.prepare(`SELECT * FROM customer_cards WHERE id=? AND customer_id=?`).get(req.body.card_id, customerId);
     if (!card) return res.status(404).json({ error: 'Saved card not found.' });
     const stripeCust = await stripeCustomerFor(customerId);
     let charge;
-    try { charge = await stripeLib.chargeSavedCard(Math.round(p.total * 100), stripeCust, card.stripe_pm_id, { kind: 'online_order' }); }
+    try { charge = await stripeLib.chargeSavedCard(dueCents, stripeCust, card.stripe_pm_id, { kind: 'online_order' }); }
     catch (e) { console.error('saved-card charge error:', e.message); return res.status(402).json({ error: 'Could not charge that card. Please use a new card.' }); }
     if (charge.status !== 'succeeded') return res.status(402).json({ error: 'Could not charge that card. Please use a new card.' });
     intentId = charge.id;
@@ -524,7 +528,7 @@ router.post('/order/confirm', orderLimiter, async (req, res) => {
     try { pay = await stripeLib.retrieveIntent(intentId); }
     catch (e) { console.error('confirm retrieve error:', e.message); return res.status(502).json({ error: 'Could not verify payment.' }); }
     if (pay.status !== 'succeeded') return res.status(402).json({ error: 'Payment was not completed.' });
-    if (pay.amount != null && pay.amount !== Math.round(p.total * 100)) {
+    if (pay.amount != null && pay.amount !== dueCents) {
       return res.status(409).json({ error: 'Payment amount mismatch. Please start over.' });
     }
   }
