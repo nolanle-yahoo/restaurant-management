@@ -367,6 +367,8 @@ function gatherBody() {
     notes: document.getElementById('cNotes').value.trim(),
   };
   if (!tableMode) {
+    const promo = document.getElementById('promoCode').value.trim(); if (promo) body.promo_code = promo;
+    const gift = document.getElementById('giftCode').value.trim(); if (gift) body.gift_card_code = gift;
     if (whenMode === 'later' && document.getElementById('schedTime').value) body.scheduled_for = document.getElementById('schedTime').value;
     if (orderType === 'pickup' && document.getElementById('curbside').checked) {
       body.curbside = true;
