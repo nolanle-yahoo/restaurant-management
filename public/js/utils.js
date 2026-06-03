@@ -64,6 +64,55 @@ function populateSidebar(user) {
 
   if (!document.getElementById('accountSettingsModal')) _injectAccountSettingsModal();
   initClockWidget(user);
+  initAnnouncements(user);
+}
+
+// ── Announcements bell (all staff): owner's global + own-location manager posts ──
+function initAnnouncements(user) {
+  const right = document.querySelector('.topbar-right');
+  if (!right || document.getElementById('annBell')) return;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:relative';
+  wrap.innerHTML =
+    `<button id="annBell" title="Announcements" style="background:none;border:none;cursor:pointer;font-size:18px;position:relative;padding:4px 6px">📣` +
+    `<span id="annCount" style="display:none;position:absolute;top:-1px;right:-2px;background:var(--danger);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:0 5px">0</span></button>` +
+    `<div id="annPanel" style="display:none;position:absolute;right:0;top:34px;width:320px;max-height:62vh;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.2);z-index:600;padding:8px"></div>`;
+  right.insertBefore(wrap, right.firstChild);
+  document.getElementById('annBell').onclick = (e) => {
+    e.stopPropagation();
+    const p = document.getElementById('annPanel');
+    const show = p.style.display !== 'block';
+    p.style.display = show ? 'block' : 'none';
+    if (show) loadAnnouncementsPanel();
+  };
+  document.addEventListener('click', e => { const p = document.getElementById('annPanel'); if (p && !wrap.contains(e.target)) p.style.display = 'none'; });
+  loadAnnouncementsBadge();
+  setInterval(loadAnnouncementsBadge, 60000);
+}
+async function loadAnnouncementsBadge() {
+  try {
+    const rows = await API.announcements();
+    const c = document.getElementById('annCount'); if (!c) return;
+    if (rows.length) { c.textContent = rows.length > 9 ? '9+' : rows.length; c.style.display = 'inline-block'; }
+    else c.style.display = 'none';
+  } catch {}
+}
+async function loadAnnouncementsPanel() {
+  const p = document.getElementById('annPanel'); if (!p) return;
+  p.innerHTML = '<div style="color:var(--muted);padding:8px;font-size:13px">Loading…</div>';
+  let rows; try { rows = await API.announcements(); } catch (e) { p.innerHTML = `<div style="color:var(--danger);padding:8px">${e.message}</div>`; return; }
+  if (!rows.length) { p.innerHTML = '<div style="color:var(--muted);padding:8px;font-size:13px">No announcements yet.</div>'; return; }
+  const esc = s => String(s || '').replace(/</g, '&lt;');
+  p.innerHTML = rows.map(a => {
+    const from = a.author_role === 'owner' ? '👑 Owner' : a.author_role === 'manager' ? '🧑‍💼 Manager' : (a.author_role || 'Staff');
+    const scope = a.location_id ? (a.location_name || 'Location') : 'All locations';
+    const when = a.created_at ? new Date(a.created_at.replace(' ', 'T') + 'Z').toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+    return `<div style="padding:8px;border-bottom:1px solid var(--border)">
+      <div style="font-weight:700;color:var(--burgundy);font-size:13.5px">${esc(a.title)}</div>
+      <div style="font-size:13px;margin:3px 0;white-space:pre-wrap">${esc(a.body)}</div>
+      <div style="font-size:11px;color:var(--muted)">${esc(a.author_name)} · ${from} · ${scope} · ${when}</div>
+    </div>`;
+  }).join('');
 }
 
 // ── Topbar clock in/out widget (all roles except owner) ──────
