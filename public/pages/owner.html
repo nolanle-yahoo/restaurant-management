@@ -1957,6 +1957,7 @@ function renderMenuRow(i) {
     <td><button class="btn btn-sm ${i.is_available?'btn-success':'btn-ghost'}" onclick="toggleItemAvail(${i.id},${i.is_available})">${i.is_available?'✓ Yes':'✗ No'}</button></td>
     <td><button class="btn btn-sm btn-ghost" onclick="openRecipe(${i.id},'${nm}')">🧪 Recipe</button>
         <button class="btn btn-sm btn-ghost" onclick="openModifiers(${i.id},'${nm}')">🧩 Options</button>
+        <button class="btn btn-sm btn-ghost" title="Kitchen prep time — drives the KDS prep timer" onclick="editPrep(${i.id},${i.prep_minutes ?? 'null'})">⏱ ${i.prep_minutes!=null?i.prep_minutes+'m':'prep'}</button>
         ${resetBtn}
         <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteMenuItem(${i.id})">Delete</button></td>
   </tr>`;
