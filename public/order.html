@@ -59,6 +59,18 @@
           <input class="field" id="cPhone" placeholder="Phone *">
           <input class="field" id="cEmail" placeholder="Email (for confirmation)">
           <input class="field" id="cAddr"  placeholder="Delivery address *" style="display:none">
+          <div id="whenBox" style="margin:2px 0 8px">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px">When</div>
+            <div style="display:flex;gap:6px">
+              <button type="button" id="whenAsap" class="btn btn-sm btn-primary" style="flex:1" onclick="setWhen('asap')">ASAP</button>
+              <button type="button" id="whenLater" class="btn btn-sm btn-ghost" style="flex:1" onclick="setWhen('later')">Schedule</button>
+            </div>
+            <input class="field" id="schedTime" type="datetime-local" style="display:none;margin-top:6px">
+          </div>
+          <label id="curbWrap" style="display:flex;gap:8px;align-items:center;font-size:13px;margin:0 0 6px">
+            <input type="checkbox" id="curbside" onchange="document.getElementById('vehicle').style.display=this.checked?'block':'none'"> 🚗 Curbside pickup
+          </label>
+          <input class="field" id="vehicle" placeholder="Vehicle (e.g., Red Honda Civic)" style="display:none">
           <textarea class="field" id="cNotes" rows="2" placeholder="Notes (allergies, instructions)"></textarea>
           <div id="payMethodBox" style="display:none;margin:4px 0 8px">
             <div style="font-size:12px;color:var(--muted);margin-bottom:5px">Payment method</div>
