@@ -581,6 +581,12 @@ function createSchema() {
   try { db.exec(`ALTER TABLE menu_items ADD COLUMN dietary TEXT`); } catch {}
   try { db.exec(`ALTER TABLE supply_orders ADD COLUMN vendor_id INTEGER REFERENCES vendors(id)`); } catch {}
   try { db.exec(`ALTER TABLE order_items ADD COLUMN course TEXT`); } catch {}
+  // KDS course-firing + prep timers: when a course is "fired" to the line we stamp
+  // fired_at on its items; prep_minutes is the per-item cook-time target (snapshot
+  // from the menu, falling back to a per-course default on the display).
+  try { db.exec(`ALTER TABLE order_items ADD COLUMN fired_at TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE order_items ADD COLUMN prep_minutes INTEGER`); } catch {}
+  try { db.exec(`ALTER TABLE menu_items ADD COLUMN prep_minutes INTEGER`); } catch {}
   try { db.exec(`ALTER TABLE inventory ADD COLUMN sku TEXT`); } catch {}
   try { db.exec(`ALTER TABLE inventory ADD COLUMN unit_cost REAL NOT NULL DEFAULT 0`); } catch {}
   // Self-service waitlist (virtual queue): guests join online via a public code,
