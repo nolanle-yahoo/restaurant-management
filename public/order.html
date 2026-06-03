@@ -314,7 +314,7 @@ function showOAlert(msg, type='danger') {
 }
 
 function gatherBody() {
-  const items = Object.entries(cart).map(([id,c]) => ({ id: Number(id), quantity: c.qty }));
+  const items = cart.map(l => ({ id: l.id, quantity: l.qty, option_ids: l.optionIds }));
   const body = {
     location_id: Number(document.getElementById('locSelect').value),
     order_type: orderType,
