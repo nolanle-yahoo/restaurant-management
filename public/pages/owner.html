@@ -2013,6 +2013,7 @@ function openEditMenuItem(id) {
   document.getElementById('menuItemDesc').value = i.description || '';
   document.getElementById('menuItemImage').value = i.image_url || '';
   document.getElementById('menuItemAllergens').value = i.allergens || '';
+  document.getElementById('menuItemPrep').value = i.prep_minutes ?? '';
   const diet = (i.dietary || '').split(',');
   document.getElementById('dietVeg').checked = diet.includes('vegetarian');
   document.getElementById('dietVegan').checked = diet.includes('vegan');
