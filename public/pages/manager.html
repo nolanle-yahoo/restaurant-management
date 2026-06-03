@@ -361,6 +361,28 @@
         </div>
       </div>
 
+      <!-- ── Promotions tab ── -->
+      <div id="tab-promos" class="hidden">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">Promo Codes</div></div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Codes you create apply at <b>your location</b>. Global codes (set by the owner) are shown too.</div>
+          <div id="mgrPromoAlert" class="alert hidden" style="margin-bottom:10px"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
+            <div><label style="font-size:11px;color:var(--muted)">Code</label><br><input id="mpCode" placeholder="LUNCH15" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;text-transform:uppercase;width:120px"></div>
+            <div><label style="font-size:11px;color:var(--muted)">Type</label><br><select id="mpKind" style="padding:7px;border:1.5px solid var(--border);border-radius:8px"><option value="percent">% off</option><option value="amount">$ off</option></select></div>
+            <div><label style="font-size:11px;color:var(--muted)">Value</label><br><input id="mpValue" type="number" min="0" step="1" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;width:80px"></div>
+            <div><label style="font-size:11px;color:var(--muted)">Min $</label><br><input id="mpMin" type="number" min="0" step="1" value="0" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;width:70px"></div>
+            <div><label style="font-size:11px;color:var(--muted)">Uses limit</label><br><input id="mpLimit" type="number" min="1" placeholder="∞" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;width:70px"></div>
+            <button class="btn btn-primary btn-sm" onclick="createMgrPromo()">Add code</button>
+          </div>
+          <div id="mgrPromoList"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Issued Gift Cards</div></div>
+          <div id="mgrGcList"></div>
+        </div>
+      </div>
+
       <!-- ── Floor Plan tab ── -->
       <div id="tab-floorplan" class="hidden">
         <div class="card">
