@@ -452,8 +452,8 @@ router.post('/order/confirm', orderLimiter, async (req, res) => {
            String(customer_name).slice(0, 120), String(customer_phone).slice(0, 40),
            (customer_email || '').trim() || null, p.type === 'delivery' ? String(delivery_address).slice(0, 300) : null, code);
     orderId = r.lastInsertRowid;
-    const ins = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price) VALUES (?,?,?,?)`);
-    p.resolved.forEach(i => ins.run(orderId, i.name, i.quantity, i.price));
+    const ins = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, modifiers) VALUES (?,?,?,?,?)`);
+    p.resolved.forEach(i => ins.run(orderId, i.name, i.quantity, i.price, i.modifiers || null));
     db.prepare(`
       INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, tip, total, method, status, stripe_payment_intent_id, receipt_code, receipt_email)
       VALUES (?, ?, NULL, ?, ?, ?, ?, ?, 'card', 'paid', ?, ?, ?)
