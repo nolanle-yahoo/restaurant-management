@@ -524,6 +524,28 @@
         </div>
       </section>
 
+      <!-- ── Guests (CRM) ──────────────────────────────── -->
+      <section id="sec-crm" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Guests</div>
+            <input id="crmSearch" placeholder="Search name or email…" oninput="crmSearch()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;width:240px">
+          </div>
+          <div id="crmList"><p style="color:var(--muted)">Loading…</p></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Guest profile modal ───────────────────────── -->
+<div class="modal-overlay" id="crmModal">
+  <div class="modal" style="width:560px;max-width:94vw">
+    <div class="modal-title" id="crmName">Guest</div>
+    <div id="crmProfile" style="max-height:64vh;overflow:auto"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+      <button class="btn btn-ghost" onclick="document.getElementById('crmModal').classList.remove('open')">Close</button>
     </div>
   </div>
 </div>
