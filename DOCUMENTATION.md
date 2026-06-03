@@ -822,7 +822,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 ### Audit — `/api/audit`
 | Method | Path | Access | Description |
 |---|---|---|---|
-| GET | `/` | Owner, Manager | Audit entries (scoped by role; action filter). |
+| GET | `/` | Owner, Manager | Audit entries (scoped by role). Filters: `action`, `location_id` (owner only), `start`/`end` (date range — `YYYY-MM-DD`, inclusive), `limit`. |
 
 ### Payments — `/api/payments`
 | Method | Path | Access | Description |
