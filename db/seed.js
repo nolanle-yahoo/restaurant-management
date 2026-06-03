@@ -1,5 +1,6 @@
 const db = require('./database');
 const { createSchema } = require('./schema');
+const { applyMenuModifiers } = require('./menuModifiers');
 const bcrypt = require('bcryptjs');
 
 createSchema();
