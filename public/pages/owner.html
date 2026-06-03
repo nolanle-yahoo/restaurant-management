@@ -409,6 +409,14 @@
               <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px">Service Charge %</label>
               <input id="setSvc" type="number" step="0.1" min="0" max="100" style="width:120px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
             </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px">Reservation Deposit $</label>
+              <input id="setDeposit" type="number" step="1" min="0" style="width:120px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px">…for parties of</label>
+              <input id="setDepositMin" type="number" step="1" min="1" style="width:90px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+            </div>
             <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save</button>
           </div>
           <div style="font-size:11.5px;color:var(--muted);margin-top:8px">Applied to every bill at settlement, across all locations.</div>
