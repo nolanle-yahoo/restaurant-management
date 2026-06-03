@@ -64,6 +64,7 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 | ✅ done | Central menu w/ per-location overrides — *shipped v1.24.0* | Owner, Manager | 3 |
 | ✅ done | Customer reviews + activity log for managers, with date/location filters — *shipped v1.42.0* | Owner, Manager | 2 |
 | ✅ done | Feedback after any service (online order, reservation, dine-in) — *shipped v1.43.0* | Customer, Owner, Mgr | 2 |
+| ✅ done | KDS course-firing + prep timers — *shipped v1.44.0* | Chef, Waiter, Mgr | 3 |
 | 🔴 1 | 2FA for owner/manager | Owner | 3–4 |
 
 ---
