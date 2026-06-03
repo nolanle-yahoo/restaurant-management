@@ -834,6 +834,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/waitlist` | Public (rate-limited) | Join the virtual queue; returns a code, position, and ETA. |
 | GET | `/waitlist` | Public | Live status by code (position, ETA, ready flag, status). |
 | POST | `/waitlist/cancel` | Public | Leave the queue by code. |
+| POST | `/order/arrived` | Public | Curbside "I'm here" by tracking code — records arrival + alerts staff. |
 | POST | `/account/register` · `/account/login` | Public (rate-limited) | Customer sign-up / sign-in; returns a customer JWT. |
 | GET | `/account/me` · `/account/orders` · `/account/loyalty` | Customer | Profile, order history, and points + ledger. |
 | GET · DELETE | `/account/cards[/:id]` | Customer | List or remove saved payment cards (brand/last4/expiry only). |
