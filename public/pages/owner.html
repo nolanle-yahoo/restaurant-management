@@ -2164,6 +2164,13 @@ async function loadStaffPerf() {
 }
 
 // ── Guest feedback ────────────────────────────────────────────
+// Label a review by where the guest left it (dine-in receipt, online order, reservation…).
+function fbSourceBadge(f) {
+  const map = { receipt: ['Dine-in', 'badge-success'], order: ['Online order', 'badge-info'], reservation: ['Reservation', 'badge-warning'], general: ['General', 'badge-muted'] };
+  const [label, cls] = map[f.source] || map.general;
+  const ref = f.reference_code ? ` ${f.reference_code}` : '';
+  return `<span class="badge ${cls}" style="font-size:10px;vertical-align:middle">${label}${ref}</span>`;
+}
 async function loadOwnerFeedback() {
   const { start, end } = periodRange(document.getElementById('fbPeriod')?.value || 'all');
   let d; try { d = await API.feedback({ location_id: document.getElementById('anLocFilter')?.value || '', start, end }); } catch(e) { return; }
