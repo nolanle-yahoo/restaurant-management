@@ -88,6 +88,11 @@ function seed() {
   // Each user's home location starts as their assigned location.
   db.prepare(`UPDATE users SET home_location_id=location_id WHERE home_location_id IS NULL`).run();
 
+  // ── Demo announcements (owner-global + a Downtown manager post) ──
+  const insAnn = db.prepare(`INSERT INTO announcements (location_id, author_id, author_name, title, body, created_at) VALUES (?,?,?,?,?,datetime('now',?))`);
+  insAnn.run(null, 1, 'Nolan Le',     'Welcome to the new platform', 'Team — everyone please clock in/out each shift. Reach out via Account Settings → Message with any questions. Thank you!', '-2 days');
+  insAnn.run(1,    2, 'Marco Rivera', 'Downtown patio reopens Friday', 'Heads up, Downtown crew: the patio reopens Friday. Expect a busy weekend — let\'s be ready!', '-3 hours');
+
   // ── Demo customer account (loyalty + marketing) ─────────────────
   const crypto = require('crypto');
   db.prepare(`INSERT INTO customers (name, email, phone, password_hash, points, marketing_opt_in, unsubscribe_token) VALUES (?,?,?,?,?,?,?)`)
