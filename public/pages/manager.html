@@ -1910,8 +1910,8 @@ async function loadMgrActivity() {
     document.getElementById('mgrFbAvg').textContent = d.count ? `★ ${d.average} · ${d.count} reviews` : 'No reviews';
     document.getElementById('mgrFeedback').innerHTML = d.items.length ? d.items.slice(0, 100).map(f => `
       <div style="padding:10px 0;border-bottom:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between">
-          <span style="color:var(--gold)">${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}</span>
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+          <span style="color:var(--gold)">${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)} ${mgrFbSourceBadge(f)}</span>
           <span class="text-sm text-muted">${fmtDateTime(f.created_at)}</span>
         </div>
         ${f.comment ? `<div style="font-size:13.5px;margin-top:4px">${f.comment}</div>` : '<div style="font-size:12px;color:var(--muted);margin-top:2px">No comment</div>'}
