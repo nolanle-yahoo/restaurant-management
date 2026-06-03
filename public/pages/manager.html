@@ -1839,6 +1839,44 @@ async function assignDelivery(id) {
   catch(e) { showAlert('dispatchAlert', e.message); }
 }
 
+// ── Promotions (manager: own-location codes; owner's global codes are read-only) ──
+async function loadMgrPromos() {
+  try {
+    const [promos, cards] = await Promise.all([API.promos(), API.giftCardsList()]);
+    const pl = document.getElementById('mgrPromoList');
+    pl.innerHTML = promos.length ? `<table class="data-table">
+      <thead><tr><th>Code</th><th>Discount</th><th>Min</th><th>Used</th><th>Scope</th><th>Active</th><th></th></tr></thead>
+      <tbody>${promos.map(p => {
+        const mine = p.location_id === user.location_id;
+        return `<tr>
+          <td class="fw-700">${p.code}</td>
+          <td>${p.kind==='percent'?p.value+'%':'$'+p.value.toFixed(2)} off</td>
+          <td>$${(p.min_subtotal||0).toFixed(2)}</td>
+          <td>${p.used_count}${p.usage_limit!=null?' / '+p.usage_limit:''}</td>
+          <td>${p.location_id ? (mine?'This location':'Other location') : '<span class="badge badge-muted">global</span>'}</td>
+          <td>${mine?`<button class="btn btn-sm ${p.is_active?'btn-success':'btn-ghost'}" onclick="toggleMgrPromo(${p.id},${p.is_active})">${p.is_active?'✓ On':'Off'}</button>`:(p.is_active?'✓':'—')}</td>
+          <td>${mine?`<button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteMgrPromo(${p.id})">Delete</button>`:''}</td>
+        </tr>`;
+      }).join('')}</tbody></table>` : '<p style="color:var(--muted)">No promo codes yet.</p>';
+    const gl = document.getElementById('mgrGcList');
+    gl.innerHTML = cards.length ? `<table class="data-table">
+      <thead><tr><th>Code</th><th>Initial</th><th>Balance</th><th>Status</th></tr></thead>
+      <tbody>${cards.map(c => `<tr><td class="fw-700">${c.code}</td><td>$${c.initial_amount.toFixed(2)}</td><td class="fw-700" style="color:var(--success)">$${c.balance.toFixed(2)}</td><td>${c.status}</td></tr>`).join('')}</tbody></table>` : '<p style="color:var(--muted)">No gift cards issued yet.</p>';
+  } catch(e) { document.getElementById('mgrPromoList').innerHTML = `<p style="color:var(--danger)">${e.message}</p>`; }
+}
+async function createMgrPromo() {
+  const code = document.getElementById('mpCode').value.trim();
+  if (!code) return showAlert('mgrPromoAlert', 'Enter a code.');
+  try {
+    await API.promoCreate({ code, kind: document.getElementById('mpKind').value, value: parseFloat(document.getElementById('mpValue').value)||0,
+      min_subtotal: parseFloat(document.getElementById('mpMin').value)||0, usage_limit: document.getElementById('mpLimit').value || null });
+    document.getElementById('mpCode').value=''; document.getElementById('mpValue').value='';
+    loadMgrPromos();
+  } catch(e) { showAlert('mgrPromoAlert', e.message); }
+}
+async function toggleMgrPromo(id, on) { try { await API.promoUpdate(id, { is_active: on?0:1 }); loadMgrPromos(); } catch(e){ showAlert('mgrPromoAlert', e.message); } }
+async function deleteMgrPromo(id) { if(!confirm('Delete this promo code?'))return; try { await API.promoDelete(id); loadMgrPromos(); } catch(e){ showAlert('mgrPromoAlert', e.message); } }
+
 // Stockroom shares this dashboard but only has inventory/supply-chain access.
 // Hide the manager-only tabs and skip the manager-only boot calls so the page
 // never fires requests it isn't allowed to make (no 403 noise in the console).
