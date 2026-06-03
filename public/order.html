@@ -162,7 +162,7 @@ async function init() {
 }
 
 async function loadMenu() {
-  cart = {}; renderCart();
+  cart = []; renderCart();
   const locId = document.getElementById('locSelect').value;
   const el = document.getElementById('menuContent');
   el.innerHTML = '<p style="color:var(--muted);padding:40px;text-align:center">Loading…</p>';
