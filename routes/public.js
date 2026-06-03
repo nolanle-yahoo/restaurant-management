@@ -341,6 +341,8 @@ router.post('/order', orderLimiter, (req, res) => {
     db.prepare(`UPDATE orders SET scheduled_for=?, curbside=?, vehicle=? WHERE id=?`).run(sched.scheduled_for, sched.curbside, sched.vehicle, orderId);
     const ins = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, modifiers) VALUES (?,?,?,?,?)`);
     resolved.forEach(i => ins.run(orderId, i.name, i.quantity, i.price, i.modifiers || null));
+    // Tag courses + prep targets; dine-in (QR) paces courses, to-go fires everything.
+    applyCoursing(orderId, Number(location_id), type === 'dine_in');
     db.exec('COMMIT');
   } catch (e) {
     db.exec('ROLLBACK');
