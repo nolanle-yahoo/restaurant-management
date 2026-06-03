@@ -519,7 +519,9 @@ async function doPay() {
       if (!paymentIntent || paymentIntent.status !== 'succeeded') { showPayAlert('Payment was not completed.'); return resetBtn(); }
     }
     const r = await api('/order/confirm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ...payCtx.body, intent_id: payCtx.intent_id }) });
-    orderPlacedView({ tracking_code: r.tracking_code, receipt_code: r.receipt_code, paidLine: `Paid online: <b>${money(r.breakdown.total)}</b> (incl. ${money(r.breakdown.tip)} tip)` });
+    const paid = r.breakdown.amount_due != null ? r.breakdown.amount_due : r.breakdown.total;
+    const extra = (r.breakdown.gift_applied ? ` · gift card ${money(r.breakdown.gift_applied)}` : '') + (r.breakdown.promo_discount ? ` · promo −${money(r.breakdown.promo_discount)}` : '');
+    orderPlacedView({ tracking_code: r.tracking_code, receipt_code: r.receipt_code, paidLine: `Paid online: <b>${money(paid)}</b>${extra}` });
   } catch (e) { showPayAlert(e.message); resetBtn(); }
 }
 
