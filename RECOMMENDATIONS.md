@@ -143,6 +143,10 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
     Telegram ops notifier.)
 50. ✅ **DONE (v1.35.0)** — **Self-service waitlist / virtual queue**: guests join online with a
     live position + ETA, get a "table ready" text when paged, and can leave the queue.
+51. ✅ **DONE (v1.36.0)** — **Menu modifiers + combos**: option groups with price deltas + min/max;
+    required groups = combos; server-priced and shown on tickets/receipts.
+52. ✅ **DONE (v1.37.0)** — **Scheduled order-ahead + curbside**: future pickup/delivery times +
+    curbside with vehicle and an "I'm here" arrival alert.
 
 ---
 
