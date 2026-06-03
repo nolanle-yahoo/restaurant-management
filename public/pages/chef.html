@@ -125,10 +125,11 @@ async function loadQueue() {
           ${statusBadge(o.status)}
         </div>
         <div class="order-items" style="margin:10px 0">
-          ${renderCourses(o.items||[])}
+          ${renderCourses(o)}
         </div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Waiter: ${o.waiter_name || '—'}</div>
         <div class="order-actions">
+          ${hasHeld ? `<button class="btn btn-sm fire-btn" style="background:var(--gold,#C9A84C);color:#fff" onclick="fireCourse(${o.id},'all')">🔥 Fire all remaining</button>` : ''}
           ${o.status==='pending'   ? `<button class="btn btn-primary btn-sm" onclick="advance(${o.id},'preparing')">Start Preparing</button>` : ''}
           ${o.status==='preparing' ? `<button class="btn btn-success btn-sm" onclick="advance(${o.id},'ready')">Mark Ready</button>` : ''}
         </div>
