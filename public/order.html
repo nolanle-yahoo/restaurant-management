@@ -195,8 +195,8 @@ async function loadMenu() {
               ${i.allergens ? `<div style="font-size:11px;color:var(--danger);margin-top:2px">Contains: ${i.allergens}</div>` : ''}
             </div>
             <div style="display:flex;align-items:center;gap:10px">
-              <span class="mi-price">${money(i.price)}</span>
-              <button class="btn btn-sm btn-primary" onclick="addToCart(${i.id})">Add</button>
+              <span class="mi-price">${money(i.price)}${i.modifier_groups && i.modifier_groups.length ? '+' : ''}</span>
+              <button class="btn btn-sm btn-primary" onclick="addToCart(${i.id})">${i.modifier_groups && i.modifier_groups.length ? 'Customize' : 'Add'}</button>
             </div>
           </div>`).join('')}
       </div>`).join('');
