@@ -554,6 +554,21 @@ router.get('/order', (req, res) => {
   res.json({ ...o, items, delivery });
 });
 
+// Curbside "I'm here" — guest signals arrival; staff are notified.
+router.post('/order/arrived', (req, res) => {
+  const code = (req.body.code || '').toString().trim().toUpperCase();
+  const o = db.prepare(`SELECT * FROM orders WHERE tracking_code=?`).get(code);
+  if (!o) return res.status(404).json({ error: 'No order found for that code.' });
+  if (!o.curbside) return res.status(400).json({ error: 'This is not a curbside order.' });
+  if (o.arrived_at) return res.json({ success: true, already: true });
+  db.prepare(`UPDATE orders SET arrived_at=datetime('now') WHERE id=?`).run(o.id);
+  const locName = (db.prepare(`SELECT name FROM locations WHERE id=?`).get(o.location_id) || {}).name || 'the restaurant';
+  notify(`🚗 Curbside arrived — ${o.customer_name || 'guest'} (${o.tracking_code})${o.vehicle ? `, ${o.vehicle}` : ''}`, { locId: o.location_id, roles: ['chef', 'manager', 'frontdesk', 'owner'], kind: 'order_ready' });
+  tg.sendTelegram(`🚗 Curbside arrival — ${o.customer_name || 'guest'} for order ${o.tracking_code}${o.vehicle ? ` (${o.vehicle})` : ''} at ${locName}`, 'order');
+  broadcast('order_update', { type: 'arrived', order_id: o.id, location_id: o.location_id }, o.location_id);
+  res.json({ success: true });
+});
+
 // Public receipt view by code
 router.get('/receipt', (req, res) => {
   const { code } = req.query;
