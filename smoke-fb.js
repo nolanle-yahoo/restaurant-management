@@ -43,12 +43,20 @@ async function clickStarsAndSubmit(page, scope) {
   chk('order: feedback widget rendered', await p1.locator('#orderFb .fb-stars').count() > 0);
   chk('order: feedback submitted (thank-you)', await clickStarsAndSubmit(p1, '#orderFb'));
 
-  // ── Reservation done view ──
+  // ── Reservation done view (drive the real form so lastResCode is set naturally) ──
   const p2 = await (await browser.newContext()).newPage();
   await p2.goto(BASE + '/reserve.html');
   await p2.waitForLoadState('networkidle');
-  await p2.evaluate(c => { window.lastResCode = c; showDone('Request received!'); }, rc);
-  await p2.waitForTimeout(300);
+  await p2.waitForTimeout(500);
+  await p2.fill('#rName', 'Smoke Resv');
+  await p2.fill('#rPhone', '5553334444');
+  await p2.fill('#rParty', '2');
+  await p2.fill('#rDate', day);
+  await p2.fill('#rTime', '18:30');
+  await p2.click('button:has-text("Request Reservation")');
+  await p2.waitForSelector('#resDone:not(.hidden)', { timeout: 8000 }).catch(() => {});
+  await p2.waitForTimeout(400);
+  const resvRc = await p2.evaluate(() => window.__resCode || null);
   chk('reservation: feedback widget rendered', await p2.locator('#resFb .fb-stars').count() > 0);
   chk('reservation: feedback submitted (thank-you)', await clickStarsAndSubmit(p2, '#resFb'));
 
