@@ -208,6 +208,13 @@ const API = {
   itemRecipe(id)               { return this.get(`/menu/items/${id}/recipe`); },
   itemRecipeUpdate(id, ingredients) { return this.put(`/menu/items/${id}/recipe`, { ingredients }); },
   resetItemToCentral(id)       { return this.post(`/menu/items/${id}/reset-central`, {}); },
+  itemModifiers(id)            { return this.get(`/menu/items/${id}/modifiers`); },
+  modGroupCreate(itemId, data) { return this.post(`/menu/items/${itemId}/modifier-groups`, data); },
+  modGroupUpdate(id, data)     { return this.put(`/menu/modifier-groups/${id}`, data); },
+  modGroupDelete(id)           { return this.delete(`/menu/modifier-groups/${id}`); },
+  modOptionCreate(groupId, data){ return this.post(`/menu/modifier-groups/${groupId}/options`, data); },
+  modOptionUpdate(id, data)    { return this.put(`/menu/modifier-options/${id}`, data); },
+  modOptionDelete(id)          { return this.delete(`/menu/modifier-options/${id}`); },
 
   centralCategories()          { return this.get('/menu/central/categories'); },
   centralCategoryCreate(data)  { return this.post('/menu/central/categories', data); },
