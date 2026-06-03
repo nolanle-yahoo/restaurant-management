@@ -471,6 +471,8 @@ router.post('/order/confirm', orderLimiter, async (req, res) => {
            String(customer_name).slice(0, 120), String(customer_phone).slice(0, 40),
            (customer_email || '').trim() || null, p.type === 'delivery' ? String(delivery_address).slice(0, 300) : null, code);
     orderId = r.lastInsertRowid;
+    const sched = scheduleFields(req.body, p.type);
+    if (!sched.error) db.prepare(`UPDATE orders SET scheduled_for=?, curbside=?, vehicle=? WHERE id=?`).run(sched.scheduled_for, sched.curbside, sched.vehicle, orderId);
     const ins = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, modifiers) VALUES (?,?,?,?,?)`);
     p.resolved.forEach(i => ins.run(orderId, i.name, i.quantity, i.price, i.modifiers || null));
     db.prepare(`
