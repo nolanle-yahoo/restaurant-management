@@ -493,6 +493,42 @@ function createSchema() {
       returned_at TEXT
     );
 
+    -- Promo / discount codes applied at checkout.
+    CREATE TABLE IF NOT EXISTS promo_codes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT NOT NULL UNIQUE,
+      kind TEXT NOT NULL DEFAULT 'percent' CHECK(kind IN ('percent','amount')),
+      value REAL NOT NULL DEFAULT 0,
+      min_subtotal REAL NOT NULL DEFAULT 0,
+      starts_at TEXT,
+      ends_at TEXT,
+      usage_limit INTEGER,
+      used_count INTEGER NOT NULL DEFAULT 0,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      location_id INTEGER REFERENCES locations(id),
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    -- Stored-value gift cards (balance lives here; ledger in gift_card_txns).
+    CREATE TABLE IF NOT EXISTS gift_cards (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT NOT NULL UNIQUE,
+      initial_amount REAL NOT NULL,
+      balance REAL NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','void')),
+      purchaser_email TEXT,
+      recipient_email TEXT,
+      message TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS gift_card_txns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      gift_card_id INTEGER NOT NULL REFERENCES gift_cards(id),
+      amount REAL NOT NULL,
+      reason TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     -- Broadcast announcements from owner/manager to staff (location-scoped or global).
     CREATE TABLE IF NOT EXISTS announcements (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
