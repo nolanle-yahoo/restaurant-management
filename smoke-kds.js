@@ -3,6 +3,7 @@
 // held course shows a Fire button, a fired course shows a live prep timer, and clicking
 // Fire moves a held course onto the line.
 const { chromium } = require('playwright');
+const db = require('./db/database');
 const BASE = 'http://localhost:3000';
 let pass = 0, fail = 0;
 const chk = (n, c) => { console.log((c ? 'PASS ' : 'FAIL ') + n); c ? pass++ : fail++; };
