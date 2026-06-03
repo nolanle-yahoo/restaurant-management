@@ -693,6 +693,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/` | All non-owner staff + Owner | Orders for location (optional status filter). |
 | POST | `/` | Waiter, Manager, Employee, Chef, Front Desk, Stockroom | Create order with items + special request; broadcasts; audited. |
 | PUT | `/:id` | Same as POST + Owner | Advance status; broadcasts; audited. |
+| PUT | `/:id/fire` | On-duty Owner/Manager/Waiter/Chef/Employee/Front Desk | Fire a held course (body `{ course }`) or all held courses (`{ course: 'all' }` / omitted) — starts its prep timer; moves a pending order to preparing; audited (`course_fire`). |
 | PUT | `/:id/void` | On-duty staff with `void` permission | Void an unpaid order (reason); restores inventory; audited. |
 | PUT | `/:id/move` | On-duty floor staff | Move an order to another table (transfer). |
 | PUT | `/merge` | On-duty floor staff | Merge a table's open orders into another table. |
