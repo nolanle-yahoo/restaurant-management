@@ -213,9 +213,10 @@ router.post('/:id/items', requireRole(...EDIT_ROLES), requireOnDuty, (req, res) 
   const { name, quantity, price, notes } = req.body;
   const qty = Math.max(1, parseInt(quantity) || 1);
   if (!name) return res.status(400).json({ error: 'Item name required' });
-  const cat = (db.prepare(`SELECT c.name FROM menu_items mi JOIN menu_categories c ON mi.category_id=c.id WHERE mi.location_id=? AND mi.name=?`).get(order.location_id, name) || {}).name || '';
-  const r = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, notes, course) VALUES (?,?,?,?,?,?)`)
-    .run(order.id, name, qty, price || 0, notes || null, courseFromCategory(cat));
+  const mi = db.prepare(`SELECT c.name AS cat, mi.prep_minutes AS prep FROM menu_items mi JOIN menu_categories c ON mi.category_id=c.id WHERE mi.location_id=? AND mi.name=?`).get(order.location_id, name) || {};
+  // Items added to an in-progress order are fired right away (the kitchen is working).
+  const r = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, notes, course, prep_minutes, fired_at) VALUES (?,?,?,?,?,?,?,datetime('now'))`)
+    .run(order.id, name, qty, price || 0, notes || null, courseFromCategory(mi.cat), mi.prep != null ? mi.prep : null);
   adjustForLine(req, order.id, order.location_id, name, qty);
   db.prepare(`UPDATE orders SET updated_at=datetime('now') WHERE id=?`).run(order.id);
   broadcast('order_update', { type: 'edit', order_id: order.id, location_id: order.location_id }, order.location_id);
