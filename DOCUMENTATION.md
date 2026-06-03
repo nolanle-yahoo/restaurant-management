@@ -875,6 +875,7 @@ to scope their subscription. The server broadcasts:
 | `menu.html` | Public (customers) | Browse any location's priced menu; no login. |
 | `reserve.html` | Public (customers) | Submit an online reservation request (returns a confirmation code); no login. |
 | `reserve-lookup.html` | Public (customers) | Look up or cancel a reservation by code + contact; no login. |
+| `waitlist.html` | Public (customers) | Join the virtual queue; live position/ETA, "table ready" alert, leave-queue; no login. |
 | `order.html` | Public (customers) | Order online: browse, cart, submit, track by code. Pickup/delivery, or "table mode" (`?table=`) for QR dine-in ordering. Links a signed-in customer for loyalty. |
 | `account.html` | Public (customers) | Customer sign-up/sign-in, loyalty points, order history, marketing preference. |
 | `unsubscribe.html` | Public (customers) | One-click marketing unsubscribe via emailed token. |
