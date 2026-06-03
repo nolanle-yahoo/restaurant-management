@@ -68,7 +68,9 @@
   </div>
   <div class="pub-foot">© 2026 Restaurant Management System</div>
 
+<script src="/js/feedback.js"></script>
 <script>
+let lastResCode = null;  // confirmation code of the just-created reservation, for feedback
 async function init() {
   document.getElementById('rDate').valueAsDate = new Date();
   try {
