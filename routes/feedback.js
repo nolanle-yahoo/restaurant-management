@@ -15,7 +15,7 @@ router.get('/', requireRole('owner', 'manager'), (req, res) => {
   if (end)   { clauses.push('date(f.created_at) <= date(?)'); args.push(end); }
   const cond = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
   const rows = db.prepare(`
-    SELECT f.id, f.receipt_code, f.rating, f.comment, f.created_at, l.name as location_name
+    SELECT f.id, f.receipt_code, f.rating, f.comment, f.created_at, f.source, f.reference_code, f.customer_name, l.name as location_name
     FROM feedback f LEFT JOIN locations l ON f.location_id=l.id
     ${cond} ORDER BY f.created_at DESC LIMIT 200
   `).all(...args);
