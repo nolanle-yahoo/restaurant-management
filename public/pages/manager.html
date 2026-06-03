@@ -1901,6 +1901,12 @@ async function deleteMgrPromo(id) { if(!confirm('Delete this promo code?'))retur
 // ── Activity & Customer Reviews ───────────────────────────────
 // Customer feedback + the location's activity log, both date-filtered. The
 // server scopes everything to the manager's own location automatically.
+function mgrFbSourceBadge(f) {
+  const map = { receipt: ['Dine-in', 'badge-success'], order: ['Online order', 'badge-info'], reservation: ['Reservation', 'badge-warning'], general: ['General', 'badge-muted'] };
+  const [label, cls] = map[f.source] || map.general;
+  const ref = f.reference_code ? ` ${f.reference_code}` : '';
+  return `<span class="badge ${cls}" style="font-size:10px;vertical-align:middle">${label}${ref}</span>`;
+}
 async function loadMgrActivity() {
   const { start, end } = periodRange(document.getElementById('actPeriod')?.value || 'all');
 
