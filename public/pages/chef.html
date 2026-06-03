@@ -153,6 +153,7 @@ async function loadQueue() {
       </div>`).join('')}` : '';
 
   document.getElementById('orderQueue').innerHTML = activeHtml + readyHtml;
+  tickTimers();
 }
 
 const COURSE_ORDER = ['Appetizers', 'Mains', 'Desserts', 'Drinks'];
