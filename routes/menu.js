@@ -280,4 +280,84 @@ router.post('/central/apply', requireRole('owner'), (req, res) => {
   res.json({ success: true, locations: targets.length, created, updated });
 });
 
+// ── Modifiers (option groups + options on a menu item) ─────────
+function canEditItem(req, itemId) {
+  const item = db.prepare(`SELECT id, location_id FROM menu_items WHERE id=?`).get(itemId);
+  if (!item) return null;
+  if (req.user.role === 'manager' && item.location_id !== req.user.location_id) return false;
+  return item;
+}
+
+// Full modifier tree for an item.
+router.get('/items/:id/modifiers', requireRole('owner','manager','chef'), (req, res) => {
+  const groups = db.prepare(`SELECT * FROM modifier_groups WHERE menu_item_id=? ORDER BY sort_order, id`).all(req.params.id);
+  const optsFor = db.prepare(`SELECT * FROM modifier_options WHERE group_id=? ORDER BY sort_order, id`);
+  res.json(groups.map(g => ({ ...g, options: optsFor.all(g.id) })));
+});
+
+router.post('/items/:id/modifier-groups', requireRole('owner','manager'), (req, res) => {
+  const item = canEditItem(req, req.params.id);
+  if (item === null) return res.status(404).json({ error: 'Menu item not found' });
+  if (item === false) return res.status(403).json({ error: 'Not your location.' });
+  const name = (req.body.name || '').toString().trim();
+  if (!name) return res.status(400).json({ error: 'Group name required' });
+  const min = Math.max(0, parseInt(req.body.min_select) || 0);
+  const max = Math.max(1, parseInt(req.body.max_select) || 1);
+  const r = db.prepare(`INSERT INTO modifier_groups (menu_item_id, name, min_select, max_select, sort_order) VALUES (?,?,?,?,?)`)
+    .run(item.id, name.slice(0, 80), min, Math.max(min || 1, max), parseInt(req.body.sort_order) || 0);
+  res.json({ success: true, id: r.lastInsertRowid });
+});
+router.put('/modifier-groups/:id', requireRole('owner','manager'), (req, res) => {
+  const g = db.prepare(`SELECT * FROM modifier_groups WHERE id=?`).get(req.params.id);
+  if (!g) return res.status(404).json({ error: 'Group not found' });
+  if (canEditItem(req, g.menu_item_id) === false) return res.status(403).json({ error: 'Not your location.' });
+  const fields = [], vals = [];
+  if (req.body.name !== undefined)       { fields.push('name=?');       vals.push(String(req.body.name).slice(0,80)); }
+  if (req.body.min_select !== undefined) { fields.push('min_select=?'); vals.push(Math.max(0, parseInt(req.body.min_select)||0)); }
+  if (req.body.max_select !== undefined) { fields.push('max_select=?'); vals.push(Math.max(1, parseInt(req.body.max_select)||1)); }
+  if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
+  vals.push(g.id);
+  db.prepare(`UPDATE modifier_groups SET ${fields.join(',')} WHERE id=?`).run(...vals);
+  res.json({ success: true });
+});
+router.delete('/modifier-groups/:id', requireRole('owner','manager'), (req, res) => {
+  const g = db.prepare(`SELECT * FROM modifier_groups WHERE id=?`).get(req.params.id);
+  if (!g) return res.status(404).json({ error: 'Group not found' });
+  if (canEditItem(req, g.menu_item_id) === false) return res.status(403).json({ error: 'Not your location.' });
+  db.prepare(`DELETE FROM modifier_options WHERE group_id=?`).run(g.id);
+  db.prepare(`DELETE FROM modifier_groups WHERE id=?`).run(g.id);
+  res.json({ success: true });
+});
+
+router.post('/modifier-groups/:id/options', requireRole('owner','manager'), (req, res) => {
+  const g = db.prepare(`SELECT * FROM modifier_groups WHERE id=?`).get(req.params.id);
+  if (!g) return res.status(404).json({ error: 'Group not found' });
+  if (canEditItem(req, g.menu_item_id) === false) return res.status(403).json({ error: 'Not your location.' });
+  const name = (req.body.name || '').toString().trim();
+  if (!name) return res.status(400).json({ error: 'Option name required' });
+  const r = db.prepare(`INSERT INTO modifier_options (group_id, name, price_delta, sort_order) VALUES (?,?,?,?)`)
+    .run(g.id, name.slice(0,80), Math.round((parseFloat(req.body.price_delta)||0)*100)/100, parseInt(req.body.sort_order)||0);
+  res.json({ success: true, id: r.lastInsertRowid });
+});
+router.put('/modifier-options/:id', requireRole('owner','manager'), (req, res) => {
+  const o = db.prepare(`SELECT o.*, g.menu_item_id FROM modifier_options o JOIN modifier_groups g ON o.group_id=g.id WHERE o.id=?`).get(req.params.id);
+  if (!o) return res.status(404).json({ error: 'Option not found' });
+  if (canEditItem(req, o.menu_item_id) === false) return res.status(403).json({ error: 'Not your location.' });
+  const fields = [], vals = [];
+  if (req.body.name !== undefined)         { fields.push('name=?');        vals.push(String(req.body.name).slice(0,80)); }
+  if (req.body.price_delta !== undefined)  { fields.push('price_delta=?'); vals.push(Math.round((parseFloat(req.body.price_delta)||0)*100)/100); }
+  if (req.body.is_available !== undefined) { fields.push('is_available=?'); vals.push(req.body.is_available ? 1 : 0); }
+  if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
+  vals.push(o.id);
+  db.prepare(`UPDATE modifier_options SET ${fields.join(',')} WHERE id=?`).run(...vals);
+  res.json({ success: true });
+});
+router.delete('/modifier-options/:id', requireRole('owner','manager'), (req, res) => {
+  const o = db.prepare(`SELECT o.*, g.menu_item_id FROM modifier_options o JOIN modifier_groups g ON o.group_id=g.id WHERE o.id=?`).get(req.params.id);
+  if (!o) return res.status(404).json({ error: 'Option not found' });
+  if (canEditItem(req, o.menu_item_id) === false) return res.status(403).json({ error: 'Not your location.' });
+  db.prepare(`DELETE FROM modifier_options WHERE id=?`).run(o.id);
+  res.json({ success: true });
+});
+
 module.exports = router;
