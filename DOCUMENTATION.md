@@ -800,6 +800,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/` | Owner, Manager, Front Desk | Current waiting parties (location-scoped). |
 | POST | `/` | Owner, Manager, Front Desk | Add a walk-in party. |
 | PUT | `/:id` | Owner, Manager, Front Desk | Seat or remove a party (status). |
+| POST | `/:id/notify` | Owner, Manager, Front Desk | Page a waiting party (texts them; marks notified). |
 
 ### Public (customer-facing, no authentication) — `/api/public`
 | Method | Path | Access | Description |
