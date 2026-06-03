@@ -714,6 +714,13 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/:id/status` | Driver (own), Owner, Manager | Advance status: `picked_up` / `delivered` / `failed`. |
 | POST | `/:id/location` | Driver (own) | Push the driver's GPS `lat`/`lng` for live tracking. |
 
+### Guests (CRM) — `/api/customers`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/` | Owner, Manager, Front Desk | Search guests with spend/visit aggregates + tier. |
+| GET | `/:id` | Owner, Manager, Front Desk | Guest profile + order/reservation history. |
+| PUT | `/:id` | Owner, Manager, Front Desk | Update VIP flag, tags, notes. |
+
 ### Regions & Staff Lending — `/api/regions`
 | Method | Path | Access | Description |
 |---|---|---|---|
