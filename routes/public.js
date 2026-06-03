@@ -351,13 +351,9 @@ function priceOnlineOrder(body) {
   if (!loc) return { error: 'Location not found' };
   if (!body.customer_name || !body.customer_phone) return { error: 'Your name and phone are required.' };
   if (type === 'delivery' && !body.delivery_address) return { error: 'A delivery address is required for delivery orders.' };
-  const lookup = db.prepare(`SELECT id, name, price FROM menu_items WHERE id=? AND location_id=? AND is_available=1`);
-  const resolved = [];
-  for (const it of body.items) {
-    const mi = lookup.get(it.id, body.location_id);
-    if (!mi) return { error: 'One or more items are unavailable. Please refresh the menu.' };
-    resolved.push({ name: mi.name, price: mi.price, quantity: Math.max(1, Math.min(50, parseInt(it.quantity) || 1)) });
-  }
+  const rc = resolveCart(body.items, body.location_id);
+  if (rc.error) return { error: rc.error };
+  const resolved = rc.resolved;
   const subtotal = round2(resolved.reduce((s, i) => s + i.price * i.quantity, 0));
   const { sales_tax_rate, service_charge_rate } = getRates();
   const service = round2(subtotal * service_charge_rate);
