@@ -2230,7 +2230,8 @@ async function sendCampaign() {
 let auditData = [];
 async function loadAuditLog() {
   const locId = document.getElementById('auditLocFilter')?.value || '';
-  auditData = await API.auditLog({ location_id: locId });
+  const { start, end } = periodRange(document.getElementById('auditPeriod')?.value || 'all');
+  auditData = await API.auditLog({ location_id: locId, start, end });
   renderAudit();
 }
 function renderAudit() {
