@@ -584,7 +584,11 @@ async function trackOrder() {
         `</div>`;
     }
     html += `<div style="font-size:12.5px;color:var(--muted);margin-top:8px">${(o.items||[]).map(i=>`${i.item_name} ×${i.quantity}${i.modifiers?` <span style="color:var(--muted)">(${i.modifiers})</span>`:''}`).join('<br>')}</div>`;
+    // Once the order is complete, invite feedback right here in the tracker.
+    const done = o.status === 'served' || (D && D.status === 'delivered');
+    if (done) html += `<div id="trackFb" style="border-top:1px dashed var(--border);margin-top:14px;padding-top:14px"></div>`;
     out.innerHTML = html;
+    if (done && window.FeedbackWidget) FeedbackWidget.mount(document.getElementById('trackFb'), { tracking_code: o.tracking_code, prompt: 'How was your order?' });
 
     if (D && D.driver_lat != null && D.status !== 'delivered' && D.status !== 'failed') renderDriverMap(D.driver_lat, D.driver_lng);
     // Keep refreshing while a delivery is in motion.
