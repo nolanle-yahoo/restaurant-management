@@ -2165,7 +2165,8 @@ async function loadStaffPerf() {
 
 // ── Guest feedback ────────────────────────────────────────────
 async function loadOwnerFeedback() {
-  let d; try { d = await API.feedback(document.getElementById('anLocFilter')?.value || ''); } catch(e) { return; }
+  const { start, end } = periodRange(document.getElementById('fbPeriod')?.value || 'all');
+  let d; try { d = await API.feedback({ location_id: document.getElementById('anLocFilter')?.value || '', start, end }); } catch(e) { return; }
   document.getElementById('fbAvg').textContent = d.count ? `★ ${d.average} · ${d.count} reviews` : 'No reviews yet';
   const el = document.getElementById('ownerFeedback');
   el.innerHTML = d.items.length ? d.items.slice(0, 50).map(f => `
