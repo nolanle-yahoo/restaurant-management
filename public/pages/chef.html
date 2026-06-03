@@ -143,7 +143,7 @@ async function loadQueue() {
           ${statusBadge(o.status)}
         </div>
         <div class="order-items" style="margin:8px 0">
-          ${(o.items||[]).map(i=>`<div class="order-item-row">• ${i.item_name} ×${i.quantity}</div>`).join('')}
+          ${(o.items||[]).map(i=>`<div class="order-item-row">• ${i.item_name} ×${i.quantity}${i.modifiers?`<div style="font-size:11px;color:var(--gold,#b8860b);margin-left:12px">↳ ${i.modifiers}</div>`:''}</div>`).join('')}
         </div>
         <div style="font-size:12px;color:var(--muted)">Waiter: ${o.waiter_name || '—'}</div>
       </div>`).join('')}` : '';
