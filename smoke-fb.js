@@ -56,7 +56,6 @@ async function clickStarsAndSubmit(page, scope) {
   await p2.click('button:has-text("Request Reservation")');
   await p2.waitForSelector('#resDone:not(.hidden)', { timeout: 8000 }).catch(() => {});
   await p2.waitForTimeout(400);
-  const resvRc = await p2.evaluate(() => window.__resCode || null);
   chk('reservation: feedback widget rendered', await p2.locator('#resFb .fb-stars').count() > 0);
   chk('reservation: feedback submitted (thank-you)', await clickStarsAndSubmit(p2, '#resFb'));
 
