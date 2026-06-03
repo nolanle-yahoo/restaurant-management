@@ -16,14 +16,16 @@ router.get('/', (req, res) => {
   let rows;
   if (req.user.role === 'owner') {
     rows = db.prepare(`
-      SELECT a.*, l.name as location_name FROM announcements a
+      SELECT a.*, l.name as location_name, u.role as author_role FROM announcements a
       LEFT JOIN locations l ON a.location_id=l.id
+      LEFT JOIN users u ON a.author_id=u.id
       ORDER BY a.created_at DESC LIMIT 50
     `).all();
   } else {
     rows = db.prepare(`
-      SELECT a.*, l.name as location_name FROM announcements a
+      SELECT a.*, l.name as location_name, u.role as author_role FROM announcements a
       LEFT JOIN locations l ON a.location_id=l.id
+      LEFT JOIN users u ON a.author_id=u.id
       WHERE a.location_id IS NULL OR a.location_id=?
       ORDER BY a.created_at DESC LIMIT 50
     `).all(req.user.location_id);
