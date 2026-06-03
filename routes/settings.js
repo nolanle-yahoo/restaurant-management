@@ -24,13 +24,15 @@ router.put('/permissions', requireRole('owner'), (req, res) => {
 
 // Read current global settings (owner/manager can view; only owner edits).
 router.get('/', requireRole('owner', 'manager'), (req, res) => {
-  res.json(getRates());
+  res.json({ ...getRates(), ...getDeposit() });
 });
 
-// Update tax / service-charge rates. Rates are fractions (0.08 = 8%), 0–1.
+// Update tax / service-charge rates (fractions, 0–1) and reservation deposit policy.
 router.put('/', requireRole('owner'), (req, res) => {
-  const { sales_tax_rate, service_charge_rate } = req.body;
-  const updated = setRates({ sales_tax_rate, service_charge_rate });
+  const { sales_tax_rate, service_charge_rate, reservation_deposit, reservation_deposit_min_party } = req.body;
+  setRates({ sales_tax_rate, service_charge_rate });
+  setDeposit({ reservation_deposit, reservation_deposit_min_party });
+  const updated = { ...getRates(), ...getDeposit() };
   auditLog(req, 'settings_update', 'settings', null, updated);
   res.json({ success: true, ...updated });
 });
