@@ -112,6 +112,7 @@ async function loadQueue() {
   const activeHtml = sorted.map(o => {
     const mins = Math.floor((Date.now() - new Date(o.created_at + 'Z')) / 60000);
     const urgent = mins > 15;
+    const hasHeld = (o.items||[]).some(i => !i.fired_at);
     return `
       <div class="order-card status-${o.status}" style="margin-bottom:14px">
         <div class="order-header">
