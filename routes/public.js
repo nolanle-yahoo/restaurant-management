@@ -797,19 +797,51 @@ router.get('/account/loyalty', requireCustomer, (req, res) => {
   res.json({ points, tier: tierFor(points), referral_code: c ? c.referral_code : null, ledger });
 });
 
-// Post-visit feedback from the receipt page (rating 1–5 + optional comment).
+// Customer feedback (rating 1–5 + optional comment). Guests can leave it after any
+// service: a settled dine-in receipt (receipt_code), an online order (tracking_code),
+// a reservation (reservation_code), or general feedback tied to a location.
 router.post('/feedback', orderLimiter, (req, res) => {
-  const code = String(req.body.receipt_code || '').trim().toUpperCase();
   const rating = parseInt(req.body.rating);
   const comment = (req.body.comment || '').toString().slice(0, 1000) || null;
-  if (!code || !(rating >= 1 && rating <= 5)) return res.status(400).json({ error: 'A receipt code and a rating (1–5) are required.' });
-  const p = db.prepare(`SELECT order_id, location_id FROM payments WHERE receipt_code=?`).get(code);
-  if (!p) return res.status(404).json({ error: 'We could not find that receipt.' });
-  if (db.prepare(`SELECT id FROM feedback WHERE receipt_code=?`).get(code)) {
-    return res.status(409).json({ error: 'Feedback has already been submitted for this receipt. Thank you!' });
+  const name = (req.body.name || '').toString().slice(0, 120).trim() || null;
+  if (!(rating >= 1 && rating <= 5)) return res.status(400).json({ error: 'A rating (1–5) is required.' });
+
+  const receiptCode = String(req.body.receipt_code || '').trim().toUpperCase();
+  const trackingCode = String(req.body.tracking_code || '').trim().toUpperCase();
+  const reservationCode = String(req.body.reservation_code || '').trim().toUpperCase();
+  let locationId = req.body.location_id ? Number(req.body.location_id) : null;
+  let orderId = null, source = 'general', refCode = null;
+
+  const dup = (src, code) =>
+    db.prepare(`SELECT id FROM feedback WHERE source=? AND reference_code=?`).get(src, code);
+
+  if (receiptCode) {
+    const p = db.prepare(`SELECT order_id, location_id FROM payments WHERE receipt_code=?`).get(receiptCode);
+    if (!p) return res.status(404).json({ error: 'We could not find that receipt.' });
+    // Honour both the legacy receipt_code column and the newer source/reference pair.
+    if (db.prepare(`SELECT id FROM feedback WHERE receipt_code=?`).get(receiptCode) || dup('receipt', receiptCode))
+      return res.status(409).json({ error: 'Feedback has already been submitted for this receipt. Thank you!' });
+    orderId = p.order_id; locationId = p.location_id; source = 'receipt'; refCode = receiptCode;
+  } else if (trackingCode) {
+    const o = db.prepare(`SELECT id, location_id FROM orders WHERE tracking_code=?`).get(trackingCode);
+    if (!o) return res.status(404).json({ error: 'We could not find that order.' });
+    if (dup('order', trackingCode))
+      return res.status(409).json({ error: 'Feedback has already been submitted for this order. Thank you!' });
+    orderId = o.id; locationId = o.location_id; source = 'order'; refCode = trackingCode;
+  } else if (reservationCode) {
+    const r = db.prepare(`SELECT id, location_id FROM reservations WHERE confirmation_code=?`).get(reservationCode);
+    if (!r) return res.status(404).json({ error: 'We could not find that reservation.' });
+    if (dup('reservation', reservationCode))
+      return res.status(409).json({ error: 'Feedback has already been submitted for this reservation. Thank you!' });
+    locationId = r.location_id; source = 'reservation'; refCode = reservationCode;
+  } else {
+    // General feedback — a location is recommended so staff can route it, but optional.
+    if (locationId && !db.prepare(`SELECT id FROM locations WHERE id=?`).get(locationId)) locationId = null;
   }
-  db.prepare(`INSERT INTO feedback (receipt_code, order_id, location_id, rating, comment) VALUES (?,?,?,?,?)`)
-    .run(code, p.order_id, p.location_id, rating, comment);
+
+  db.prepare(`INSERT INTO feedback (receipt_code, order_id, location_id, rating, comment, source, reference_code, customer_name)
+              VALUES (?,?,?,?,?,?,?,?)`)
+    .run(source === 'receipt' ? refCode : null, orderId, locationId, rating, comment, source, refCode, name);
   res.json({ success: true, message: 'Thank you for your feedback!' });
 });
 
