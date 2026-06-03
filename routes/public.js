@@ -554,11 +554,19 @@ router.post('/order/confirm', orderLimiter, async (req, res) => {
     if (!sched.error) db.prepare(`UPDATE orders SET scheduled_for=?, curbside=?, vehicle=? WHERE id=?`).run(sched.scheduled_for, sched.curbside, sched.vehicle, orderId);
     const ins = db.prepare(`INSERT INTO order_items (order_id, item_name, quantity, price, modifiers) VALUES (?,?,?,?,?)`);
     p.resolved.forEach(i => ins.run(orderId, i.name, i.quantity, i.price, i.modifiers || null));
+    const discount = round2(p.promo_discount + p.gift_applied);
+    const discountReason = [p.promo ? `promo ${p.promo.code}` : null, p.gift ? `gift ${p.gift.code}` : null].filter(Boolean).join(' + ') || null;
     db.prepare(`
-      INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, tip, total, method, status, stripe_payment_intent_id, receipt_code, receipt_email)
-      VALUES (?, ?, NULL, ?, ?, ?, ?, ?, 'card', 'paid', ?, ?, ?)
-    `).run(orderId, location_id, p.subtotal, p.service, p.tax, p.tip, p.total, intentId, receiptCode, (customer_email || '').trim() || null);
-    if (customerId && p.subtotal > 0) awardCustomerPoints(customerId, Math.floor(p.subtotal), `Online order ${code}`);
+      INSERT INTO payments (order_id, location_id, waiter_id, subtotal, service_charge, tax, tip, total, discount, discount_reason, method, status, stripe_payment_intent_id, receipt_code, receipt_email)
+      VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, 'card', 'paid', ?, ?, ?)
+    `).run(orderId, location_id, p.subtotal, p.service, p.tax, p.tip, p.amount_due, discount, discountReason, intentId, receiptCode, (customer_email || '').trim() || null);
+    if (customerId && p.discountedSub > 0) awardCustomerPoints(customerId, Math.floor(p.discountedSub), `Online order ${code}`);
+    // Apply promo usage + draw down the gift card within the same transaction.
+    if (p.promo) db.prepare(`UPDATE promo_codes SET used_count=used_count+1 WHERE id=?`).run(p.promo.id);
+    if (p.gift && p.gift_applied > 0) {
+      db.prepare(`UPDATE gift_cards SET balance=ROUND(balance-?,2) WHERE id=?`).run(p.gift_applied, p.gift.id);
+      db.prepare(`INSERT INTO gift_card_txns (gift_card_id, amount, reason) VALUES (?,?,?)`).run(p.gift.id, -p.gift_applied, `Order ${code}`);
+    }
     db.exec('COMMIT');
   } catch (e) {
     db.exec('ROLLBACK');
