@@ -38,7 +38,7 @@
       const r = await fetch('/api/public/receipt?code=' + encodeURIComponent(code));
       const d = await r.json();
       if (!r.ok) return showErr(d.error || 'Receipt not found');
-      const items = (d.items||[]).map(i => `<div class="row"><span>${i.item_name} ×${i.quantity}</span><span>$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('');
+      const items = (d.items||[]).map(i => `<div class="row"><span>${i.item_name} ×${i.quantity}${i.modifiers?`<br><span style="font-size:11px;color:#888">${i.modifiers}</span>`:''}</span><span>$${(i.price*i.quantity).toFixed(2)}</span></div>`).join('');
       document.getElementById('lookup').classList.add('hidden');
       const v = document.getElementById('view');
       v.classList.remove('hidden');
