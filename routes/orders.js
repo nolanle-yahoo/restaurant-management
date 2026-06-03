@@ -113,6 +113,23 @@ router.put('/:id', requireRole('owner','manager','waiter','chef','employee','fro
   res.json({ success: true });
 });
 
+// Fire a held course (or all held courses) to the line — starts its prep timer.
+// Body: { course } for one course, or { course: 'all' } / omitted for everything.
+router.put('/:id/fire', requireRole('owner','manager','waiter','chef','employee','frontdesk'), requireOnDuty, (req, res) => {
+  const order = db.prepare(`SELECT * FROM orders WHERE id=?`).get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  if (order.voided) return res.status(400).json({ error: 'Cannot fire a voided order.' });
+  const course = (req.body.course || '').toString().trim();
+  const fired = (!course || course.toLowerCase() === 'all') ? fireAll(order.id) : fireCourse(order.id, course);
+  if (!fired) return res.status(400).json({ error: 'That course is already fired (or has no items).' });
+  // A fired course means the kitchen is actively working — move pending → preparing.
+  if (order.status === 'pending') db.prepare(`UPDATE orders SET status='preparing' WHERE id=?`).run(order.id);
+  db.prepare(`UPDATE orders SET updated_at=datetime('now') WHERE id=?`).run(order.id);
+  broadcast('order_update', { type: 'fire', order_id: order.id, course: course || 'all', location_id: order.location_id }, order.location_id);
+  auditLog(req, 'course_fire', 'order', order.id, { course: course || 'all', items: fired });
+  res.json({ success: true, fired });
+});
+
 // Void an unpaid order: mark voided (with reason), restore any depleted
 // inventory, free the table, and audit. Permission-gated.
 router.put('/:id/void', requireOnDuty, requireCan('void'), (req, res) => {
