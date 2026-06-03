@@ -459,10 +459,15 @@ router.post('/order/intent', orderLimiter, async (req, res) => {
   const p = priceOnlineOrder(req.body);
   if (p.error) return res.status(400).json({ error: p.error });
   const cid = customerIdFromReq(req);
-  const amountCents = Math.round(p.total * 100);
+  const amountCents = Math.round(p.amount_due * 100);
   const meta = { kind: 'online_order', location_id: String(req.body.location_id) };
-  const breakdown = { subtotal: p.subtotal, service: p.service, tax: p.tax, tip: p.tip, total: p.total };
+  const breakdown = { subtotal: p.subtotal, promo_discount: p.promo_discount, service: p.service, tax: p.tax, tip: p.tip,
+                      total: p.total, gift_applied: p.gift_applied, amount_due: p.amount_due };
   try {
+    // Fully covered by a gift card (or otherwise $0 due) — no card needed.
+    if (amountCents < 50) {
+      return res.json({ fully_covered: true, breakdown });
+    }
     // Saved card: no charge here — confirmed (charged) together with order creation.
     if (cid && req.body.card_id) {
       const card = db.prepare(`SELECT id FROM customer_cards WHERE id=? AND customer_id=?`).get(req.body.card_id, cid);
