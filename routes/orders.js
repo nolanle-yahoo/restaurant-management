@@ -6,18 +6,10 @@ const { auditLog } = require('../lib/audit');
 const { depleteForOrder, adjustForLine } = require('../lib/recipes');
 const { requireCan } = require('../lib/permissions');
 const { sendSMS } = require('../lib/sms');
+const { courseFromCategory, fireCourse, fireAll, applyCoursing } = require('../lib/courses');
 
 const router = express.Router();
 router.use(verifyToken);
-
-// Map a menu category name to a kitchen course for ticket grouping/firing.
-function courseFromCategory(cat) {
-  const c = (cat || '').toLowerCase();
-  if (/starter|appetiz|salad|soup|small plate/.test(c)) return 'Appetizers';
-  if (/dessert|sweet/.test(c)) return 'Desserts';
-  if (/beverage|drink|wine|coffee|bar/.test(c)) return 'Drinks';
-  return 'Mains';
-}
 
 router.get('/', requireRole('owner','manager','waiter','chef','employee','frontdesk','stockroom'), (req, res) => {
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
