@@ -86,6 +86,7 @@ const API = {
   },
   createOrder(data)  { return this.post('/orders', data); },
   updateOrder(id, status) { return this.put(`/orders/${id}`, { status }); },
+  fireCourse(id, course)  { return this.put(`/orders/${id}/fire`, { course }); },
   voidOrder(id, reason)   { return this.put(`/orders/${id}/void`, { reason }); },
   moveOrder(id, to_table_id) { return this.put(`/orders/${id}/move`, { to_table_id }); },
   addOrderItem(id, data)        { return this.post(`/orders/${id}/items`, data); },
