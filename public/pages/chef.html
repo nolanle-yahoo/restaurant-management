@@ -153,7 +153,7 @@ async function loadQueue() {
 
 const COURSE_ORDER = ['Appetizers', 'Mains', 'Desserts', 'Drinks'];
 function renderCourses(items) {
-  const itemRow = i => `<div class="order-item-row">• ${i.item_name} <span style="color:var(--muted)">×${i.quantity}</span>${allergenMap[i.item_name]?` <span class="badge badge-danger" style="font-size:10px">⚠ ${allergenMap[i.item_name]}</span>`:''}</div>`;
+  const itemRow = i => `<div class="order-item-row">• ${i.item_name} <span style="color:var(--muted)">×${i.quantity}</span>${allergenMap[i.item_name]?` <span class="badge badge-danger" style="font-size:10px">⚠ ${allergenMap[i.item_name]}</span>`:''}${i.modifiers?`<div style="font-size:11px;color:var(--gold,#b8860b);margin-left:12px">↳ ${i.modifiers}</div>`:''}</div>`;
   const groups = {};
   items.forEach(i => { const c = i.course || 'Mains'; (groups[c] = groups[c] || []).push(i); });
   const order = [...COURSE_ORDER, ...Object.keys(groups).filter(c => !COURSE_ORDER.includes(c))];
