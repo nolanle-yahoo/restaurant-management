@@ -12,7 +12,7 @@ const sms = require('../lib/sms');
 const { sendSMS } = sms;
 const tg = require('../lib/telegram');
 const { depleteForOrder } = require('../lib/recipes');
-const { getRates } = require('../lib/settings');
+const { getRates, getDeposit } = require('../lib/settings');
 const stripeLib = require('../lib/stripe');
 const { signCustomer, customerIdFromReq, requireCustomer } = require('../lib/customerAuth');
 const round2 = n => Math.round(n * 100) / 100;
