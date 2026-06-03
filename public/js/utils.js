@@ -527,6 +527,18 @@ function fmtDateTime(dt) {
   if (!dt) return '—';
   return fmtDate(dt) + ' ' + fmtTime(dt);
 }
+// Compute a {start,end} local-date range (YYYY-MM-DD) for a named period used by
+// the owner/manager Activity & Feedback filters. 'all' returns empty strings.
+function periodRange(period) {
+  const pad = n => String(n).padStart(2, '0');
+  const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const end = ymd(today);
+  if (period === 'today')  return { start: end, end };
+  if (period === 'week')   { const s = new Date(today); s.setDate(s.getDate() - 6); return { start: ymd(s), end }; }
+  if (period === 'month')  { const s = new Date(today); s.setDate(s.getDate() - 29); return { start: ymd(s), end }; }
+  return { start: '', end: '' };
+}
 function timeAgo(dt) {
   if (!dt) return '';
   const diff = Math.floor((Date.now() - new Date(dt + (dt.includes('T') ? '' : 'Z'))) / 60000);
