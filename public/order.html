@@ -178,7 +178,7 @@ async function init() {
       document.getElementById('locLabel').textContent = 'Your order goes straight to the kitchen';
       // Dine-in QR orders are settled at the table by a server (tip handled then).
       const tb = document.getElementById('tipBox'); if (tb) tb.style.display = 'none';
-      ['whenBox','curbWrap','vehicle'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+      ['whenBox','curbWrap','vehicle','codesBox'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
       const cb = document.getElementById('checkoutBtn'); if (cb) cb.textContent = 'Place Order';
       const ch = document.getElementById('checkoutHint'); if (ch) ch.textContent = 'A server will bring your bill.';
     }
