@@ -584,7 +584,12 @@ function createSchema() {
   // KDS course-firing + prep timers: when a course is "fired" to the line we stamp
   // fired_at on its items; prep_minutes is the per-item cook-time target (snapshot
   // from the menu, falling back to a per-course default on the display).
-  try { db.exec(`ALTER TABLE order_items ADD COLUMN fired_at TEXT`); } catch {}
+  // Adding fired_at succeeds only once; backfill existing items as already-fired (at
+  // their order time) so legacy/in-flight tickets don't all appear "held".
+  try {
+    db.exec(`ALTER TABLE order_items ADD COLUMN fired_at TEXT`);
+    db.exec(`UPDATE order_items SET fired_at=(SELECT o.created_at FROM orders o WHERE o.id=order_items.order_id) WHERE fired_at IS NULL`);
+  } catch {}
   try { db.exec(`ALTER TABLE order_items ADD COLUMN prep_minutes INTEGER`); } catch {}
   try { db.exec(`ALTER TABLE menu_items ADD COLUMN prep_minutes INTEGER`); } catch {}
   try { db.exec(`ALTER TABLE inventory ADD COLUMN sku TEXT`); } catch {}
