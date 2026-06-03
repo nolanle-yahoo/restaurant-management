@@ -82,6 +82,19 @@ router.put('/:id', requireRole('owner','manager','frontdesk'), (req, res) => {
   res.json({ success: true });
 });
 
+// Refund a paid reservation deposit (e.g., honored cancellation).
+router.post('/:id/refund-deposit', requireRole('owner','manager'), async (req, res) => {
+  const r = db.prepare(`SELECT * FROM reservations WHERE id=?`).get(req.params.id);
+  if (!r) return res.status(404).json({ error: 'Reservation not found' });
+  if (req.user.role === 'manager' && r.location_id !== req.user.location_id) return res.status(403).json({ error: 'Not your location.' });
+  if (r.deposit_status !== 'paid') return res.status(409).json({ error: 'No paid deposit to refund.' });
+  try { await stripeLib.refund(r.deposit_intent); } catch (e) { console.error('deposit refund:', e.message); return res.status(502).json({ error: 'Refund failed at the gateway.' }); }
+  db.prepare(`UPDATE reservations SET deposit_status='refunded' WHERE id=?`).run(r.id);
+  auditLog(req, 'reservation_deposit_refund', 'reservation', r.id, { amount: r.deposit_amount });
+  broadcast('reservation_update', { location_id: r.location_id }, r.location_id);
+  res.json({ success: true });
+});
+
 router.delete('/:id', requireRole('owner','manager'), (req, res) => {
   db.prepare(`DELETE FROM reservations WHERE id=?`).run(req.params.id);
   res.json({ success: true });
