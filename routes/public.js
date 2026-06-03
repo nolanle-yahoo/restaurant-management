@@ -142,12 +142,15 @@ router.post('/reservations', bookingLimiter, (req, res) => {
 
   const size = Math.max(1, Math.min(50, parseInt(party_size) || 1));
   const code = makeCode('RSV');
+  // Deposit policy: flat amount when the party meets the minimum size.
+  const dep = getDeposit();
+  const depositAmount = (dep.reservation_deposit > 0 && size >= dep.reservation_deposit_min_party) ? round2(dep.reservation_deposit) : 0;
   const r = db.prepare(`
     INSERT INTO reservations (location_id, guest_name, guest_phone, guest_email, party_size,
-      reservation_date, reservation_time, status, notes, confirmation_code)
-    VALUES (?,?,?,?,?,?,?,'pending',?,?)
+      reservation_date, reservation_time, status, notes, confirmation_code, deposit_amount)
+    VALUES (?,?,?,?,?,?,?,'pending',?,?,?)
   `).run(location_id, String(guest_name).slice(0,120), guest_phone || null, guest_email || null,
-         size, reservation_date, reservation_time, notes ? String(notes).slice(0,500) : null, code);
+         size, reservation_date, reservation_time, notes ? String(notes).slice(0,500) : null, code, depositAmount);
 
   const locName = (db.prepare(`SELECT name FROM locations WHERE id=?`).get(location_id) || {}).name || 'our restaurant';
   if (guest_email) {
