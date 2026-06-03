@@ -185,6 +185,11 @@ const API = {
   announcementCreate(data) { return this.post('/announcements', data); },
   announcementDelete(id)   { return this.delete(`/announcements/${id}`); },
 
+  customersList(q)        { return this.get('/customers' + (q ? `?q=${encodeURIComponent(q)}` : '')); },
+  customerProfile(id)     { return this.get(`/customers/${id}`); },
+  customerUpdate(id, data){ return this.put(`/customers/${id}`, data); },
+  refundDeposit(resId)    { return this.post(`/reservations/${resId}/refund-deposit`, {}); },
+
   reservations(params = {}) {
     const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
     return this.get('/reservations' + (qs ? '?' + qs : ''));
