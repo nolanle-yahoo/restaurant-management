@@ -118,6 +118,8 @@ async function loadQueue() {
           <div>
             <div class="order-table">${orderLabel(o)}</div>
             <div class="order-time ${urgent?'elapsed-urgent':''}">⏱ ${mins}m waiting${urgent?' — URGENT':''}</div>
+            ${o.scheduled_for?`<div style="font-size:12px;color:var(--burgundy);font-weight:700">⏰ Scheduled ${new Date(o.scheduled_for).toLocaleString([], {hour:'numeric',minute:'2-digit'})}</div>`:''}
+            ${o.curbside?`<div style="font-size:12px;font-weight:700;color:${o.arrived_at?'var(--success)':'var(--muted)'}">🚗 Curbside${o.vehicle?` — ${o.vehicle}`:''}${o.arrived_at?' · ARRIVED':''}</div>`:''}
           </div>
           ${statusBadge(o.status)}
         </div>
