@@ -725,6 +725,14 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/:id/status` | Driver (own), Owner, Manager | Advance status: `picked_up` / `delivered` / `failed`. |
 | POST | `/:id/location` | Driver (own) | Push the driver's GPS `lat`/`lng` for live tracking. |
 
+### Promotions & Gift Cards — `/api/promos`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET · POST · PUT · DELETE | `/[:id]` | Owner, Manager | Manage promo codes (managers scoped to their location). |
+| GET | `/giftcards` | Owner, Manager | Issued gift cards (code, balance, status). |
+
+*(Public: `POST /api/public/promo/check`, `GET /api/public/giftcards/:code`, `POST /api/public/giftcards/intent` + `/confirm`; gift card + promo apply within `/api/public/order/intent` + `/confirm`.)*
+
 ### Guests (CRM) — `/api/customers`
 | Method | Path | Access | Description |
 |---|---|---|---|
