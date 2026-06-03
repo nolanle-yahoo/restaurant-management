@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gift Cards — Nolan Restaurant Group</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: var(--cream, #faf7f2); }
+    .pub-header { background: var(--burgundy); color:#fff; padding:22px 20px; text-align:center; }
+    .pub-header .logo { font-size:34px; } .pub-header h1 { font-size:24px; font-weight:800; margin-top:6px; }
+    .pub-nav { display:flex; gap:10px; justify-content:center; padding:14px; background:#fff; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+    .gc-wrap { max-width:460px; margin:0 auto; padding:24px 18px 60px; }
+    .field { width:100%; padding:11px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:14px; margin-bottom:10px; }
+    .amt-btns { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  </style>
+</head>
+<body>
+  <div class="pub-header"><div class="logo">🎁</div><h1>Gift Cards</h1><p>Give the gift of a great meal.</p></div>
+  <div class="pub-nav">
+    <a class="btn btn-ghost" href="/">← Home</a>
+    <a class="btn btn-ghost" href="/order.html">🛍️ Order</a>
+    <a class="btn btn-ghost" href="/account.html">⭐ My Account</a>
+  </div>
+
+  <div class="gc-wrap">
+    <div id="buyCard" class="card">
+      <div class="card-header"><div class="card-title">Buy a Gift Card</div></div>
+      <div id="gcAlert" class="alert hidden" style="margin-bottom:10px"></div>
+      <label style="font-size:12.5px;color:var(--muted)">Amount</label>
+      <div class="amt-btns" id="amtBtns">
+        <button type="button" class="btn btn-sm btn-ghost" onclick="setAmt(25,this)">$25</button>
+        <button type="button" class="btn btn-sm btn-primary" onclick="setAmt(50,this)">$50</button>
+        <button type="button" class="btn btn-sm btn-ghost" onclick="setAmt(100,this)">$100</button>
+        <input class="field" id="gcAmt" type="number" min="5" max="500" value="50" style="width:90px;margin:0">
+      </div>
+      <input class="field" id="gcRecipient" type="email" placeholder="Recipient email (we'll send the code)">
+      <input class="field" id="gcPurchaser" type="email" placeholder="Your email (optional)">
+      <textarea class="field" id="gcMsg" rows="2" placeholder="Add a message (optional)"></textarea>
+      <button class="btn btn-primary" style="width:100%" onclick="buyGiftCard()">Continue to Payment</button>
+    </div>
+
+    <div id="payCard" class="card hidden" style="text-align:center">
+      <div style="font-size:40px">🔒</div>
+      <div id="gcPayMode" style="font-size:12.5px;color:var(--muted);margin:6px 0"></div>
+      <div id="gc-card" style="display:none;padding:10px;border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;text-align:left"></div>
+      <div id="gcPayAlert" class="alert hidden" style="margin-bottom:8px"></div>
+      <button class="btn btn-primary" id="gcPayBtn" style="width:100%" onclick="payGift()">Pay</button>
+      <button class="btn btn-ghost" style="width:100%;margin-top:6px" onclick="location.reload()">← Back</button>
+    </div>
+
+    <div id="doneCard" class="card hidden" style="text-align:center">
+      <div style="font-size:46px">🎁</div>
+      <div style="font-weight:800;color:var(--burgundy);font-size:18px;margin:8px 0">Gift card purchased!</div>
+      <div style="font-size:14px">Code</div>
+      <div style="font-size:24px;font-weight:800;letter-spacing:1px;color:var(--burgundy);margin:6px 0" id="gcCode"></div>
+      <div style="color:var(--muted);font-size:13px" id="gcDoneMsg"></div>
+      <a class="btn btn-primary" style="margin-top:14px" href="/order.html">Order with it</a>
+    </div>
+  </div>
+
+<script>
+const money = n => '$' + (Number(n)||0).toFixed(2);
+let gcCtx = null, gcStripe = null, gcElements = null;
+function setAmt(v, btn) { document.getElementById('gcAmt').value = v; document.querySelectorAll('#amtBtns button').forEach(b=>b.className='btn btn-sm btn-ghost'); btn.className='btn btn-sm btn-primary'; }
+function alertMsg(id, m) { const e = document.getElementById(id); e.className='alert alert-danger'; e.textContent = m; e.classList.remove('hidden'); }
+function ensureStripe() { return new Promise((res, rej) => { if (window.Stripe) return res(); const s=document.createElement('script'); s.src='https://js.stripe.com/v3/'; s.onload=res; s.onerror=()=>rej(new Error('pay lib')); document.head.appendChild(s); }); }
+
+async function buyGiftCard() {
+  const amount = parseFloat(document.getElementById('gcAmt').value);
+  if (!(amount >= 5 && amount <= 500)) return alertMsg('gcAlert', 'Amount must be $5–$500.');
+  try {
+    const r = await fetch('/api/public/giftcards/intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ amount }) });
+    const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not start payment.');
+    gcCtx = { amount, ...d,
+      recipient_email: document.getElementById('gcRecipient').value.trim(),
+      purchaser_email: document.getElementById('gcPurchaser').value.trim(),
+      message: document.getElementById('gcMsg').value.trim() };
+    document.getElementById('buyCard').classList.add('hidden');
+    document.getElementById('payCard').classList.remove('hidden');
+    document.getElementById('gcPayBtn').textContent = `Pay ${money(amount)}`;
+    if (d.simulated || !d.publishable_key) {
+      document.getElementById('gcPayMode').textContent = '🔒 Test mode — no real card is charged.';
+    } else {
+      document.getElementById('gcPayMode').textContent = '🔒 Card, Apple Pay & Google Pay — secured by Stripe.';
+      await ensureStripe(); gcStripe = Stripe(d.publishable_key);
+      gcElements = gcStripe.elements({ clientSecret: d.client_secret });
+      const ce = document.getElementById('gc-card'); ce.style.display='block'; ce.innerHTML='';
+      gcElements.create('payment').mount('#gc-card');
+    }
+  } catch (e) { alertMsg('gcAlert', e.message); }
+}
+async function payGift() {
+  if (!gcCtx) return;
+  const btn = document.getElementById('gcPayBtn'); btn.disabled = true; btn.textContent = 'Processing…';
+  try {
+    if (!gcCtx.simulated && gcCtx.client_secret && gcStripe && gcElements) {
+      const { error, paymentIntent } = await gcStripe.confirmPayment({ elements: gcElements, redirect: 'if_required' });
+      if (error || !paymentIntent || paymentIntent.status !== 'succeeded') throw new Error(error ? error.message : 'Payment was not completed.');
+    }
+    const r = await fetch('/api/public/giftcards/confirm', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ amount: gcCtx.amount, intent_id: gcCtx.intent_id, recipient_email: gcCtx.recipient_email, purchaser_email: gcCtx.purchaser_email, message: gcCtx.message }) });
+    const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Could not complete purchase.');
+    document.getElementById('payCard').classList.add('hidden');
+    document.getElementById('gcCode').textContent = d.code;
+    document.getElementById('gcDoneMsg').textContent = gcCtx.recipient_email ? `Balance ${money(d.balance)} — we've emailed the code to ${gcCtx.recipient_email}.` : `Balance ${money(d.balance)} — save this code to redeem at checkout.`;
+    document.getElementById('doneCard').classList.remove('hidden');
+  } catch (e) { const a=document.getElementById('gcPayAlert'); a.className='alert alert-danger'; a.textContent=e.message; a.classList.remove('hidden'); btn.disabled=false; btn.textContent=`Pay ${money(gcCtx.amount)}`; }
+}
+</script>
+</body>
+</html>
