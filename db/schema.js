@@ -548,6 +548,14 @@ function createSchema() {
   try { db.exec(`ALTER TABLE waitlist ADD COLUMN notified_at TEXT`); } catch {}
   // Chosen modifiers summary for an order line (human-readable).
   try { db.exec(`ALTER TABLE order_items ADD COLUMN modifiers TEXT`); } catch {}
+  // Reservation deposits (card hold to reduce no-shows).
+  try { db.exec(`ALTER TABLE reservations ADD COLUMN deposit_amount REAL NOT NULL DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE reservations ADD COLUMN deposit_status TEXT NOT NULL DEFAULT 'none'`); } catch {}
+  try { db.exec(`ALTER TABLE reservations ADD COLUMN deposit_intent TEXT`); } catch {}
+  // Guest CRM: per-customer notes, tags, and a VIP flag.
+  try { db.exec(`ALTER TABLE customers ADD COLUMN tags TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE customers ADD COLUMN notes TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE customers ADD COLUMN vip INTEGER NOT NULL DEFAULT 0`); } catch {}
   // Scheduled order-ahead + curbside pickup.
   try { db.exec(`ALTER TABLE orders ADD COLUMN scheduled_for TEXT`); } catch {}
   try { db.exec(`ALTER TABLE orders ADD COLUMN curbside INTEGER NOT NULL DEFAULT 0`); } catch {}
