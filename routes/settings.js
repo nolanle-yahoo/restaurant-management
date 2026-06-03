@@ -1,7 +1,7 @@
 const express = require('express');
 const { verifyToken, requireRole } = require('../middleware/auth');
 const { auditLog } = require('../lib/audit');
-const { getRates, setRates } = require('../lib/settings');
+const { getRates, setRates, getDeposit, setDeposit } = require('../lib/settings');
 const { getMatrix, setPermission } = require('../lib/permissions');
 
 const router = express.Router();
