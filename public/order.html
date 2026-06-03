@@ -104,7 +104,8 @@
   <div class="pub-foot">© 2026 Restaurant Management System</div>
 
 <script>
-let cart = {}, orderType = 'pickup', menuData = [], tableMode = false, tableId = null;
+let cart = [], orderType = 'pickup', menuData = [], tableMode = false, tableId = null;
+let modCtx = null; // item being customized in the modifier modal
 let savedCards = [], selectedCardId = null; // null = pay with a new card
 const signedIn = () => !!localStorage.getItem('ctoken');
 async function api(path, opts = {}) {
