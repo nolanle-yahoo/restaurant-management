@@ -75,6 +75,22 @@ function resolveCart(items, location_id) {
   return { resolved };
 }
 
+// Validate scheduled-for time + curbside fields. Returns { error } or values.
+function scheduleFields(body, type) {
+  let scheduled_for = null;
+  if (body.scheduled_for) {
+    const d = new Date(body.scheduled_for);
+    if (isNaN(d.getTime())) return { error: 'Invalid scheduled time.' };
+    const now = Date.now();
+    if (d.getTime() < now - 5 * 60000) return { error: 'Scheduled time must be in the future.' };
+    if (d.getTime() > now + 7 * 864e5) return { error: 'Scheduled time is too far in the future.' };
+    scheduled_for = String(body.scheduled_for).slice(0, 40);
+  }
+  const curbside = (type === 'pickup' && (body.curbside === true || body.curbside === 1 || body.curbside === 'on')) ? 1 : 0;
+  const vehicle = curbside && body.vehicle ? String(body.vehicle).slice(0, 120) : null;
+  return { scheduled_for, curbside, vehicle };
+}
+
 // Active locations (minimal public fields)
 router.get('/locations', (req, res) => {
   const rows = db.prepare(`SELECT id, name, address, phone FROM locations WHERE status='active' ORDER BY name`).all();
