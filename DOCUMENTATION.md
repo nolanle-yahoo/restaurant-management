@@ -183,9 +183,18 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-5.6** **Void** — permitted staff can void an unpaid order with a reason; voided orders
   leave the active views, their auto-depleted inventory is restored, the table is freed, and
   the action is audited. A paid order cannot be voided (refund instead).
-- **FR-5.7** **Courses** — each order item is tagged with a course (derived from its menu
-  category: Appetizers/Mains/Desserts/Drinks); the kitchen queue groups a ticket's items by
-  course for clearer prep/firing.
+- **FR-5.7** **Courses & course-firing** — each order item is tagged with a course (derived
+  from its menu category: Appetizers/Mains/Desserts/Drinks). The kitchen queue groups a ticket's
+  items by course and controls **when each course starts cooking**: a dine-in order auto-fires
+  its first course and **holds** the rest, while to-go (online/pickup/delivery) orders fire
+  everything at once. Held courses appear dimmed with a **🔥 Fire** button; the chef (or any
+  front-of-house role) fires the next course when the table is ready, and a "Fire all remaining"
+  shortcut fires everything. Firing a course starts its prep timer and is audited (`course_fire`).
+  Items added to an in-progress order fire immediately.
+- **FR-5.7a** **Prep timers** — once a course is fired, the KDS shows a live count-up timer
+  (m:ss) against a per-item cook-time target (`prep_minutes`, set per menu item; a sensible
+  per-course default is used when none is configured). The timer chip turns amber as it nears
+  the target and red ("LATE") once it's exceeded, so cooks and managers can pace service.
 - **FR-5.8** **Order edit** — staff can add items, change quantities, and remove items on an
   order until it has a payment; inventory re-depletes or restocks the delta (with auto-86), and
   each change is audited. Editing is blocked once any payment exists, or if the order is voided.
