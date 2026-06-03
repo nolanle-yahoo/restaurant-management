@@ -385,6 +385,9 @@ function seed() {
   addMods('House Red Wine', [
     { name: 'Size', min: 1, max: 1, options: [['Glass', 0], ['Bottle', 36]] },
   ]);
+  // Fill in category-appropriate sides / add-ons / sizes for every remaining item at
+  // every location (idempotent — keeps the bespoke groups above, never duplicates).
+  applyMenuModifiers(db);
 
   // ── Recipes (bill of materials) — drive auto-depletion & auto-86 ──
   // Map menu item name -> [[inventory item name, qty per serving], ...]. Seeded
