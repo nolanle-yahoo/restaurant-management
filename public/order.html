@@ -361,6 +361,13 @@ function gatherBody() {
     delivery_address: document.getElementById('cAddr').value.trim(),
     notes: document.getElementById('cNotes').value.trim(),
   };
+  if (!tableMode) {
+    if (whenMode === 'later' && document.getElementById('schedTime').value) body.scheduled_for = document.getElementById('schedTime').value;
+    if (orderType === 'pickup' && document.getElementById('curbside').checked) {
+      body.curbside = true;
+      body.vehicle = document.getElementById('vehicle').value.trim();
+    }
+  }
   return body;
 }
 function validateBody(body) {
