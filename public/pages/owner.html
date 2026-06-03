@@ -536,6 +536,27 @@
         </div>
       </section>
 
+      <!-- ── Promotions & Gift Cards ───────────────────── -->
+      <section id="sec-promos" class="hidden">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">Promo Codes</div></div>
+          <div id="promoAlert" class="alert hidden" style="margin-bottom:10px"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
+            <div><label style="font-size:11px;color:var(--muted)">Code</label><br><input id="pCode" placeholder="SUMMER20" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;text-transform:uppercase;width:120px"></div>
+            <div><label style="font-size:11px;color:var(--muted)">Type</label><br><select id="pKind" style="padding:7px;border:1.5px solid var(--border);border-radius:8px"><option value="percent">% off</option><option value="amount">$ off</option></select></div>
+            <div><label style="font-size:11px;color:var(--muted)">Value</label><br><input id="pValue" type="number" min="0" step="1" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;width:80px"></div>
+            <div><label style="font-size:11px;color:var(--muted)">Min $</label><br><input id="pMin" type="number" min="0" step="1" value="0" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;width:70px"></div>
+            <div><label style="font-size:11px;color:var(--muted)">Uses limit</label><br><input id="pLimit" type="number" min="1" placeholder="∞" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;width:70px"></div>
+            <button class="btn btn-primary btn-sm" onclick="createPromo()">Add code</button>
+          </div>
+          <div id="promoList"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Issued Gift Cards</div></div>
+          <div id="gcList"></div>
+        </div>
+      </section>
+
     </div>
   </div>
 </div>
