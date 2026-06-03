@@ -213,6 +213,14 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   Locations may still have purely local items. Only owners manage the central template; managers
   manage their own location's menu and overrides.
 
+- **FR-6.8** **Menu modifiers & combos** — owners/managers attach **option groups** to a menu
+  item (e.g., Size, Add-ons, Choose a side), each with options carrying a **price delta** and
+  per-group **min/max** selection rules. A group with `min_select ≥ 1` is a **required choice** —
+  the pattern for building a **combo/meal**. Guests pick options when ordering (radio for
+  single-select, checkboxes for multi); the server **validates** min/max + option validity and
+  **prices** the line (base + deltas, never trusting the client). The chosen options are stored
+  per order line and shown on the **kitchen ticket**, **tracking page**, and **receipt**.
+
 ### 5.7 Reservations
 - **FR-7.1** Owners, managers, and front desk create and manage reservations (guest name,
   contact, party size, date, time, optional table and notes).
