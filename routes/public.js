@@ -607,7 +607,56 @@ router.post('/order/confirm', orderLimiter, async (req, res) => {
   }
 
   res.json({ success: true, paid: true, tracking_code: code, receipt_code: receiptCode,
-             breakdown: { subtotal: p.subtotal, service: p.service, tax: p.tax, tip: p.tip, total: p.total } });
+             breakdown: { subtotal: p.subtotal, promo_discount: p.promo_discount, service: p.service, tax: p.tax,
+                          tip: p.tip, total: p.total, gift_applied: p.gift_applied, amount_due: p.amount_due } });
+});
+
+// Preview a promo code for a cart subtotal.
+router.post('/promo/check', (req, res) => {
+  const v = validatePromo(req.body.code || '', req.body.location_id, round2(parseFloat(req.body.subtotal) || 0));
+  if (v.error) return res.status(400).json({ error: v.error });
+  res.json({ valid: true, discount: v.discount, kind: v.promo.kind, value: v.promo.value });
+});
+
+// Gift card balance lookup.
+router.get('/giftcards/:code', (req, res) => {
+  const g = getGiftCard(req.params.code);
+  if (!g) return res.status(404).json({ error: 'Gift card not found.' });
+  res.json({ code: g.code, balance: g.balance, status: g.status });
+});
+
+// Buy a gift card (Stripe two-step; simulated without keys).
+router.post('/giftcards/intent', orderLimiter, async (req, res) => {
+  const amount = round2(parseFloat(req.body.amount) || 0);
+  if (amount < 5 || amount > 500) return res.status(400).json({ error: 'Gift card amount must be $5–$500.' });
+  try {
+    const intent = await stripeLib.createIntent(Math.round(amount * 100), { kind: 'gift_card' });
+    res.json({ intent_id: intent.id, client_secret: intent.client_secret, simulated: !!intent.simulated,
+               publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || null, amount });
+  } catch (e) { console.error('giftcard intent:', e.message); res.status(502).json({ error: 'Could not start payment.' }); }
+});
+router.post('/giftcards/confirm', orderLimiter, async (req, res) => {
+  const amount = round2(parseFloat(req.body.amount) || 0);
+  const intentId = req.body.intent_id;
+  if (amount < 5 || !intentId) return res.status(400).json({ error: 'Invalid request.' });
+  if (db.prepare(`SELECT id FROM gift_cards WHERE code=?`).get('seen:' + intentId)) {} // no-op placeholder
+  let pay;
+  try { pay = await stripeLib.retrieveIntent(intentId); } catch (e) { return res.status(502).json({ error: 'Could not verify payment.' }); }
+  if (pay.status !== 'succeeded') return res.status(402).json({ error: 'Payment was not completed.' });
+  if (pay.amount != null && pay.amount !== Math.round(amount * 100)) return res.status(409).json({ error: 'Amount mismatch.' });
+  const code = 'GC-' + crypto.randomBytes(5).toString('hex').toUpperCase().slice(0, 10);
+  const recipient = (req.body.recipient_email || '').trim() || null;
+  const purchaser = (req.body.purchaser_email || '').trim() || null;
+  const msg = (req.body.message || '').toString().slice(0, 300) || null;
+  db.prepare(`INSERT INTO gift_cards (code, initial_amount, balance, purchaser_email, recipient_email, message) VALUES (?,?,?,?,?,?)`)
+    .run(code, amount, amount, purchaser, recipient, msg);
+  if (recipient) {
+    sendEmail(recipient, `You've received a $${amount.toFixed(2)} gift card! 🎁`,
+      `${purchaser ? purchaser + ' sent you a gift card.' : 'You have a gift card!'}\n\n` +
+      (msg ? `"${msg}"\n\n` : '') +
+      `Gift card code: ${code}\nBalance: $${amount.toFixed(2)}\n\nRedeem it at checkout when you order online.`, 'gift_card');
+  }
+  res.json({ success: true, code, balance: amount });
 });
 
 // Track an online order by code (+ phone to verify).
