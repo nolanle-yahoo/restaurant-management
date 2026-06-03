@@ -147,6 +147,8 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
     required groups = combos; server-priced and shown on tickets/receipts.
 52. ✅ **DONE (v1.37.0)** — **Scheduled order-ahead + curbside**: future pickup/delivery times +
     curbside with vehicle and an "I'm here" arrival alert.
+53. ✅ **DONE (v1.38.0)** — **Reservation deposits + guest CRM**: configurable deposit (card hold)
+    for larger parties with staff refund; searchable Guests CRM with VIP/tags/notes + history.
 
 ---
 
