@@ -90,6 +90,7 @@ router.put('/items/:id', requireRole('owner','manager','waiter','chef'), (req, r
   if (image_url !== undefined)    { fields.push('image_url=?');   vals.push(image_url || null); }
   if (allergens !== undefined)    { fields.push('allergens=?');   vals.push(allergens || null); }
   if (dietary !== undefined)      { fields.push('dietary=?');     vals.push(dietary || null); }
+  if (prep_minutes !== undefined) { fields.push('prep_minutes=?'); vals.push(prep_minutes === '' || prep_minutes == null ? null : Math.max(0, parseInt(prep_minutes) || 0)); }
   if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
   vals.push(req.params.id);
   db.prepare(`UPDATE menu_items SET ${fields.join(',')} WHERE id=?`).run(...vals);
