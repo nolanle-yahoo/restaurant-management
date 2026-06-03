@@ -346,6 +346,11 @@ function seed() {
   const setDiet = db.prepare(`UPDATE menu_items SET allergens=?, dietary=? WHERE name=?`);
   Object.entries(dietMap).forEach(([name, [allerg, diet]]) => setDiet.run(allerg || null, diet || null, name));
 
+  // ── Demo promo codes ─────────────────────────────────────────────
+  const insPromo = db.prepare(`INSERT INTO promo_codes (code, kind, value, min_subtotal, usage_limit, location_id) VALUES (?,?,?,?,?,?)`);
+  insPromo.run('WELCOME10', 'percent', 10, 0, null, null);     // 10% off, any order, all locations
+  insPromo.run('FALL5', 'amount', 5, 25, 100, null);           // $5 off $25+, limited to 100 uses
+
   // ── Demo settings: reservation deposit for larger parties ────────
   const setSetting = db.prepare(`INSERT INTO settings (key, value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value`);
   setSetting.run('reservation_deposit', '20');
