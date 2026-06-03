@@ -361,6 +361,13 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 - **FR-17.2** Anyone can submit an online reservation request (name, contact, party size,
   date, time, notes); requests are created as **pending** for staff confirmation and are
   rate-limited to deter abuse.
+- **FR-17.10** **Self-service waitlist (virtual queue)** — guests can **join the waitlist online**
+  (location, name, party size, phone) without staff entry. They get a code and a live status
+  page showing their **position in line** and an **estimated wait** (auto-refreshing), and can
+  **leave the queue** anytime. Staff see online joins flagged in the host queue and can **page**
+  a party when their table is ready — which **texts the guest** (SMS) and marks them notified;
+  the guest's page then shows "your table is ready." Seating/removing closes their status.
+
 - **FR-17.3** **Path split** — the guest site is the front door at `/` (a landing page with
   Order / Reserve / Menu calls-to-action, account/loyalty + reservation-lookup links, and a live
   list of locations from the public API). The **staff app** lives at `/staff` (login → role
