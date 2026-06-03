@@ -63,6 +63,7 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 | ✅ done | Regional manager role & cross-location staff lending — *shipped v1.23.0* | Owner, Regional | 3 |
 | ✅ done | Central menu w/ per-location overrides — *shipped v1.24.0* | Owner, Manager | 3 |
 | ✅ done | Customer reviews + activity log for managers, with date/location filters — *shipped v1.42.0* | Owner, Manager | 2 |
+| ✅ done | Feedback after any service (online order, reservation, dine-in) — *shipped v1.43.0* | Customer, Owner, Mgr | 2 |
 | 🔴 1 | 2FA for owner/manager | Owner | 3–4 |
 
 ---
