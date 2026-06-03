@@ -639,7 +639,6 @@ router.post('/giftcards/confirm', orderLimiter, async (req, res) => {
   const amount = round2(parseFloat(req.body.amount) || 0);
   const intentId = req.body.intent_id;
   if (amount < 5 || !intentId) return res.status(400).json({ error: 'Invalid request.' });
-  if (db.prepare(`SELECT id FROM gift_cards WHERE code=?`).get('seen:' + intentId)) {} // no-op placeholder
   let pay;
   try { pay = await stripeLib.retrieveIntent(intentId); } catch (e) { return res.status(502).json({ error: 'Could not verify payment.' }); }
   if (pay.status !== 'succeeded') return res.status(402).json({ error: 'Payment was not completed.' });
