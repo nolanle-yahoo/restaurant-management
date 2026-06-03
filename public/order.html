@@ -406,7 +406,9 @@ function orderPlacedView({ tracking_code, paidLine, receipt_code }) {
       ${receipt_code ? `<p style="font-size:13px;margin-top:8px"><a href="/receipt.html?code=${receipt_code}">View receipt</a></p>` : ''}
       <p style="font-size:13px;color:var(--muted);margin-top:14px">Track your order anytime at<br><b>${location.origin}/order.html?code=${tracking_code}</b></p>
       <a class="btn btn-primary" style="margin-top:16px" href="/order.html?code=${tracking_code}">Track this order</a>
+      <div id="orderFb" style="border-top:1px dashed var(--border);margin-top:20px;padding-top:18px"></div>
     </div>`;
+  if (window.FeedbackWidget) FeedbackWidget.mount(document.getElementById('orderFb'), { tracking_code, prompt: 'How was ordering with us?' });
 }
 
 // Table (QR) flow — unchanged: order fires now, server settles the bill at the table.
