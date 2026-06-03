@@ -384,6 +384,25 @@
         </div>
       </div>
 
+      <!-- ── Activity & Customer Reviews tab ── -->
+      <div id="tab-activity" class="hidden">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+          <span style="font-size:13px;color:var(--muted)">Showing</span>
+          <select id="actPeriod" onchange="loadMgrActivity()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px"><option value="all">All time</option><option value="today">Today</option><option value="week">This Week</option><option value="month">This Month</option></select>
+          <span style="font-size:12.5px;color:var(--muted)">· Your location only</span>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">Customer Feedback &amp; Reviews</div><span class="badge badge-muted" id="mgrFbAvg">—</span></div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Guests leave these from their receipt after dining at your location.</div>
+          <div id="mgrFeedback"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Activity Log</div></div>
+          <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Every staff action at your location — orders, payments, schedule changes, and more.</div>
+          <div id="mgrActivityLog"></div>
+        </div>
+      </div>
+
       <!-- ── Floor Plan tab ── -->
       <div id="tab-floorplan" class="hidden">
         <div class="card">
