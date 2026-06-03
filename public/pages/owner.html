@@ -2032,6 +2032,7 @@ async function submitMenuItem() {
     description: document.getElementById('menuItemDesc').value.trim(),
     image_url: document.getElementById('menuItemImage').value.trim(),
     allergens: document.getElementById('menuItemAllergens').value.trim(),
+    prep_minutes: document.getElementById('menuItemPrep').value === '' ? null : parseInt(document.getElementById('menuItemPrep').value),
     dietary,
   };
   if (!data.name || isNaN(data.price)) return showAlert('menuItemAlert','Name and price required');
