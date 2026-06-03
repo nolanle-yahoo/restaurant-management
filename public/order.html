@@ -508,7 +508,8 @@ function cancelPay() { document.getElementById('payPanel').style.display = 'none
 async function doPay() {
   if (!payCtx) return;
   const btn = document.getElementById('doPayBtn');
-  const resetBtn = () => { btn.disabled = false; btn.textContent = `Pay ${money(payCtx.breakdown.total)}`; };
+  const due = payCtx.breakdown.amount_due != null ? payCtx.breakdown.amount_due : payCtx.breakdown.total;
+  const resetBtn = () => { btn.disabled = false; btn.textContent = payCtx.fully_covered ? 'Place order (paid by gift card)' : `Pay ${money(due)}`; };
   btn.disabled = true; btn.textContent = 'Processing…';
   try {
     // New card via real Stripe: confirm the Payment Element (card/Apple Pay/Google Pay) first.
