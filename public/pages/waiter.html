@@ -164,41 +164,47 @@ async function releaseTable(id) {
   catch(e) { showToast(e.message, 'error'); }
 }
 
-// ── My Area ────────────────────────────────────────────────
+// ── My Area / Tables ───────────────────────────────────────
+// A single table tile; `extra` adds e.g. a Release button for claimed tables.
+function tableTile(t, extra) {
+  const info = tableStatusInfo(t.status);
+  return `<div class="table-card ts-${t.status}" style="background:${info.bg};border-color:${info.border};border-width:2.5px;" onclick="tableClick(${t.id})">
+    <div class="table-num" style="color:${info.border}">T${t.table_number}</div>
+    <div class="table-cap">${t.capacity} seats</div>
+    <div style="font-size:20px;margin:4px 0">${info.emoji}</div>
+    <div class="table-stat" style="color:${info.text};font-size:11px">${info.label}</div>
+    ${t.status === 'waiting_order' ? '<div style="margin-top:4px"><span class="badge badge-gold" style="font-size:10px">Take Order</span></div>' : ''}
+    ${extra || ''}
+  </div>`;
+}
+
 function renderMyArea() {
+  // ── Top: areas assigned to me ──
   const myAreas = areaData.filter(a => a.waiters && a.waiters.some(w => w.id === user.id));
-  const el = document.getElementById('myAreaContent');
-
-  if (!myAreas.length) {
-    el.innerHTML = `<div class="card" style="text-align:center;padding:40px">
-      <div style="font-size:40px;margin-bottom:12px">📍</div>
-      <div style="font-weight:700;color:var(--burgundy);margin-bottom:8px">No area assigned yet</div>
-      <div style="color:var(--muted);font-size:13.5px">Ask your manager to assign you to an area. You can still see the Full Floor.</div>
-    </div>`;
-    return;
-  }
-
-  el.innerHTML = myAreas.map(area => `
+  const areaEl = document.getElementById('myAreaContent');
+  areaEl.innerHTML = myAreas.length ? myAreas.map(area => `
     <div class="area-section">
       <div class="area-header">
         <div class="area-dot" style="background:${area.color}"></div>
         <div class="area-name">${area.name}</div>
         <div class="area-meta">${area.tables.length} tables</div>
       </div>
-      <div class="my-tables-grid">
-        ${area.tables.map(t => {
-          const info = tableStatusInfo(t.status);
-          return `<div class="table-card ts-${t.status}" style="background:${info.bg};border-color:${info.border};border-width:2.5px;" onclick="tableClick(${t.id})">
-            <div class="table-num" style="color:${info.border}">T${t.table_number}</div>
-            <div class="table-cap">${t.capacity} seats</div>
-            <div style="font-size:20px;margin:4px 0">${info.emoji}</div>
-            <div class="table-stat" style="color:${info.text};font-size:11px">${info.label}</div>
-            ${t.status === 'waiting_order' ? '<div style="margin-top:4px"><span class="badge badge-gold" style="font-size:10px">Take Order</span></div>' : ''}
-          </div>`;
-        }).join('')}
-      </div>
-    </div>
-  `).join('');
+      <div class="my-tables-grid">${area.tables.map(t => tableTile(t)).join('')}</div>
+    </div>`).join('')
+    : `<div class="card" style="text-align:center;padding:30px">
+        <div style="font-size:36px;margin-bottom:10px">📍</div>
+        <div style="font-weight:700;color:var(--burgundy);margin-bottom:6px">No area assigned</div>
+        <div style="color:var(--muted);font-size:13.5px">Ask your manager to assign you to an area, or claim a table from the Full Floor.</div>
+      </div>`;
+
+  // ── Bottom: tables assigned to me directly or that I claimed ──
+  const mine = (allTables || []).filter(t => t.assigned_to === user.id);
+  const tEl = document.getElementById('myTablesContent');
+  tEl.innerHTML = mine.length
+    ? `<div class="my-tables-grid">${mine.map(t => tableTile(t,
+        `<div style="font-size:10px;color:var(--muted);margin-top:2px">${t.area_name || 'Unassigned area'}</div>
+         <button class="badge" style="border:none;cursor:pointer;margin-top:3px;background:#eee;color:#555" onclick="event.stopPropagation();releaseTable(${t.id})">Release</button>`)).join('')}</div>`
+    : `<div class="card" style="text-align:center;padding:24px;color:var(--muted);font-size:13.5px">No tables assigned to you yet. A manager can assign you tables, or claim an open one from the <a href="#" onclick="switchView('floor');return false">Full Floor</a>.</div>`;
 }
 
 // ── Full Floor ─────────────────────────────────────────────
