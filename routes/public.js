@@ -169,7 +169,39 @@ router.post('/reservations', bookingLimiter, (req, res) => {
 
   broadcast('reservation_update', { location_id: Number(location_id) }, location_id);
   res.json({ success: true, id: r.lastInsertRowid, confirmation_code: code,
+             deposit_required: depositAmount > 0, deposit_amount: depositAmount,
              message: `Reservation request received. Your confirmation code is ${code}.` });
+});
+
+// Deposit step 1: create a PaymentIntent for the reservation's deposit.
+router.post('/reservations/deposit/intent', async (req, res) => {
+  const code = (req.body.code || '').toString().trim().toUpperCase();
+  const r = db.prepare(`SELECT * FROM reservations WHERE confirmation_code=?`).get(code);
+  if (!r) return res.status(404).json({ error: 'Reservation not found.' });
+  if (!(r.deposit_amount > 0)) return res.status(400).json({ error: 'No deposit is required for this reservation.' });
+  if (r.deposit_status === 'paid') return res.status(409).json({ error: 'Deposit already paid.' });
+  try {
+    const intent = await stripeLib.createIntent(Math.round(r.deposit_amount * 100), { kind: 'reservation_deposit', code });
+    res.json({ intent_id: intent.id, client_secret: intent.client_secret, simulated: !!intent.simulated,
+               publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || null, amount: r.deposit_amount });
+  } catch (e) { console.error('deposit intent:', e.message); res.status(502).json({ error: 'Could not start payment.' }); }
+});
+
+// Deposit step 2: verify and mark paid.
+router.post('/reservations/deposit/confirm', async (req, res) => {
+  const code = (req.body.code || '').toString().trim().toUpperCase();
+  const r = db.prepare(`SELECT * FROM reservations WHERE confirmation_code=?`).get(code);
+  if (!r) return res.status(404).json({ error: 'Reservation not found.' });
+  if (r.deposit_status === 'paid') return res.json({ success: true, already: true });
+  const intentId = req.body.intent_id;
+  if (!intentId) return res.status(400).json({ error: 'Missing payment reference.' });
+  let pay;
+  try { pay = await stripeLib.retrieveIntent(intentId); } catch (e) { return res.status(502).json({ error: 'Could not verify payment.' }); }
+  if (pay.status !== 'succeeded') return res.status(402).json({ error: 'Payment was not completed.' });
+  if (pay.amount != null && pay.amount !== Math.round(r.deposit_amount * 100)) return res.status(409).json({ error: 'Amount mismatch.' });
+  db.prepare(`UPDATE reservations SET deposit_status='paid', deposit_intent=? WHERE id=?`).run(intentId, r.id);
+  broadcast('reservation_update', { location_id: r.location_id }, r.location_id);
+  res.json({ success: true, deposit_amount: r.deposit_amount });
 });
 
 // Public reservation lookup by code (+ email or phone to verify identity)
