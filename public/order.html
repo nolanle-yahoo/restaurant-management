@@ -325,11 +325,23 @@ function setTip(v, btn) {
   renderCart();
 }
 
+let whenMode = 'asap';
+function setWhen(m) {
+  whenMode = m;
+  document.getElementById('whenAsap').className  = 'btn btn-sm ' + (m==='asap'?'btn-primary':'btn-ghost');
+  document.getElementById('whenLater').className = 'btn btn-sm ' + (m==='later'?'btn-primary':'btn-ghost');
+  const t = document.getElementById('schedTime');
+  t.style.display = m==='later' ? 'block' : 'none';
+  if (m==='later' && !t.value) { const d = new Date(Date.now()+30*60000); d.setSeconds(0,0); t.value = new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16); }
+}
 function setType(t) {
   orderType = t;
   document.getElementById('btnPickup').className   = 'btn btn-sm ' + (t==='pickup'?'btn-primary':'btn-ghost');
   document.getElementById('btnDelivery').className = 'btn btn-sm ' + (t==='delivery'?'btn-primary':'btn-ghost');
   document.getElementById('cAddr').style.display = t==='delivery' ? 'block' : 'none';
+  // Curbside is a pickup-only option.
+  document.getElementById('curbWrap').style.display = t==='pickup' ? 'flex' : 'none';
+  if (t!=='pickup') { document.getElementById('curbside').checked = false; document.getElementById('vehicle').style.display = 'none'; }
 }
 
 function showOAlert(msg, type='danger') {
