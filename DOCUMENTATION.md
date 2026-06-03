@@ -469,6 +469,16 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   phone number, so it complements (doesn't replace) guest SMS. Simulated (logged to
   `telegram_log`) when unconfigured; `GET /api/public/sms-config` reports `telegram_live`.
 
+### 5.7a Reservation Deposits & Guest CRM
+- **FR-7.5** **Reservation deposits** — owners set a flat **deposit** and a **minimum party size**
+  (Settings). Public bookings that meet the threshold must pay the deposit (Stripe; simulated
+  without keys) to hold the table; the reservation tracks `deposit_status` (none/paid/refunded).
+  Owners/managers can **refund** a paid deposit (e.g., an honored cancellation).
+- **FR-7.6** **Guest CRM** — owners/managers/front-desk get a searchable **Guests** view over
+  registered customers showing tier, points, order count, and lifetime spend. Each guest has a
+  profile with order + reservation history and editable **VIP flag, tags** (e.g., "allergy:
+  nuts", "regular"), and **private notes**. VIPs sort to the top.
+
 ### 5.20a Delivery Dispatch & Driver Tracking
 - **FR-21.1** Every **delivery** order gets a delivery record with its own lifecycle —
   `pending → assigned → picked_up → delivered` (or `failed`) — separate from the kitchen order
