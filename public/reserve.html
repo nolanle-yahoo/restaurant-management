@@ -107,6 +107,7 @@ async function submitReservation() {
     });
     const data = await r.json();
     if (!r.ok) return showResAlert(data.error || 'Could not submit reservation.');
+    lastResCode = data.confirmation_code || null;
     document.getElementById('resForm').classList.add('hidden');
     document.getElementById('resAlert').classList.add('hidden');
     if (data.deposit_required) return startDeposit(data.confirmation_code, data.deposit_amount);
