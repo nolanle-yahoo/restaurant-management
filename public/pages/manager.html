@@ -777,8 +777,8 @@ liveClock('topbarTime');
 // Live updates + operational toasts (order-ready, help, low-stock, new online orders).
 if (user) connectWebSocket(user.location_id, { order_update: () => loadOnlineOrders() });
 
-const TABS = ['staff','schedule','timesheets','inventory','warehouse','supply','transfers','floorplan','reservations','menu','analytics','timeoff','messages','deliveries'];
-const TAB_LABELS = { staff:'Staff', schedule:'Schedule', timesheets:'Timesheets', inventory:'Inventory', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan', reservations:'Reservations', menu:'Menu Management', analytics:'Sales Analytics', timeoff:'Time Off Requests', messages:'Employee Messages', deliveries:'Delivery Dispatch' };
+const TABS = ['staff','schedule','timesheets','inventory','warehouse','supply','transfers','floorplan','reservations','menu','analytics','timeoff','messages','deliveries','promos'];
+const TAB_LABELS = { staff:'Staff', schedule:'Schedule', timesheets:'Timesheets', inventory:'Inventory', warehouse:'Warehouse', supply:'Supply Orders', transfers:'Transfers', floorplan:'Floor Plan', reservations:'Reservations', menu:'Menu Management', analytics:'Sales Analytics', timeoff:'Time Off Requests', messages:'Employee Messages', deliveries:'Delivery Dispatch', promos:'Promotions' };
 let invData = [], whData = null, supplyData = [], trData = [], currentTab = 'staff', selectedItemId = null, editTrId = null;
 let editingMgrTableId = null, mgrAssignAreaId = null;
 
