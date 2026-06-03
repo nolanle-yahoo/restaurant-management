@@ -614,8 +614,11 @@ SQLite database with 34 tables. Core entities and relationships:
 - **certifications** — staff certifications with issue/expiry dates.
 - **waitlist** — walk-in host queue (party, size, quote, status).
 - **inventory** also carries `sku` and `unit_cost` (for scan-receiving and valuation).
-- **order_items** also carry a `course` (Appetizers/Mains/Desserts/Drinks) for kitchen grouping.
-- **menu_items** also carry `image_url`, `allergens`, and `dietary` tags.
+- **order_items** also carry a `course` (Appetizers/Mains/Desserts/Drinks) for kitchen grouping,
+  `fired_at` (when the course was sent to the line; null = held), and a `prep_minutes` cook-time
+  snapshot for the KDS prep timer.
+- **menu_items** also carry `image_url`, `allergens`, `dietary` tags, and `prep_minutes` (the
+  kitchen cook-time target used to drive KDS prep timers).
 - **employee_messages** carries `parent_id` for threaded replies; **payments** carries
   `discount` (loyalty), `manual_discount` + `discount_reason` (comps); **orders** carries
   `voided` + `void_reason`; **customers** carry `referral_code` + `referred_by`.
