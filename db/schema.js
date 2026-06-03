@@ -295,6 +295,26 @@ function createSchema() {
       value TEXT
     );
 
+    -- Menu modifiers: option groups attached to a menu item (e.g. Size, Add-ons,
+    -- Protein) and the selectable options within each (with a price delta). A
+    -- "combo" is just an item with one or more required groups (min_select >= 1).
+    CREATE TABLE IF NOT EXISTS modifier_groups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      menu_item_id INTEGER NOT NULL REFERENCES menu_items(id),
+      name TEXT NOT NULL,
+      min_select INTEGER NOT NULL DEFAULT 0,
+      max_select INTEGER NOT NULL DEFAULT 1,
+      sort_order INTEGER DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS modifier_options (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      group_id INTEGER NOT NULL REFERENCES modifier_groups(id),
+      name TEXT NOT NULL,
+      price_delta REAL NOT NULL DEFAULT 0,
+      sort_order INTEGER DEFAULT 0,
+      is_available INTEGER NOT NULL DEFAULT 1
+    );
+
     -- Recipe / bill-of-materials: how much of each inventory item a menu item consumes.
     CREATE TABLE IF NOT EXISTS recipes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
