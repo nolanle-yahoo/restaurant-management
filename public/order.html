@@ -197,43 +197,98 @@ function findItem(id) {
   for (const c of menuData) { const it = c.items.find(x => x.id === id); if (it) return it; }
   return null;
 }
+const lineKey = (id, optionIds) => id + '|' + [...optionIds].sort((a,b)=>a-b).join(',');
 function addToCart(id) {
   const it = findItem(id); if (!it) return;
-  if (!cart[id]) cart[id] = { name: it.name, price: it.price, qty: 0 };
-  cart[id].qty++; renderCart();
+  if (it.modifier_groups && it.modifier_groups.length) return openModifierModal(it);
+  addLine(it, []);
 }
-function changeQty(id, d) {
-  if (!cart[id]) return;
-  cart[id].qty += d;
-  if (cart[id].qty <= 0) delete cart[id];
+// Add a configured line (item + chosen option ids) to the cart.
+function addLine(it, optionIds) {
+  const groups = it.modifier_groups || [];
+  let unit = it.price; const parts = [];
+  groups.forEach(g => {
+    const chosen = (g.options || []).filter(o => optionIds.includes(o.id));
+    chosen.forEach(o => unit += o.price_delta);
+    if (chosen.length) parts.push(chosen.map(o => o.name).join(', '));
+  });
+  unit = Math.round(unit * 100) / 100;
+  const key = lineKey(it.id, optionIds);
+  const existing = cart.find(l => l.key === key);
+  if (existing) existing.qty++;
+  else cart.push({ key, id: it.id, name: it.name, unitPrice: unit, qty: 1, optionIds: [...optionIds], modLabel: parts.join(' · ') });
+  renderCart();
+}
+function changeQty(key, d) {
+  const l = cart.find(x => x.key === key); if (!l) return;
+  l.qty += d;
+  if (l.qty <= 0) cart = cart.filter(x => x.key !== key);
   renderCart();
 }
 function renderCart() {
-  const ids = Object.keys(cart);
   const lines = document.getElementById('cartLines');
   const total = document.getElementById('cartTotal');
-  document.getElementById('checkout').style.display = ids.length ? 'block' : 'none';
-  if (!ids.length) { lines.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Your cart is empty.</p>'; total.textContent = ''; return; }
-  lines.innerHTML = ids.map(id => {
-    const c = cart[id];
-    return `<div class="cart-line">
-      <span style="flex:1">${c.name}</span>
-      <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
-      <span style="min-width:18px;text-align:center">${c.qty}</span>
-      <button class="qty-btn" onclick="changeQty(${id},1)">+</button>
-      <span style="min-width:54px;text-align:right;font-weight:700">${money(c.price*c.qty)}</span>
-    </div>`;
-  }).join('');
-  const sub = ids.reduce((s,id) => s + cart[id].price*cart[id].qty, 0);
+  document.getElementById('checkout').style.display = cart.length ? 'block' : 'none';
+  if (!cart.length) { lines.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px 0">Your cart is empty.</p>'; total.textContent = ''; return; }
+  lines.innerHTML = cart.map(l => `<div class="cart-line">
+      <span style="flex:1">${l.name}${l.modLabel ? `<br><span style="font-size:11px;color:var(--muted)">${l.modLabel}</span>` : ''}</span>
+      <button class="qty-btn" onclick="changeQty('${l.key}',-1)">−</button>
+      <span style="min-width:18px;text-align:center">${l.qty}</span>
+      <button class="qty-btn" onclick="changeQty('${l.key}',1)">+</button>
+      <span style="min-width:54px;text-align:right;font-weight:700">${money(l.unitPrice*l.qty)}</span>
+    </div>`).join('');
+  const sub = currentSubtotal();
   const tip = tableMode ? 0 : tipAmount();
   total.innerHTML = `Subtotal: ${money(sub)}` +
     (tip > 0 ? `<br><span style="font-weight:600;color:var(--muted)">Tip: ${money(tip)}</span>` : '') +
     `<br><span style="font-size:11.5px;color:var(--muted);font-weight:600">+ tax &amp; service at checkout</span>`;
 }
 
+// ── Modifier selection modal ──
+function openModifierModal(it) {
+  modCtx = it;
+  document.getElementById('modTitle').textContent = it.name;
+  document.getElementById('modBody').innerHTML = (it.modifier_groups || []).map(g => {
+    const type = g.max_select === 1 ? 'radio' : 'checkbox';
+    const req = g.min_select >= 1 ? '<span style="color:var(--danger)">*</span>' : '<span style="color:var(--muted);font-weight:400">(optional)</span>';
+    return `<div style="margin-bottom:12px" data-group="${g.id}" data-min="${g.min_select}" data-max="${g.max_select}">
+      <div style="font-weight:700;font-size:13.5px;margin-bottom:4px">${g.name} ${req}</div>
+      ${g.options.map(o => `<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14px">
+        <input type="${type}" name="g${g.id}" value="${o.id}" onchange="updateModPrice()">
+        <span style="flex:1">${o.name}</span>${o.price_delta ? `<span style="color:var(--muted)">+${money(o.price_delta)}</span>` : ''}
+      </label>`).join('')}
+    </div>`;
+  }).join('');
+  document.getElementById('modAlert').classList.add('hidden');
+  document.getElementById('modModal').classList.add('open');
+  updateModPrice();
+}
+function closeModModal() { document.getElementById('modModal').classList.remove('open'); modCtx = null; }
+function selectedModIds() {
+  return [...document.querySelectorAll('#modBody input:checked')].map(i => Number(i.value));
+}
+function updateModPrice() {
+  if (!modCtx) return;
+  let unit = modCtx.price;
+  const ids = selectedModIds();
+  (modCtx.modifier_groups || []).forEach(g => g.options.forEach(o => { if (ids.includes(o.id)) unit += o.price_delta; }));
+  document.getElementById('modAddBtn').textContent = `Add — ${money(Math.round(unit*100)/100)}`;
+}
+function confirmMod() {
+  if (!modCtx) return;
+  const ids = selectedModIds();
+  // Enforce required groups + max.
+  for (const g of (modCtx.modifier_groups || [])) {
+    const n = g.options.filter(o => ids.includes(o.id)).length;
+    if (n < g.min_select) { document.getElementById('modAlert').className = 'alert alert-danger'; document.getElementById('modAlert').textContent = `Please choose for "${g.name}".`; document.getElementById('modAlert').classList.remove('hidden'); return; }
+  }
+  addLine(modCtx, ids);
+  closeModModal();
+}
+
 const round2 = n => Math.round((Number(n)||0) * 100) / 100;
 let tipMode = '0';
-function currentSubtotal() { return Object.values(cart).reduce((s,c) => s + c.price*c.qty, 0); }
+function currentSubtotal() { return cart.reduce((s,l) => s + l.unitPrice*l.qty, 0); }
 function tipAmount() {
   if (tipMode === 'custom') return round2(Math.max(0, parseFloat(document.getElementById('tipCustom').value) || 0));
   return round2(currentSubtotal() * parseFloat(tipMode || '0'));
