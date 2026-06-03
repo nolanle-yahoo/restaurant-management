@@ -43,6 +43,38 @@ function makeCode(prefix) {
   return prefix + '-' + crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
 }
 
+// Server-price a cart, applying menu modifiers. Each item may carry option_ids[];
+// validates per-group min/max + option validity, sums price deltas into the unit
+// price, and builds a readable modifier summary. Returns { error } or { resolved }.
+function resolveCart(items, location_id) {
+  if (!Array.isArray(items) || !items.length) return { error: 'At least one item is required.' };
+  const lookup = db.prepare(`SELECT id, name, price FROM menu_items WHERE id=? AND location_id=? AND is_available=1`);
+  const groupsFor = db.prepare(`SELECT id, name, min_select, max_select FROM modifier_groups WHERE menu_item_id=? ORDER BY sort_order, id`);
+  const optsFor = db.prepare(`SELECT id, name, price_delta FROM modifier_options WHERE group_id=? AND is_available=1`);
+  const resolved = [];
+  for (const it of items) {
+    const mi = lookup.get(it.id, location_id);
+    if (!mi) return { error: 'One or more items are unavailable. Please refresh the menu.' };
+    const qty = Math.max(1, Math.min(50, parseInt(it.quantity) || 1));
+    const selected = Array.isArray(it.option_ids) ? it.option_ids.map(Number) : [];
+    let unit = mi.price;
+    const modParts = [];
+    const validIds = new Set();
+    for (const g of groupsFor.all(mi.id)) {
+      const opts = optsFor.all(g.id);
+      opts.forEach(o => validIds.add(o.id));
+      const chosen = opts.filter(o => selected.includes(o.id));
+      if (chosen.length < (g.min_select || 0)) return { error: `Please choose for "${g.name}" on ${mi.name}.` };
+      if (g.max_select && chosen.length > g.max_select) return { error: `Too many choices for "${g.name}" on ${mi.name}.` };
+      chosen.forEach(o => { unit += o.price_delta; });
+      if (chosen.length) modParts.push(`${g.name}: ${chosen.map(o => o.name).join(', ')}`);
+    }
+    if (selected.some(id => !validIds.has(id))) return { error: 'Invalid option selected. Please refresh the menu.' };
+    resolved.push({ name: mi.name, price: round2(unit), quantity: qty, modifiers: modParts.join(' · ') || null });
+  }
+  return { resolved };
+}
+
 // Active locations (minimal public fields)
 router.get('/locations', (req, res) => {
   const rows = db.prepare(`SELECT id, name, address, phone FROM locations WHERE status='active' ORDER BY name`).all();
