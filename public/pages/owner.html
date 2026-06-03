@@ -2052,14 +2052,20 @@ async function loadSettings() {
     const pct = v => String(Math.round((v||0) * 1000) / 10);
     document.getElementById('setTax').value = pct(s.sales_tax_rate);
     document.getElementById('setSvc').value = pct(s.service_charge_rate);
+    document.getElementById('setDeposit').value = s.reservation_deposit || 0;
+    document.getElementById('setDepositMin').value = s.reservation_deposit_min_party || 1;
   } catch(e) {}
 }
 async function saveSettings() {
   const tax = parseFloat(document.getElementById('setTax').value);
   const svc = parseFloat(document.getElementById('setSvc').value);
   try {
-    await API.updateSettings({ sales_tax_rate: (tax||0)/100, service_charge_rate: (svc||0)/100 });
-    showAlert('settingsAlert', 'Saved. New rates apply to future bills.', 'success');
+    await API.updateSettings({
+      sales_tax_rate: (tax||0)/100, service_charge_rate: (svc||0)/100,
+      reservation_deposit: parseFloat(document.getElementById('setDeposit').value) || 0,
+      reservation_deposit_min_party: parseInt(document.getElementById('setDepositMin').value) || 1,
+    });
+    showAlert('settingsAlert', 'Saved. New rates & deposit policy apply to future bookings/bills.', 'success');
   } catch(e) { showAlert('settingsAlert', e.message); }
 }
 
