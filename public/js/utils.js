@@ -67,53 +67,115 @@ function populateSidebar(user) {
   initAnnouncements(user);
 }
 
-// ── Announcements bell (all staff): owner's global + own-location manager posts ──
+// ── Notifications bell (all staff): owner-global + own-location manager
+// announcements, plus owner/manager replies to the staff member's messages.
+// Per-item "viewed" state is kept per user in localStorage; opening an item
+// clears it from the unread count.
+let _bellItems = [];
+function _bellKey() { const u = getUser(); return 'bellViewed:' + (u ? u.id : 'x'); }
+function _bellViewed() { try { return new Set(JSON.parse(localStorage.getItem(_bellKey()) || '[]')); } catch { return new Set(); } }
+function _bellSaveViewed(set) { localStorage.setItem(_bellKey(), JSON.stringify([...set])); }
+const _roleLabel = r => r === 'owner' ? '👑 Owner' : r === 'manager' ? '🧑‍💼 Manager' : (r || 'Staff');
+const _bellWhen = ts => ts ? new Date(ts.replace(' ', 'T') + 'Z').toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+
 function initAnnouncements(user) {
   const right = document.querySelector('.topbar-right');
   if (!right || document.getElementById('annBell')) return;
   const wrap = document.createElement('div');
   wrap.style.cssText = 'position:relative';
   wrap.innerHTML =
-    `<button id="annBell" title="Announcements" style="background:none;border:none;cursor:pointer;font-size:18px;position:relative;padding:4px 6px">📣` +
+    `<button id="annBell" title="Notifications" style="background:none;border:none;cursor:pointer;font-size:18px;position:relative;padding:4px 6px">🔔` +
     `<span id="annCount" style="display:none;position:absolute;top:-1px;right:-2px;background:var(--danger);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:0 5px">0</span></button>` +
-    `<div id="annPanel" style="display:none;position:absolute;right:0;top:34px;width:320px;max-height:62vh;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.2);z-index:600;padding:8px"></div>`;
+    `<div id="annPanel" style="display:none;position:absolute;right:0;top:34px;width:330px;max-height:64vh;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.2);z-index:600;padding:6px"></div>`;
   right.insertBefore(wrap, right.firstChild);
+  if (!document.getElementById('bellModal')) {
+    const d = document.createElement('div');
+    d.innerHTML =
+      `<div class="modal-overlay" id="bellModal"><div class="modal" style="width:420px;max-width:94vw">
+        <div class="modal-title" id="bellTitle"></div>
+        <div id="bellMeta" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>
+        <div id="bellBody" style="white-space:pre-wrap;font-size:14px;line-height:1.5"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:18px"><button class="btn btn-ghost" onclick="hideModal('bellModal')">Close</button></div>
+      </div></div>`;
+    document.body.appendChild(d.firstElementChild);
+    onModalOverlayClick('bellModal');
+  }
   document.getElementById('annBell').onclick = (e) => {
     e.stopPropagation();
     const p = document.getElementById('annPanel');
     const show = p.style.display !== 'block';
     p.style.display = show ? 'block' : 'none';
-    if (show) loadAnnouncementsPanel();
+    if (show) renderBell();
   };
-  document.addEventListener('click', e => { const p = document.getElementById('annPanel'); if (p && !wrap.contains(e.target)) p.style.display = 'none'; });
-  loadAnnouncementsBadge();
-  setInterval(loadAnnouncementsBadge, 60000);
+  document.addEventListener('click', e => { const p = document.getElementById('annPanel'); if (p && !wrap.contains(e.target) && !e.target.closest('#bellModal')) p.style.display = 'none'; });
+  loadBell();
+  setInterval(loadBell, 60000);
 }
-async function loadAnnouncementsBadge() {
+
+async function loadBell() {
+  const items = [];
   try {
-    const rows = await API.announcements();
-    const c = document.getElementById('annCount'); if (!c) return;
-    if (rows.length) { c.textContent = rows.length > 9 ? '9+' : rows.length; c.style.display = 'inline-block'; }
-    else c.style.display = 'none';
+    (await API.announcements()).forEach(a => items.push({
+      key: 'ann:' + a.id, kind: '📣 Announcement',
+      from: _roleLabel(a.author_role) + (a.author_name ? ' · ' + a.author_name : ''),
+      scope: a.location_id ? (a.location_name || 'Location') : 'All locations',
+      title: a.title, body: a.body, ts: a.created_at,
+    }));
   } catch {}
+  try {
+    (await API.messagesMine()).forEach(m => (m.replies || []).forEach(r => {
+      if (r.sender_role === 'owner' || r.sender_role === 'manager') items.push({
+        key: 'msg:' + r.id, kind: '💬 Reply',
+        from: _roleLabel(r.sender_role) + (r.sender_name ? ' · ' + r.sender_name : ''),
+        scope: '', title: 'Re: ' + m.subject, body: r.message, ts: r.created_at,
+      });
+    }));
+  } catch {}
+  items.sort((a, b) => String(b.ts || '').localeCompare(String(a.ts || '')));
+  _bellItems = items;
+  updateBellBadge();
+  const panel = document.getElementById('annPanel');
+  if (panel && panel.style.display === 'block') renderBell();
 }
-async function loadAnnouncementsPanel() {
+
+function updateBellBadge() {
+  const c = document.getElementById('annCount'); if (!c) return;
+  const viewed = _bellViewed();
+  const unread = _bellItems.filter(i => !viewed.has(i.key)).length;
+  if (unread) { c.textContent = unread > 9 ? '9+' : unread; c.style.display = 'inline-block'; }
+  else c.style.display = 'none';
+}
+
+function renderBell() {
   const p = document.getElementById('annPanel'); if (!p) return;
-  p.innerHTML = '<div style="color:var(--muted);padding:8px;font-size:13px">Loading…</div>';
-  let rows; try { rows = await API.announcements(); } catch (e) { p.innerHTML = `<div style="color:var(--danger);padding:8px">${e.message}</div>`; return; }
-  if (!rows.length) { p.innerHTML = '<div style="color:var(--muted);padding:8px;font-size:13px">No announcements yet.</div>'; return; }
+  if (!_bellItems.length) { p.innerHTML = '<div style="color:var(--muted);padding:10px;font-size:13px">No notifications.</div>'; return; }
+  const viewed = _bellViewed();
   const esc = s => String(s || '').replace(/</g, '&lt;');
-  p.innerHTML = rows.map(a => {
-    const from = a.author_role === 'owner' ? '👑 Owner' : a.author_role === 'manager' ? '🧑‍💼 Manager' : (a.author_role || 'Staff');
-    const scope = a.location_id ? (a.location_name || 'Location') : 'All locations';
-    const when = a.created_at ? new Date(a.created_at.replace(' ', 'T') + 'Z').toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
-    return `<div style="padding:8px;border-bottom:1px solid var(--border)">
-      <div style="font-weight:700;color:var(--burgundy);font-size:13.5px">${esc(a.title)}</div>
-      <div style="font-size:13px;margin:3px 0;white-space:pre-wrap">${esc(a.body)}</div>
-      <div style="font-size:11px;color:var(--muted)">${esc(a.author_name)} · ${from} · ${scope} · ${when}</div>
-    </div>`;
-  }).join('');
+  const unread = _bellItems.filter(i => !viewed.has(i.key)).length;
+  p.innerHTML =
+    `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px 8px">
+       <b style="font-size:13px">Notifications</b>
+       ${unread ? `<button class="btn btn-sm btn-ghost" onclick="bellMarkAll()">Mark all read</button>` : ''}</div>` +
+    _bellItems.map(i => {
+      const isNew = !viewed.has(i.key);
+      return `<div onclick="openBellItem('${i.key}')" style="cursor:pointer;padding:8px;border-bottom:1px solid var(--border);${isNew ? 'background:rgba(107,26,26,.05)' : ''}">
+        <div style="font-weight:${isNew ? '800' : '600'};font-size:13px;color:var(--burgundy)">${isNew ? '🔴 ' : ''}${esc(i.title)}</div>
+        <div style="font-size:11.5px;color:var(--muted)">${i.kind} · ${esc(i.from)}${i.scope ? ' · ' + esc(i.scope) : ''} · ${_bellWhen(i.ts)}</div>
+      </div>`;
+    }).join('');
 }
+
+function openBellItem(key) {
+  const i = _bellItems.find(x => x.key === key); if (!i) return;
+  const s = _bellViewed(); s.add(key); _bellSaveViewed(s);
+  document.getElementById('bellTitle').textContent = i.title;
+  document.getElementById('bellMeta').textContent = `${i.kind} · ${i.from}${i.scope ? ' · ' + i.scope : ''} · ${_bellWhen(i.ts)}`;
+  document.getElementById('bellBody').textContent = i.body;
+  showModal('bellModal');
+  updateBellBadge();
+  renderBell();
+}
+function bellMarkAll() { const s = _bellViewed(); _bellItems.forEach(i => s.add(i.key)); _bellSaveViewed(s); updateBellBadge(); renderBell(); }
 
 // ── Topbar clock in/out widget (all roles except owner) ──────
 function initClockWidget(user) {
