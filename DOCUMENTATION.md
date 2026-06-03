@@ -397,6 +397,11 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   to take real card payments; without them the system runs in **simulated mode** (no external
   call, intents auto-"succeed") so the full flow works for demos. This mirrors the email layer's
   real-or-simulated behavior and applies to staff card payments too.
+- **FR-17.4d** **Scheduled order-ahead + curbside** — at checkout a pickup/delivery guest can
+  choose **ASAP** or **schedule** a future time (validated server-side: future, within 7 days),
+  shown to the kitchen as "⏰ Scheduled HH:MM". Pickup orders can opt into **curbside** with a
+  vehicle description; on the tracking page the guest taps **"I'm here"**, which records arrival
+  and alerts staff (toast + Telegram) and flags the kitchen ticket **ARRIVED**.
 - **FR-17.4b** **Apple Pay / Google Pay** — the checkout uses the Stripe **Payment Element**,
   which automatically offers Apple Pay and Google Pay (alongside card entry) on supported
   devices/browsers when real keys are configured. No separate buttons to maintain; wallets ride
