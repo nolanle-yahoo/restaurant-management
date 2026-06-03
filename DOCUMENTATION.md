@@ -905,7 +905,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 ### Feedback — `/api/feedback`
 | Method | Path | Access | Description |
 |---|---|---|---|
-| GET | `/` | Owner, Manager | Guest feedback (count + average + items), location-scoped for managers. |
+| GET | `/` | Owner, Manager | Guest feedback/reviews (count + average + items), location-scoped for managers. Filters: `location_id` (owner only), `start`/`end` (date range — `YYYY-MM-DD`, inclusive). |
 
 ### Marketing — `/api/marketing`
 | Method | Path | Access | Description |
