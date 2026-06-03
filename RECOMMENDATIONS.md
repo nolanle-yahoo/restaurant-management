@@ -139,7 +139,10 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
     live-tracking timeline + map.
 49. ✅ **DONE (v1.32.0)** — **SMS notifications (Twilio)**: order received, payment received,
     ready-for-pickup, delivery on-the-way/delivered, and reservation request texts; simulated
-    (sms_log) without keys.
+    (sms_log) without keys. (v1.33.0 added free TextBelt / carrier-gateway providers; v1.34.0 a
+    Telegram ops notifier.)
+50. ✅ **DONE (v1.35.0)** — **Self-service waitlist / virtual queue**: guests join online with a
+    live position + ETA, get a "table ready" text when paged, and can leave the queue.
 
 ---
 
