@@ -1781,20 +1781,33 @@ function renderOwnerRes() {
   if (!ownerResData.length) { document.getElementById('resList').innerHTML = '<p style="text-align:center;padding:32px;color:var(--muted)">No reservations found.</p>'; return; }
   const statusColors = { pending:'badge-gold', confirmed:'badge-success', seated:'badge-info', completed:'badge-muted', no_show:'badge-danger', cancelled:'badge-danger' };
   document.getElementById('resList').innerHTML = `<table class="data-table">
-    <thead><tr><th>Guest</th><th>Location</th><th>Party</th><th>Date & Time</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
+    <thead><tr><th>Guest</th><th>Location</th><th>Party</th><th>Date & Time</th><th>Status</th><th>Deposit</th><th>Notes</th><th>Actions</th></tr></thead>
     <tbody>${ownerResData.map(r => `<tr>
       <td class="fw-700">${r.guest_name}<br><span class="text-sm text-muted">${r.guest_phone||''}</span></td>
       <td>${r.location_name}</td>
       <td style="text-align:center">${r.party_size} 👤</td>
       <td>${r.reservation_date}<br><span class="fw-700">${r.reservation_time}</span></td>
       <td>${statusBadge(r.status)}</td>
+      <td style="white-space:nowrap">${depositCell(r)}</td>
       <td style="max-width:150px;color:var(--muted)">${r.notes||'—'}</td>
       <td style="white-space:nowrap">
         ${r.status==='confirmed'?`<button class="btn btn-sm btn-gold" onclick="updateOwnerRes(${r.id},'seated')">Seat</button> `:''}
         ${r.status==='seated'?`<button class="btn btn-sm btn-success" onclick="updateOwnerRes(${r.id},'completed')">Done</button> `:''}
         ${!['completed','cancelled'].includes(r.status)?`<button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="updateOwnerRes(${r.id},'cancelled')">Cancel</button>`:''}
+        ${r.deposit_status==='paid'?`<button class="btn btn-sm btn-ghost" onclick="refundDeposit(${r.id})">Refund deposit</button>`:''}
       </td>
     </tr>`).join('')}</tbody></table>`;
+}
+function depositCell(r) {
+  if (!(r.deposit_amount > 0)) return '<span class="text-muted">—</span>';
+  const m = '$' + r.deposit_amount.toFixed(2);
+  if (r.deposit_status === 'paid') return `<span class="badge badge-success">paid ${m}</span>`;
+  if (r.deposit_status === 'refunded') return `<span class="badge badge-muted">refunded</span>`;
+  return `<span class="badge badge-gold">due ${m}</span>`;
+}
+async function refundDeposit(id) {
+  if (!confirm('Refund this reservation deposit?')) return;
+  try { await API.refundDeposit(id); loadOwnerReservations(); } catch(e) { alert(e.message); }
 }
 function openOwnerResModal() {
   editingResId = null;
