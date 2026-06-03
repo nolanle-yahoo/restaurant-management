@@ -25,7 +25,16 @@ async function login(page, email, password) {
   const mi = await j('GET', '/menu/items?location_id=1', null, tok);
   const pick = c => mi.d.find(x => x.category_name === c && x.is_available);
   const s = pick('Starters'), m = pick('Mains'), d = pick('Desserts');
-  const ord = await j('POST', '/orders', { table_id: 3, items: [
+  // Pick a loc-1 table with no active (unpaid, non-voided) order so the KDS card we
+  // assert against is unambiguously ours (seed data already occupies some tables).
+  const freeTable = db.prepare(`
+    SELECT t.id, t.table_number FROM tables t
+    WHERE t.location_id=1 AND NOT EXISTS (
+      SELECT 1 FROM orders o WHERE o.table_id=t.id AND o.voided=0
+        AND NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id=o.id AND p.status='paid'))
+    ORDER BY t.table_number DESC LIMIT 1`).get();
+  const TABLE_NO = freeTable.table_number;
+  const ord = await j('POST', '/orders', { table_id: freeTable.id, items: [
     { name: s.name, quantity: 1, price: s.price },
     { name: m.name, quantity: 1, price: m.price },
     { name: d.name, quantity: 1, price: d.price },
