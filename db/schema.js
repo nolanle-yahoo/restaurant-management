@@ -562,6 +562,11 @@ function createSchema() {
   try { db.exec(`ALTER TABLE orders ADD COLUMN delivery_address TEXT`); } catch {}
   try { db.exec(`ALTER TABLE orders ADD COLUMN tracking_code TEXT`); } catch {}
   try { db.exec(`ALTER TABLE orders ADD COLUMN customer_id INTEGER REFERENCES customers(id)`); } catch {}
+  // Feedback can now be left after any service (online order, reservation) — not just a
+  // settled receipt — so track where it came from and which booking/order it references.
+  try { db.exec(`ALTER TABLE feedback ADD COLUMN source TEXT DEFAULT 'receipt'`); } catch {}
+  try { db.exec(`ALTER TABLE feedback ADD COLUMN reference_code TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE feedback ADD COLUMN customer_name TEXT`); } catch {}
   try { db.exec(`ALTER TABLE payments ADD COLUMN discount REAL NOT NULL DEFAULT 0`); } catch {}
   try { db.exec(`ALTER TABLE payments ADD COLUMN manual_discount REAL NOT NULL DEFAULT 0`); } catch {}
   try { db.exec(`ALTER TABLE payments ADD COLUMN discount_reason TEXT`); } catch {}
