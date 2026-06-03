@@ -103,6 +103,18 @@
   </div>
   <div class="pub-foot">© 2026 Restaurant Management System</div>
 
+  <div class="modal-overlay" id="modModal">
+    <div class="modal" style="width:420px;max-width:94vw">
+      <div class="modal-title" id="modTitle">Customize</div>
+      <div id="modAlert" class="alert hidden" style="margin-bottom:10px"></div>
+      <div id="modBody" style="max-height:50vh;overflow:auto"></div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button class="btn btn-primary" id="modAddBtn" style="flex:1" onclick="confirmMod()">Add</button>
+        <button class="btn btn-ghost" onclick="closeModModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 let cart = [], orderType = 'pickup', menuData = [], tableMode = false, tableId = null;
 let modCtx = null; // item being customized in the modifier modal
