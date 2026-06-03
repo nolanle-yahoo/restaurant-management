@@ -288,6 +288,8 @@ router.post('/order', orderLimiter, (req, res) => {
   const rc = resolveCart(items, location_id);
   if (rc.error) return res.status(400).json({ error: rc.error });
   const resolved = rc.resolved;
+  const sched = scheduleFields(req.body, type);
+  if (sched.error) return res.status(400).json({ error: sched.error });
 
   const customerId = customerIdFromReq(req); // null unless signed in as a customer
   const code = makeCode('ORD');
