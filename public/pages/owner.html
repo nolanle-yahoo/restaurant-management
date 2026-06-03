@@ -440,7 +440,14 @@
 
         <!-- Guest feedback -->
         <div class="card" style="margin-top:16px">
-          <div class="card-header"><div class="card-title">Guest Feedback</div><span class="badge badge-muted" id="fbAvg">—</span></div>
+          <div class="card-header">
+            <div class="card-title">Guest Feedback &amp; Reviews</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="fbPeriod" onchange="loadOwnerFeedback()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px"><option value="all">All time</option><option value="today">Today</option><option value="week">This Week</option><option value="month">This Month</option></select>
+              <span class="badge badge-muted" id="fbAvg">—</span>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Reviews use the <b>Location</b> filter above. Customers leave these from their receipt after dining.</div>
           <div id="ownerFeedback"></div>
         </div>
       </section>
