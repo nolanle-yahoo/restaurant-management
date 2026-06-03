@@ -1898,6 +1898,45 @@ async function createMgrPromo() {
 async function toggleMgrPromo(id, on) { try { await API.promoUpdate(id, { is_active: on?0:1 }); loadMgrPromos(); } catch(e){ showAlert('mgrPromoAlert', e.message); } }
 async function deleteMgrPromo(id) { if(!confirm('Delete this promo code?'))return; try { await API.promoDelete(id); loadMgrPromos(); } catch(e){ showAlert('mgrPromoAlert', e.message); } }
 
+// ── Activity & Customer Reviews ───────────────────────────────
+// Customer feedback + the location's activity log, both date-filtered. The
+// server scopes everything to the manager's own location automatically.
+async function loadMgrActivity() {
+  const { start, end } = periodRange(document.getElementById('actPeriod')?.value || 'all');
+
+  // Customer feedback / reviews
+  try {
+    const d = await API.feedback({ start, end });
+    document.getElementById('mgrFbAvg').textContent = d.count ? `★ ${d.average} · ${d.count} reviews` : 'No reviews';
+    document.getElementById('mgrFeedback').innerHTML = d.items.length ? d.items.slice(0, 100).map(f => `
+      <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--gold)">${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}</span>
+          <span class="text-sm text-muted">${fmtDateTime(f.created_at)}</span>
+        </div>
+        ${f.comment ? `<div style="font-size:13.5px;margin-top:4px">${f.comment}</div>` : '<div style="font-size:12px;color:var(--muted);margin-top:2px">No comment</div>'}
+      </div>`).join('') : '<p style="color:var(--muted);padding:12px">No customer reviews in this period.</p>';
+  } catch(e) { document.getElementById('mgrFeedback').innerHTML = `<p style="color:var(--danger);padding:12px">${e.message}</p>`; }
+
+  // Activity log (audit)
+  try {
+    const rows = await API.auditLog({ start, end });
+    document.getElementById('mgrActivityLog').innerHTML = rows.length ? `<table class="data-table">
+      <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Entity</th><th>Details</th></tr></thead>
+      <tbody>${rows.map(r => {
+        let details = '';
+        try { const d = JSON.parse(r.details||'{}'); details = Object.entries(d).map(([k,v])=>`${k}: ${v}`).join(', '); } catch {}
+        return `<tr>
+          <td class="text-sm text-muted">${fmtDateTime(r.created_at)}</td>
+          <td class="fw-700">${r.user_name||'—'}<br><span class="text-sm text-muted">${r.user_role||''}</span></td>
+          <td><span class="badge badge-info">${r.action}</span></td>
+          <td class="text-sm">${r.entity_type||'—'}${r.entity_id?' #'+r.entity_id:''}</td>
+          <td style="max-width:220px;color:var(--muted);font-size:12px">${details||'—'}</td>
+        </tr>`;
+      }).join('')}</tbody></table>` : '<p style="color:var(--muted);padding:12px">No activity in this period.</p>';
+  } catch(e) { document.getElementById('mgrActivityLog').innerHTML = `<p style="color:var(--danger);padding:12px">${e.message}</p>`; }
+}
+
 // Stockroom shares this dashboard but only has inventory/supply-chain access.
 // Hide the manager-only tabs and skip the manager-only boot calls so the page
 // never fires requests it isn't allowed to make (no 403 noise in the console).
