@@ -939,7 +939,7 @@ to scope their subscription. The server broadcasts:
 | `manager.html` | Manager / Stockroom | Staff, Schedule, Timesheets, Inventory, Warehouse, Supply, Transfers, Floor Plan (incl. printable table QR codes), Reservations, Menu, Sales Analytics (incl. Payments & Refunds), Time Off, Messages, **Delivery Dispatch**; low-stock banner; Online Orders panel; live toasts. *(Stockroom sees a focused subset: Inventory/Warehouse/Supply/Transfers.)* |
 | `regional.html` | Regional | Region overview (per-location KPIs) and staff lending within the region. |
 | `driver.html` | Driver | Assigned deliveries with map link + tap-to-call, status actions (picked up / delivered / failed), and opt-in live location sharing. |
-| `waiter.html` | Waiter | My Area, Full Floor, My Orders; take/serve with menu picker + special request; Settle Bill. |
+| `waiter.html` | Waiter | **My Area/Tables** (top: assigned area; bottom: tables assigned to or claimed by the waiter, each releasable), Full Floor, My Orders; take/serve with menu picker + special request; Settle Bill. |
 | `chef.html` | Chef | Kitchen queue (dine-in + online pickup/delivery), inventory quick view, low-stock alert, Menu Availability (86/un-86), and live toasts. |
 | `frontdesk.html` | Front Desk | Floor Map, Areas & Staff, Reservations, Waitlist. |
 | `employee.html` | Employee | My Time (clock), Tables & Orders (take orders, Settle Bill), Time Off, Messages. |
