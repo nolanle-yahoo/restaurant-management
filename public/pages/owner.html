@@ -1999,6 +1999,7 @@ function openAddMenuItemModal() {
   document.getElementById('menuItemDesc').value = '';
   document.getElementById('menuItemImage').value = '';
   document.getElementById('menuItemAllergens').value = '';
+  document.getElementById('menuItemPrep').value = '';
   ['dietVeg','dietVegan','dietGf'].forEach(id => document.getElementById(id).checked = false);
   document.getElementById('menuItemCat').innerHTML = menuCats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   showModal('menuItemModal');
