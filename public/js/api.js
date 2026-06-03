@@ -241,7 +241,11 @@ const API = {
   updateSettings(data)   { return this.put('/settings', data); },
   permissions()          { return this.get('/settings/permissions'); },
   setPermission(data)    { return this.put('/settings/permissions', data); },
-  feedback(locId)        { return this.get('/feedback' + (locId ? `?location_id=${locId}` : '')); },
+  feedback(params = {}) {
+    if (typeof params === 'string' || typeof params === 'number') params = { location_id: params };
+    const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString();
+    return this.get('/feedback' + (qs ? '?' + qs : ''));
+  },
 
   marketingAudience()    { return this.get('/marketing/audience'); },
   marketingHistory()     { return this.get('/marketing/history'); },
