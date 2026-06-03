@@ -1164,7 +1164,8 @@ data-deletion workflows.
 | 1.32.0 | SMS notifications (Twilio, simulated without keys): guests are texted on order received, payment received, ready for pickup, delivery on-the-way/delivered, and reservation request — whenever a phone is on file. Numbers normalized to E.164; simulated messages recorded in `sms_log`. |
 | 1.33.0 | Pluggable SMS provider via `SMS_PROVIDER`: `simulated` (default), `twilio`, free **TextBelt**, or free **email-to-SMS carrier gateway** (reuses SMTP). `GET /api/public/sms-config` reports the active provider; `.env.example` documents all options. Real texts now possible without Twilio. |
 | 1.34.0 | Optional Telegram ops notifier: a free bot posts new-order (incl. paid) and reservation alerts to a staff chat (`TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`); simulated to `telegram_log` when unconfigured; surfaced in `/api/public/sms-config` as `telegram_live`. |
-| 1.35.0 | **Self-service waitlist (virtual queue): guests join online (`waitlist.html`) and watch their live position + ETA; staff "Page" a party (texts them) and the guest's page flips to "table ready". New public endpoints + a staff page action; online joins flagged in the host queue.** |
+| 1.35.0 | Self-service waitlist (virtual queue): guests join online (`waitlist.html`) and watch their live position + ETA; staff "Page" a party (texts them) and the guest's page flips to "table ready". New public endpoints + a staff page action; online joins flagged in the host queue. |
+| 1.36.0 | **Menu modifiers & combos: owners attach option groups (Size/Add-ons/Choose-a-side) with price deltas + min/max rules to menu items; a required group = a combo. Guests customize items at order time; the server validates + prices server-side and stores the chosen options, shown on kitchen tickets, tracking, and receipts.** |
 
 ---
 
