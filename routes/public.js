@@ -409,12 +409,47 @@ function priceOnlineOrder(body) {
   if (rc.error) return { error: rc.error };
   const resolved = rc.resolved;
   const subtotal = round2(resolved.reduce((s, i) => s + i.price * i.quantity, 0));
+  // Promo code → discount off the subtotal (before tax/service).
+  let promo_discount = 0, promo = null;
+  if (body.promo_code) {
+    const pv = validatePromo(body.promo_code, body.location_id, subtotal);
+    if (pv.error) return { error: pv.error };
+    promo = pv.promo; promo_discount = pv.discount;
+  }
+  const discountedSub = round2(Math.max(0, subtotal - promo_discount));
   const { sales_tax_rate, service_charge_rate } = getRates();
-  const service = round2(subtotal * service_charge_rate);
-  const tax = round2((subtotal + service) * sales_tax_rate);
+  const service = round2(discountedSub * service_charge_rate);
+  const tax = round2((discountedSub + service) * sales_tax_rate);
   const tip = round2(Math.max(0, Math.min(1000, parseFloat(body.tip) || 0)));
-  const total = round2(subtotal + service + tax + tip);
-  return { type, resolved, subtotal, service, tax, tip, total };
+  const total = round2(discountedSub + service + tax + tip);
+  // Gift card → applied toward the total, reducing what's charged to the card.
+  let gift_applied = 0, gift = null;
+  if (body.gift_card_code) {
+    const g = getGiftCard(body.gift_card_code);
+    if (!g || g.status !== 'active') return { error: 'That gift card is invalid or inactive.' };
+    if (g.balance <= 0) return { error: 'That gift card has no balance left.' };
+    gift = g; gift_applied = round2(Math.min(g.balance, total));
+  }
+  const amount_due = round2(Math.max(0, total - gift_applied));
+  return { type, resolved, subtotal, discountedSub, promo, promo_discount, service, tax, tip, total,
+           gift, gift_applied, amount_due };
+}
+
+// Validate a promo code for a location + subtotal. Returns { error } or { promo, discount }.
+function validatePromo(code, location_id, subtotal) {
+  const p = db.prepare(`SELECT * FROM promo_codes WHERE code=?`).get(String(code).trim().toUpperCase());
+  if (!p || !p.is_active) return { error: 'Invalid promo code.' };
+  if (p.location_id && Number(p.location_id) !== Number(location_id)) return { error: 'This code isn’t valid at this location.' };
+  const now = Date.now();
+  if (p.starts_at && new Date(p.starts_at).getTime() > now) return { error: 'This code isn’t active yet.' };
+  if (p.ends_at && new Date(p.ends_at).getTime() < now) return { error: 'This code has expired.' };
+  if (p.usage_limit != null && p.used_count >= p.usage_limit) return { error: 'This code has reached its limit.' };
+  if (subtotal < (p.min_subtotal || 0)) return { error: `Spend at least $${(p.min_subtotal||0).toFixed(2)} to use this code.` };
+  let discount = p.kind === 'percent' ? subtotal * (p.value / 100) : p.value;
+  return { promo: p, discount: round2(Math.min(discount, subtotal)) };
+}
+function getGiftCard(code) {
+  return db.prepare(`SELECT * FROM gift_cards WHERE code=?`).get(String(code).trim().toUpperCase());
 }
 
 // Step 1: prepare payment for the priced cart (no order created yet).
