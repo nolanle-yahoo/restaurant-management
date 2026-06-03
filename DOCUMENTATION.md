@@ -1210,7 +1210,8 @@ data-deletion workflows.
 | 1.35.0 | Self-service waitlist (virtual queue): guests join online (`waitlist.html`) and watch their live position + ETA; staff "Page" a party (texts them) and the guest's page flips to "table ready". New public endpoints + a staff page action; online joins flagged in the host queue. |
 | 1.36.0 | Menu modifiers & combos: owners attach option groups (Size/Add-ons/Choose-a-side) with price deltas + min/max rules to menu items; a required group = a combo. Guests customize items at order time; the server validates + prices server-side and stores the chosen options, shown on kitchen tickets, tracking, and receipts. |
 | 1.37.0 | Scheduled order-ahead + curbside: pickup/delivery guests choose ASAP or a future time (validated, shown to the kitchen); pickup orders can be curbside with a vehicle, and an "I'm here" arrival button alerts staff and flags the ticket. New `/order/arrived` endpoint. |
-| 1.38.0 | **Reservation deposits + guest CRM: owners set a deposit + min party size; qualifying public bookings prepay to hold the table (refundable by staff). New owner "Guests" CRM — searchable list with spend/visit/tier, per-guest VIP flag, tags, private notes, and order/reservation history.** |
+| 1.38.0 | Reservation deposits + guest CRM: owners set a deposit + min party size; qualifying public bookings prepay to hold the table (refundable by staff). New owner "Guests" CRM — searchable list with spend/visit/tier, per-guest VIP flag, tags, private notes, and order/reservation history. |
+| 1.39.0 | **Promo codes + gift cards: owners/managers create %/$ promo codes (min, limit, window, location); guests apply them at online checkout (server-validated, discount before tax). Buyable stored-value gift cards (Stripe/sim) with emailed codes, balance tracking + ledger, and redemption at checkout (covers the order, partial or full).** |
 
 ---
 
