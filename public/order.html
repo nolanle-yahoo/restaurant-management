@@ -575,6 +575,10 @@ async function trackOrder() {
     else stopTrackPolling();
   } catch (e) { stopTrackPolling(); out.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`; }
 }
+async function arrived(code) {
+  try { await api('/order/arrived', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code }) }); trackOrder(); }
+  catch (e) { alert(e.message); }
+}
 init();
 </script>
 </body>
