@@ -311,13 +311,13 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
   location, or all locations for owners). They appear in staff message views and are pushed
   live as real-time toasts (FR-14.2).
 
-- **FR-12.4** **Announcements reach every staff member** — owners post **global** announcements
-  (all locations) and managers post to **their location**. An **announcements bell** in the topbar
-  on **every staff page** (chef, waiter, employee, front desk, stockroom, regional, driver,
-  manager, owner) lists the announcements that apply to the viewer — owner-global plus their own
-  location's manager posts — each labeled with the author and whether it's from the **Owner** or
-  **Manager**, with an unread count. New posts also push a live toast. *(Staff reach leadership
-  the other way via Account Settings → Message, with manager/owner replies shown there.)*
+- **FR-12.4** **Notifications bell reaches every staff member** — a 🔔 bell in the topbar on
+  **every staff page** (all roles) aggregates what leadership sent the viewer: owner **global**
+  announcements + their **own-location manager** announcements, **and** owner/manager **replies**
+  to the staff member's own messages. Each item is labeled by author role (**Owner**/**Manager**)
+  and shows an **unread count**. **Clicking an item opens a popup** with the full message and
+  **clears it from the unread count**; "Mark all read" clears everything. Read state is remembered
+  per user (persists across reloads). New announcements also push a live toast.
 
 ### 5.13 Audit Log
 - **FR-13.1** Sensitive operations (e.g., reservation create/update, menu changes, order
