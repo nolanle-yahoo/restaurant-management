@@ -8,8 +8,12 @@ router.use(verifyToken);
 
 router.get('/', requireRole('owner', 'manager'), (req, res) => {
   const locId = req.user.role === 'owner' ? (req.query.location_id || null) : req.user.location_id;
-  const cond = locId ? 'WHERE f.location_id=?' : '';
-  const args = locId ? [locId] : [];
+  const { start, end } = req.query;
+  const clauses = [], args = [];
+  if (locId) { clauses.push('f.location_id=?'); args.push(locId); }
+  if (start) { clauses.push('date(f.created_at) >= date(?)'); args.push(start); }
+  if (end)   { clauses.push('date(f.created_at) <= date(?)'); args.push(end); }
+  const cond = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
   const rows = db.prepare(`
     SELECT f.id, f.receipt_code, f.rating, f.comment, f.created_at, l.name as location_name
     FROM feedback f LEFT JOIN locations l ON f.location_id=l.id
