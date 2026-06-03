@@ -548,6 +548,11 @@ function createSchema() {
   try { db.exec(`ALTER TABLE waitlist ADD COLUMN notified_at TEXT`); } catch {}
   // Chosen modifiers summary for an order line (human-readable).
   try { db.exec(`ALTER TABLE order_items ADD COLUMN modifiers TEXT`); } catch {}
+  // Scheduled order-ahead + curbside pickup.
+  try { db.exec(`ALTER TABLE orders ADD COLUMN scheduled_for TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE orders ADD COLUMN curbside INTEGER NOT NULL DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE orders ADD COLUMN vehicle TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE orders ADD COLUMN arrived_at TEXT`); } catch {}
   // Central menu with per-location overrides: location rows link to a central
   // (location_id IS NULL) template via central_id; price_overridden=1 protects a
   // locally-edited price from being reset on the next central sync.
