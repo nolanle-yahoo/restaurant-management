@@ -2281,7 +2281,8 @@ async function loadMgrAnalytics() {
   }
   loadMgrPayments();
   loadMgrStaffPerf();
-  // Day Close (Z-report + cash) — manager's own location (server-pinned, so locId='').
+  // Live labor + Day Close — manager's own location (server-pinned, so locId='').
+  if (!window._laborBoard) mountLaborBoard(document.getElementById('mgrLabor'), () => ''); else laborRefresh();
   if (!window._dayClose) mountDayClose(document.getElementById('mgrDayClose'), () => '');
   else { dayCloseRefreshZ(); dayCloseRefreshCash(); }
   let d;
