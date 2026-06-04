@@ -380,6 +380,17 @@ Ten roles are enforced both in the UI (page routing) and on the server (`require
 - **FR-15b.4** All drawer actions are audited (`cash_drawer_open/close`, `cash_paid_in/out`) and
   location-scoped. Both tools live on the **Sales Analytics** view (owner & manager).
 
+### 5.15c Live Labor & Overtime Alerts
+- **FR-15c.1** A **Live Labor** board (owner & manager, on the Sales Analytics view) shows who is
+  **currently on the clock** at a location, each with their clock-in time, current **shift length**,
+  **hours today**, **hours this week**, and **labor cost** (hours × hourly rate).
+- **FR-15c.2** Headline metrics: **headcount on duty**, **labor cost today**, **net sales today**,
+  **labor %** (labor cost ÷ net sales — colored green ≤25% / amber ≤35% / red >35%), and
+  **sales per labor hour**. Auto-refreshes (~45s) while visible.
+- **FR-15c.3** **Overtime alerts** — weekly hours (from Monday) drive a per-staff flag:
+  **approaching OT** at ≥36h and **overtime** at ≥40h; a continuous shift over 8h is flagged as a
+  **long shift**. A banner summarizes anyone in/near OT or on a long shift.
+
 ### 5.16 Payments & Bill Settlement
 - **FR-16.1** Order-handling staff settle a table's bill, producing an itemized total of
   subtotal + optional service charge + sales tax + optional tip. The sales-tax and
