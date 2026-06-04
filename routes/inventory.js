@@ -344,6 +344,7 @@ router.put('/:id', requireRole('owner','manager','stockroom'), (req, res) => {
   if (req.body.sku !== undefined)          { fields.push('sku=?');          vals.push(req.body.sku || null); }
   if (req.body.min_quantity !== undefined) { fields.push('min_quantity=?'); vals.push(parseFloat(req.body.min_quantity) || 0); }
   if (req.body.unit_cost !== undefined)    { fields.push('unit_cost=?');    vals.push(parseFloat(req.body.unit_cost) || 0); }
+  if (req.body.par_level !== undefined)    { fields.push('par_level=?');    vals.push(req.body.par_level === '' || req.body.par_level == null ? null : Math.max(0, parseFloat(req.body.par_level) || 0)); }
   if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
   vals.push(item.id);
   db.prepare(`UPDATE inventory SET ${fields.join(',')} WHERE id=?`).run(...vals);
