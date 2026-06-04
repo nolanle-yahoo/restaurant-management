@@ -195,7 +195,7 @@ router.put('/:id/move', requireRole('owner','manager','waiter','employee','front
 });
 
 // ── Order edit (add / change qty / remove items) ──────────────
-const EDIT_ROLES = ['owner','manager','waiter','employee','frontdesk','stockroom','chef'];
+const EDIT_ROLES = ['owner','manager','waiter','employee','frontdesk','stockroom','chef','bartender'];
 
 // Fetch an editable order or send the appropriate error (404/400/409).
 function getEditableOrder(req, res) {
