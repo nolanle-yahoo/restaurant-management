@@ -1385,6 +1385,8 @@ async function loadSupply() {
   supplyData = orders;
   renderSupply();
   loadVendors();
+  // Auto-reorder suggestions (manager's own location — server-pinned, so locId='').
+  if (!window._reorderPanel) mountReorderPanel(document.getElementById('mgrReorder'), () => ''); else reorderRefresh();
   document.getElementById('txBody').innerHTML = txs.map(t => `
     <tr>
       <td class="fw-700">${t.item_name}</td>
