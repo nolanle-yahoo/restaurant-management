@@ -1258,4 +1258,97 @@ async function laborRefresh() {
       : '<p style="color:var(--muted);padding:12px;text-align:center">No staff currently on the clock.</p>'}`;
 }
 
+// ── Auto-reorder panel: par-based suggestions → draft purchase orders ───────────
+// mountReorderPanel(containerEl, getLocId). Owner passes the chosen location; manager
+// passes '' (server pins to theirs). Lists below-par items with an editable suggested
+// quantity; "Create Purchase Orders" turns the reviewed draft into pending supply orders.
+function mountReorderPanel(el, getLocId) {
+  if (!el) return;
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Auto-Reorder Suggestions <span class="badge badge-muted" id="roCount">—</span></div>
+        <button class="btn btn-ghost btn-sm" onclick="reorderRefresh()">↻ Refresh</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Items at or below their reorder point. Quantities build back up to par (set a par level on an item to order more buffer). Review, then create the purchase orders.</div>
+      <div id="roAlert" class="alert hidden" style="margin-bottom:10px"></div>
+      <div id="roBody"></div>
+    </div>`;
+  window._reorderPanel = { getLocId };
+  reorderRefresh();
+}
+
+async function reorderRefresh() {
+  const rp = window._reorderPanel; if (!rp) return;
+  const body = document.getElementById('roBody'); if (!body) return;
+  const _m = n => '$' + (Number(n) || 0).toFixed(2);
+  const isOwner = (getUser() || {}).role === 'owner';
+  const loc = rp.getLocId();
+  if (isOwner && !loc) { document.getElementById('roCount').textContent = '—'; body.innerHTML = '<p style="color:var(--muted);padding:12px">Pick a single location above to see reorder suggestions.</p>'; return; }
+  let items, vendors;
+  try { [items, vendors] = await Promise.all([API.reorderSuggestions(loc || ''), API.vendors().catch(() => [])]); }
+  catch (e) { body.innerHTML = `<p style="color:var(--danger);padding:12px">${e.message}</p>`; return; }
+  rp.vendors = vendors || [];
+  document.getElementById('roCount').textContent = `${items.length} item${items.length !== 1 ? 's' : ''}`;
+  if (!items.length) { body.innerHTML = '<p style="color:var(--success);padding:12px">✅ Everything is at or above its reorder point.</p>'; return; }
+  const estTotal = items.reduce((s, i) => s + i.est_cost, 0);
+  body.innerHTML = `
+    <table class="data-table">
+      <thead><tr><th><input type="checkbox" id="roAll" checked onclick="reorderToggleAll(this.checked)"></th><th>Item</th><th>On hand</th><th>Reorder pt</th><th>Par</th><th>Order qty</th><th>Unit cost</th><th>Est. cost</th></tr></thead>
+      <tbody>${items.map(i => `<tr>
+        <td><input type="checkbox" class="ro-pick" data-id="${i.id}" checked></td>
+        <td class="fw-700">${i.item_name}<br><span class="text-sm text-muted">${i.category || ''}</span></td>
+        <td style="color:var(--danger)">${i.quantity} ${i.unit || ''}</td>
+        <td>${i.min_quantity}</td>
+        <td>${i.par_level != null ? i.par_level : '—'}</td>
+        <td><input type="number" min="0" step="1" class="ro-qty" data-id="${i.id}" value="${i.suggested_qty}" oninput="reorderRecalc()" style="width:80px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px"></td>
+        <td>${_m(i.unit_cost)}</td>
+        <td class="ro-line" data-id="${i.id}" data-cost="${i.unit_cost}">${_m(i.est_cost)}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
+      <label style="font-size:13px">Vendor (optional):
+        <select id="roVendor" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+          <option value="">— assign later —</option>
+          ${rp.vendors.filter(v => v.is_active !== 0).map(v => `<option value="${v.id}">${v.name}</option>`).join('')}
+        </select>
+      </label>
+      <span style="font-weight:800" id="roTotal">Est. total ${_m(estTotal)}</span>
+      <button class="btn btn-primary" onclick="reorderCreate()" style="margin-left:auto">Create Purchase Orders</button>
+    </div>`;
+}
+
+function reorderToggleAll(on) { document.querySelectorAll('.ro-pick').forEach(c => { c.checked = on; }); reorderRecalc(); }
+function reorderRecalc() {
+  let total = 0;
+  document.querySelectorAll('.ro-line').forEach(td => {
+    const id = td.dataset.id, cost = parseFloat(td.dataset.cost) || 0;
+    const qtyEl = document.querySelector(`.ro-qty[data-id="${id}"]`);
+    const pick = document.querySelector(`.ro-pick[data-id="${id}"]`);
+    const line = Math.round((parseFloat(qtyEl.value) || 0) * cost * 100) / 100;
+    td.textContent = '$' + line.toFixed(2);
+    if (pick && pick.checked) total += line;
+  });
+  const t = document.getElementById('roTotal'); if (t) t.textContent = 'Est. total $' + total.toFixed(2);
+}
+
+async function reorderCreate() {
+  const rp = window._reorderPanel;
+  const items = [];
+  document.querySelectorAll('.ro-pick').forEach(pick => {
+    if (!pick.checked) return;
+    const id = pick.dataset.id;
+    const qty = parseFloat(document.querySelector(`.ro-qty[data-id="${id}"]`).value) || 0;
+    if (qty > 0) items.push({ item_id: Number(id), quantity: qty });
+  });
+  if (!items.length) return showAlert('roAlert', 'Select at least one item with a quantity above zero.');
+  const vendor_id = document.getElementById('roVendor').value || null;
+  if (!confirm(`Create ${items.length} purchase order line(s)?`)) return;
+  try {
+    const r = await API.createReorder({ items, vendor_id, location_id: rp.getLocId() || '' });
+    showAlert('roAlert', `Created ${r.created} purchase order(s) — review them in Supply Orders.`, 'success');
+    reorderRefresh();
+  } catch (e) { showAlert('roAlert', e.message); }
+}
+
 document.addEventListener('DOMContentLoaded', () => { initDarkMode(); initMobileSidebar(); });
