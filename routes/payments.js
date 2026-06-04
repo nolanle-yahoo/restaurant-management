@@ -12,7 +12,7 @@ const { can, requireCan } = require('../lib/permissions');
 const router = express.Router();
 router.use(verifyToken);
 
-const STAFF = ['owner','manager','waiter','employee','frontdesk','chef','stockroom'];
+const STAFF = ['owner','manager','waiter','employee','frontdesk','chef','stockroom','bartender'];
 const round2 = n => Math.round(n * 100) / 100;
 const POINT_VALUE = 0.05;   // $ value of one loyalty point (20 points = $1)
 const makeReceiptCode = () => 'RCT-' + crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
