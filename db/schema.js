@@ -697,6 +697,38 @@ function createSchema() {
     }
   } catch (e) { db.exec(`PRAGMA foreign_keys = ON`); }
 
+  // Widen users.role CHECK again to include 'bartender' (bar tabs / bar service).
+  // Guarded table-rebuild preserving ids so existing FK references stay valid.
+  try {
+    const ddl = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='users'`).get();
+    if (ddl && !ddl.sql.includes("'bartender'")) {
+      db.exec(`PRAGMA foreign_keys = OFF`);
+      db.exec(`
+        CREATE TABLE users_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          email TEXT UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          role TEXT NOT NULL CHECK(role IN ('owner','regional','manager','stockroom','employee','frontdesk','waiter','chef','driver','bartender')),
+          location_id INTEGER REFERENCES locations(id),
+          hourly_rate REAL DEFAULT 0,
+          is_active INTEGER DEFAULT 1,
+          created_at TEXT DEFAULT (datetime('now')),
+          token_version INTEGER DEFAULT 0,
+          region_id INTEGER REFERENCES regions(id),
+          home_location_id INTEGER REFERENCES locations(id)
+        )
+      `);
+      const newCols = ['id','name','email','password_hash','role','location_id','hourly_rate','is_active','created_at','token_version','region_id','home_location_id'];
+      const have = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
+      const copy = newCols.filter(c => have.includes(c)).join(',');
+      db.exec(`INSERT INTO users_new (${copy}) SELECT ${copy} FROM users`);
+      db.exec(`DROP TABLE users`);
+      db.exec(`ALTER TABLE users_new RENAME TO users`);
+      db.exec(`PRAGMA foreign_keys = ON`);
+    }
+  } catch (e) { db.exec(`PRAGMA foreign_keys = ON`); }
+
   // Backfill each user's home location to their current location.
   try { db.exec(`UPDATE users SET home_location_id = location_id WHERE home_location_id IS NULL`); } catch {}
 
