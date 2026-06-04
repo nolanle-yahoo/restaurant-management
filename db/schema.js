@@ -628,6 +628,9 @@ function createSchema() {
   try { db.exec(`ALTER TABLE menu_items ADD COLUMN prep_minutes INTEGER`); } catch {}
   try { db.exec(`ALTER TABLE inventory ADD COLUMN sku TEXT`); } catch {}
   try { db.exec(`ALTER TABLE inventory ADD COLUMN unit_cost REAL NOT NULL DEFAULT 0`); } catch {}
+  // Par level: the target stock level to reorder back up to (min_quantity is the
+  // reorder trigger). Drives auto-reorder suggestions / draft purchase orders.
+  try { db.exec(`ALTER TABLE inventory ADD COLUMN par_level REAL`); } catch {}
   // Self-service waitlist (virtual queue): guests join online via a public code,
   // and staff can "page" them when their table is ready.
   try { db.exec(`ALTER TABLE waitlist ADD COLUMN public_code TEXT`); } catch {}
