@@ -11,7 +11,7 @@ const { courseFromCategory, fireCourse, fireAll, applyCoursing } = require('../l
 const router = express.Router();
 router.use(verifyToken);
 
-router.get('/', requireRole('owner','manager','waiter','chef','employee','frontdesk','stockroom'), (req, res) => {
+router.get('/', requireRole('owner','manager','waiter','chef','employee','frontdesk','stockroom','bartender'), (req, res) => {
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
   const status = req.query.status;
   let sql = `
