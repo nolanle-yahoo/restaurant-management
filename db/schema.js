@@ -556,6 +556,8 @@ function createSchema() {
   try { db.exec(`ALTER TABLE reservations ADD COLUMN reminded INTEGER DEFAULT 0`); } catch {}
   // Online ordering: orders can be customer pickup/delivery (no table/waiter).
   try { db.exec(`ALTER TABLE orders ADD COLUMN order_type TEXT NOT NULL DEFAULT 'dine_in'`); } catch {}
+  // Bar tabs (order_type='bar'): age-verification flag stamped by the bartender.
+  try { db.exec(`ALTER TABLE orders ADD COLUMN id_checked INTEGER NOT NULL DEFAULT 0`); } catch {}
   try { db.exec(`ALTER TABLE orders ADD COLUMN customer_name TEXT`); } catch {}
   try { db.exec(`ALTER TABLE orders ADD COLUMN customer_phone TEXT`); } catch {}
   try { db.exec(`ALTER TABLE orders ADD COLUMN customer_email TEXT`); } catch {}
