@@ -611,6 +611,7 @@ SQLite database with 34 tables. Core entities and relationships:
 - **locations** — restaurant branches.
 - **users** — staff accounts (role enum incl. `bartender`, location FK, hourly rate, active flag).
 - **orders** — also carry `order_type` (`dine_in`/`pickup`/`delivery`/**`bar`**) and `id_checked` (age verification flag on bar tabs).
+- **cash_drawers / cash_events** — cash-drawer reconciliation sessions (float, expected, counted, over/short, deposit) and their pay-in/pay-out events.
 - **clock_records** — check-in/out events and computed hours.
 - **areas** / **tables** — floor layout; tables belong to areas and locations.
 - **waiter_assignments** — waiter ↔ area mapping (unique pair).
