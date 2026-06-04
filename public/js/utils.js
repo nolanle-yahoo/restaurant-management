@@ -27,6 +27,7 @@ function redirectByRole(role, mobile) {
     stockroom: '/pages/manager.html',
     regional:  '/pages/regional.html',
     driver:    '/pages/driver.html',
+    bartender: '/pages/bartender.html',
   };
   location.href = map[role] || '/staff';
 }
