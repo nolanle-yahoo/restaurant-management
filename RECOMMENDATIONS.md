@@ -162,7 +162,7 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 Proposed during the role-by-role review. Roughly ordered by operational impact.
 55. ✅ **DONE (v1.46.0)** — **End-of-day Z-report + cash/drawer reconciliation** (owner/manager): per-day Z-report (net sales, covers, avg check, voids/comps/discounts, by-method, tips, refunds) + open/float → pay-ins/outs → count & close with over/short and deposit history.
 56. ✅ **DONE (v1.47.0)** — **Live labor dashboard** — who's on the clock, labor $ vs net-sales %, approaching-OT (≥36h) / overtime (≥40h) + long-shift flags, sales-per-labor-hour; auto-refreshing on the Sales Analytics view.
-57. **Par levels → auto-reorder draft POs** (stockroom) — suggest/draft POs below par; receive-against-PO 3-way match. *M–L* (backlog #36)
+57. ✅ **DONE (v1.48.0)** — **Par levels → auto-reorder draft POs** (owner/manager/stockroom): per-item par level; a suggestions panel lists below-reorder-point items with a build-to-par quantity + est. cost; review/edit, pick a vendor, and create pending POs. *(Receive-against-PO 3-way match remains a follow-up.)*
 58. **Tip pooling / tip-out engine + server checkout report** (waiter/manager). *M*
 59. **Digital manager log / shift log** — end-of-shift notes, incidents, 86s, VIPs (searchable). *S–M*
 60. **HACCP / temperature & checklist compliance** — fridge/freezer temp logs, line checks, opening/closing checklists with sign-off. *M*
