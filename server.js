@@ -57,6 +57,7 @@ app.use('/api/regions',      require('./routes/regions'));
 app.use('/api/deliveries',   require('./routes/deliveries'));
 app.use('/api/customers',    require('./routes/customers'));
 app.use('/api/promos',       require('./routes/promos'));
+app.use('/api/bar',          require('./routes/bar'));
 app.use('/api/public',       require('./routes/public'));
 
 // Unknown routes fall back to the customer site (not the staff login).
