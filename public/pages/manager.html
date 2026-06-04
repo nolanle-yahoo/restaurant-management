@@ -2280,6 +2280,9 @@ async function loadMgrAnalytics() {
   }
   loadMgrPayments();
   loadMgrStaffPerf();
+  // Day Close (Z-report + cash) — manager's own location (server-pinned, so locId='').
+  if (!window._dayClose) mountDayClose(document.getElementById('mgrDayClose'), () => '');
+  else { dayCloseRefreshZ(); dayCloseRefreshCash(); }
   let d;
   try { d = await API.analytics({ start: document.getElementById('manStart').value, end: document.getElementById('manEnd').value }); }
   catch(e) { document.getElementById('manKpis').innerHTML = `<div class="card" style="grid-column:1/-1;color:var(--danger);padding:16px">${e.message}</div>`; return; }
