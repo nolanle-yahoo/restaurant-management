@@ -72,6 +72,77 @@ router.get('/zreport', (req, res) => {
   });
 });
 
+// ── Live labor: who's on the clock, labor % vs sales, overtime alerts ───────────
+const WEEK_OT = 40, WEEK_APPROACHING = 36, LONG_SHIFT_HOURS = 8;
+const _ms = s => new Date(s.replace(' ', 'T') + 'Z').getTime();
+
+router.get('/labor', (req, res) => {
+  const locId = scopeLoc(req);
+  if (!locId) return res.status(400).json({ error: 'A location is required for the labor report.' });
+  const date = (req.query.date || new Date().toISOString().slice(0, 10)).slice(0, 10);
+  const now = Date.now();
+  const hoursOf = (ci, co) => Math.max(0, ((co ? _ms(co) : now) - _ms(ci)) / 3.6e6);
+
+  // Clock records active today (started today) or still open (overnight shift).
+  const today = db.prepare(`
+    SELECT cr.user_id, cr.check_in, cr.check_out, cr.hours_worked, u.name, u.role, u.hourly_rate
+    FROM clock_records cr JOIN users u ON cr.user_id=u.id
+    WHERE cr.location_id=? AND (date(cr.check_in)=date(?) OR cr.check_out IS NULL)
+  `).all(locId, date);
+
+  let laborCost = 0, laborHours = 0;
+  today.forEach(r => {
+    const h = r.check_out != null ? (r.hours_worked != null ? r.hours_worked : hoursOf(r.check_in, r.check_out)) : hoursOf(r.check_in, null);
+    r._h = Math.max(0, h);
+    laborCost += r._h * (r.hourly_rate || 0);
+    laborHours += r._h;
+  });
+  laborCost = round2(laborCost);
+  laborHours = Math.round(laborHours * 100) / 100;
+
+  // Hours so far this work-week (from Monday 00:00 UTC) per user, for overtime flags.
+  const d = new Date();
+  const monday = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - ((d.getUTCDay() + 6) % 7)));
+  const wkStart = monday.toISOString().slice(0, 10) + ' 00:00:00';
+  const weekByUser = {};
+  db.prepare(`SELECT user_id, check_in, check_out, hours_worked FROM clock_records WHERE location_id=? AND check_in>=?`)
+    .all(locId, wkStart)
+    .forEach(r => {
+      const h = r.check_out != null ? (r.hours_worked != null ? r.hours_worked : hoursOf(r.check_in, r.check_out)) : hoursOf(r.check_in, null);
+      weekByUser[r.user_id] = (weekByUser[r.user_id] || 0) + Math.max(0, h);
+    });
+
+  const on_duty = today.filter(r => r.check_out == null).map(r => {
+    const shift_hours = hoursOf(r.check_in, null);
+    const week_hours = Math.round((weekByUser[r.user_id] || shift_hours) * 100) / 100;
+    const ot_status = week_hours >= WEEK_OT ? 'overtime' : week_hours >= WEEK_APPROACHING ? 'approaching' : 'none';
+    return {
+      user_id: r.user_id, name: r.name, role: r.role, hourly_rate: r.hourly_rate, check_in: r.check_in,
+      shift_hours: Math.round(shift_hours * 100) / 100, hours_today: Math.round(r._h * 100) / 100,
+      week_hours, labor_cost: round2(r._h * (r.hourly_rate || 0)),
+      ot_status, long_shift: shift_hours > LONG_SHIFT_HOURS,
+    };
+  }).sort((a, b) => b.week_hours - a.week_hours);
+
+  // Net sales today (food/bev, ex tax/tip) at the location — the labor-% denominator.
+  const salesNet = round2(db.prepare(`
+    SELECT COALESCE(SUM(subtotal - discount - manual_discount),0) s
+    FROM payments WHERE location_id=? AND status='paid' AND date(created_at)=date(?)
+  `).get(locId, date).s);
+
+  res.json({
+    location_id: Number(locId), date,
+    on_duty, headcount: on_duty.length,
+    labor_cost_today: laborCost, labor_hours_today: laborHours,
+    sales_today: salesNet,
+    labor_pct: salesNet > 0 ? Math.round((laborCost / salesNet * 100) * 10) / 10 : null,
+    sales_per_labor_hour: laborHours > 0 ? round2(salesNet / laborHours) : null,
+    ot_count: on_duty.filter(d => d.ot_status !== 'none').length,
+    long_shift_count: on_duty.filter(d => d.long_shift).length,
+    thresholds: { week_ot: WEEK_OT, week_approaching: WEEK_APPROACHING, long_shift: LONG_SHIFT_HOURS },
+  });
+});
+
 // ── Cash drawer ─────────────────────────────────────────────────────────────────
 // Cash sales captured by an open drawer = paid cash payments at its location from
 // open time until now (or its close time).
