@@ -158,6 +158,21 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 
 ---
 
+## Tier 6 — New advisory backlog (post-v1.45 review, not yet built)
+Proposed during the role-by-role review. Roughly ordered by operational impact.
+55. **End-of-day Z-report + cash/drawer reconciliation** (owner/manager) — daily close: net sales, covers, avg check, voids/comps/discounts, cash vs card, tips, drawer over/short, deposit log. *M* ⭐
+56. **Live labor dashboard** — who's on the clock, labor $ vs live sales %, overtime/approaching-OT alerts, sales-per-labor-hour. *M* ⭐
+57. **Par levels → auto-reorder draft POs** (stockroom) — suggest/draft POs below par; receive-against-PO 3-way match. *M–L* (backlog #36)
+58. **Tip pooling / tip-out engine + server checkout report** (waiter/manager). *M*
+59. **Digital manager log / shift log** — end-of-shift notes, incidents, 86s, VIPs (searchable). *S–M*
+60. **HACCP / temperature & checklist compliance** — fridge/freezer temp logs, line checks, opening/closing checklists with sign-off. *M*
+61. **Seat-level ordering** (assign items to seats → easier splits & coursing). *M*
+62. **Unified host stand** — floor + reservations + waitlist + table-turn timers + quoted wait times; combine tables. *M*
+63. **Kitchen "all-day" counts + station routing** (grill/sauté/fry/cold displays). *M*
+64. **Customer reorder-favorites + PWA push notifications** — cheap retention win. *S–M*
+65. **Configurable RBAC / custom roles** — let owners define roles (host, shift lead, cashier, bookkeeper) with custom permission sets. *L* (backlog #39) — the scalable answer to "do I need new roles?"
+66. **Read-only Accountant/Bookkeeper role** — financials/exports without operational access. *S–M*
+
 ## Conditional (impact depends on scale — defer until you outgrow a single server)
 - **PostgreSQL migration** (SQLite → Postgres) and **Redis pub/sub** for the WebSocket bus across
   multiple instances.
