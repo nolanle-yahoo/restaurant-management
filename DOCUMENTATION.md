@@ -366,6 +366,20 @@ Ten roles are enforced both in the UI (page routing) and on the server (`require
 - **FR-15a.5** Bar-tab actions are location-scoped and role-gated: only bartenders (own location),
   managers, and owners can open/modify tabs; the bartender must be clocked in.
 
+### 5.15b End-of-Day Close: Z-Report & Cash Reconciliation
+- **FR-15b.1** **Z-report** — owners and managers run a single business day's sales close for a
+  location: orders/covers, gross sales, discounts, comps, **net sales**, average check, service
+  charge, tax collected, tips, **total collected**, refunds, voids, and **tendered-by-method**
+  (cash/card/mobile). Printable. Managers are scoped to their own location; owners pick any.
+- **FR-15b.2** **Cash drawer reconciliation** — open a drawer with a starting **float**, record
+  **pay-ins / pay-outs** (with reasons), and the system tracks **cash sales** (paid cash payments
+  in the drawer's window). Expected cash = float + cash sales + pay-ins − pay-outs, shown live.
+- **FR-15b.3** **Close & count** — at close the manager enters the **counted cash** and an optional
+  **bank deposit**; the system computes **over/short** (counted − expected) and stores the session.
+  One open drawer per location; closed sessions appear in a history with over/short and deposit.
+- **FR-15b.4** All drawer actions are audited (`cash_drawer_open/close`, `cash_paid_in/out`) and
+  location-scoped. Both tools live on the **Sales Analytics** view (owner & manager).
+
 ### 5.16 Payments & Bill Settlement
 - **FR-16.1** Order-handling staff settle a table's bill, producing an itemized total of
   subtotal + optional service charge + sales tax + optional tip. The sales-tax and
