@@ -722,6 +722,16 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/:id/release` | Assignee, Manager, Owner | Free a table's assignment. |
 | DELETE | `/:id` | Owner, Manager | Delete table. |
 
+### Reports & Cash — `/api/reports`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/zreport` | Owner, Manager | Daily sales close for a location (`date`, owner: `location_id`). Totals, by-method, refunds, voids. |
+| GET | `/cash/current` | Owner, Manager | The open cash drawer at the location (with live expected cash) or `null`. |
+| GET | `/cash/history` | Owner, Manager | Recent closed drawers (expected / counted / over-short / deposit). |
+| POST | `/cash/open` | Owner, Manager | Open a drawer with `opening_float` (one open drawer per location). |
+| POST | `/cash/:id/event` | Owner, Manager | Record a `paid_in` / `paid_out` (`amount`, `reason`). |
+| POST | `/cash/:id/close` | Owner, Manager | Close with `closing_count` (+ optional `deposit_amount`, `notes`); returns over/short. |
+
 ### Bar Tabs — `/api/bar`
 | Method | Path | Access | Description |
 |---|---|---|---|
