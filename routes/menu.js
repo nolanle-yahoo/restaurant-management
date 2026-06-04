@@ -63,7 +63,7 @@ router.post('/items', requireRole('owner','manager'), (req, res) => {
   res.json({ success: true, id: r.lastInsertRowid });
 });
 
-router.put('/items/:id', requireRole('owner','manager','waiter','chef'), (req, res) => {
+router.put('/items/:id', requireRole('owner','manager','waiter','chef','bartender'), (req, res) => {
   const { name, description, price, is_available, sort_order, category_id, image_url, allergens, dietary, prep_minutes } = req.body;
   // Waiters and chefs may only toggle availability ("86" an item) — not edit
   // names, prices, or structure.
