@@ -95,6 +95,7 @@ const API = {
 
   // End-of-day reporting + cash drawer
   zReport(params = {})    { const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString(); return this.get('/reports/zreport' + (qs ? '?' + qs : '')); },
+  laborBoard(params = {}) { const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString(); return this.get('/reports/labor' + (qs ? '?' + qs : '')); },
   cashCurrent(locId)      { return this.get('/reports/cash/current' + (locId ? `?location_id=${locId}` : '')); },
   cashHistory(locId)      { return this.get('/reports/cash/history' + (locId ? `?location_id=${locId}` : '')); },
   cashOpen(data)          { return this.post('/reports/cash/open', data); },
