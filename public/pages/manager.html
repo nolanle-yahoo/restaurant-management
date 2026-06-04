@@ -1251,13 +1251,17 @@ async function loadValuation() {
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px">current stock value · consumed (30d): $${(d.consumed_cost||0).toFixed(2)}</div>
     ${(d.by_category||[]).slice(0,6).map(c => `<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0"><span>${c.category}</span><span>$${(c.value||0).toFixed(2)}</span></div>`).join('')}`;
 }
-async function editItemAttrs(id, name, sku, cost) {
+async function editItemAttrs(id, name, sku, cost, par) {
   const newSku = prompt(`SKU for ${name}:`, sku || '');
   if (newSku === null) return;
   const newCost = prompt(`Unit cost ($) for ${name}:`, cost || 0);
   if (newCost === null) return;
-  try { await API.inventoryItemUpdate(id, { sku: newSku.trim(), unit_cost: parseFloat(newCost) || 0 }); showToast('Item updated', 'info'); loadInventory(); }
-  catch(e) { alert(e.message); }
+  const newPar = prompt(`Par level for ${name} (target stock to reorder up to; blank to clear):`, par == null ? '' : par);
+  if (newPar === null) return;
+  try {
+    await API.inventoryItemUpdate(id, { sku: newSku.trim(), unit_cost: parseFloat(newCost) || 0, par_level: newPar.trim() === '' ? null : (parseFloat(newPar) || 0) });
+    showToast('Item updated', 'info'); loadInventory();
+  } catch(e) { alert(e.message); }
 }
 
 async function countFor(id, name, sys) {
