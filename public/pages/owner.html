@@ -1760,8 +1760,10 @@ async function loadAnalytics() {
     document.getElementById('anStart').value = start.toISOString().slice(0,10);
     document.getElementById('anEnd').value = end.toISOString().slice(0,10);
   }
-  // Day Close (Z-report + cash) — mount once, then refresh for the chosen location.
-  if (!window._dayClose) mountDayClose(document.getElementById('ownerDayClose'), () => document.getElementById('anLocFilter').value || '');
+  // Live labor + Day Close (Z-report + cash) — mount once, then refresh per location.
+  const ownerLoc = () => document.getElementById('anLocFilter').value || '';
+  if (!window._laborBoard) mountLaborBoard(document.getElementById('ownerLabor'), ownerLoc); else laborRefresh();
+  if (!window._dayClose) mountDayClose(document.getElementById('ownerDayClose'), ownerLoc);
   else { dayCloseRefreshZ(); dayCloseRefreshCash(); }
   const params = {
     location_id: document.getElementById('anLocFilter').value || '',
