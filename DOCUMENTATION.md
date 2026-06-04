@@ -273,6 +273,12 @@ Ten roles are enforced both in the UI (page routing) and on the server (`require
   panel lists lots expiring within a window (7/14/30 days, including already-expired), and a lot
   can be **discarded** — writing it off as waste and reducing stock. `inventory.quantity` remains
   the authoritative total; lots are a parallel ledger for expiry and traceability.
+- **FR-8.13** **Par levels & auto-reorder draft POs** — each item can carry a **par level** (the
+  target stock to reorder up to; `min_quantity` is the reorder trigger). An **Auto-Reorder
+  Suggestions** panel (owner & manager, on Supply Orders) lists every item below its reorder point
+  with a **suggested order quantity** that builds back up to par (to the reorder point if no par is
+  set) and an estimated cost. The user reviews/edits the quantities, optionally tags a **vendor**,
+  and **Create Purchase Orders** turns the reviewed draft into pending supply orders (audited).
 
 ### 5.9 Scheduling
 - **FR-9.1** Owners and managers build weekly staff schedules — a grid of **every role's** staff
