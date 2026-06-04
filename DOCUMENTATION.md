@@ -738,6 +738,7 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | Method | Path | Access | Description |
 |---|---|---|---|
 | GET | `/zreport` | Owner, Manager | Daily sales close for a location (`date`, owner: `location_id`). Totals, by-method, refunds, voids. |
+| GET | `/labor` | Owner, Manager | Live labor: on-duty staff with hours/cost, labor % vs net sales, sales-per-labor-hour, and overtime flags (`date`, owner: `location_id`). |
 | GET | `/cash/current` | Owner, Manager | The open cash drawer at the location (with live expected cash) or `null`. |
 | GET | `/cash/history` | Owner, Manager | Recent closed drawers (expected / counted / over-short / deposit). |
 | POST | `/cash/open` | Owner, Manager | Open a drawer with `opening_float` (one open drawer per location). |
