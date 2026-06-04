@@ -86,6 +86,9 @@ function seed() {
   // Delivery drivers (Downtown).
   insertUser.run('Diego Ramirez', 'driver@downtown.com',  h('driver123'), 'driver', 1, 16.00);
   insertUser.run('Tara Singh',    'driver2@downtown.com', h('driver123'), 'driver', 1, 16.00);
+  // Bartenders (run bar tabs at the bar).
+  insertUser.run('Jack Mercer',   'bartender@downtown.com', h('bar123'), 'bartender', 1, 17.00);
+  insertUser.run('Sofia Rossi',   'bartender@uptown.com',   h('bar123'), 'bartender', 2, 17.00);
   // Each user's home location starts as their assigned location.
   db.prepare(`UPDATE users SET home_location_id=location_id WHERE home_location_id IS NULL`).run();
 
