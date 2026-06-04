@@ -1041,4 +1041,162 @@ function initMobileSidebar() {
     });
   });
 }
+// ── Day Close: Z-report + cash-drawer reconciliation (owner + manager) ──────────
+// Self-contained widget. mountDayClose(containerEl, getLocId) where getLocId() returns
+// the location id (owner: the chosen location; manager: '' — the server pins to theirs).
+function mountDayClose(el, getLocId) {
+  if (!el) return;
+  const _m = n => '$' + (Number(n) || 0).toFixed(2);
+  const isOwner = (getUser() || {}).role === 'owner';
+  const today = new Date().toISOString().slice(0, 10);
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header">
+        <div class="card-title">Z-Report (Daily Close)</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="date" id="zrDate" value="${today}" onchange="dayCloseRefreshZ()" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+          <button class="btn btn-ghost btn-sm" onclick="dayClosePrintZ()">🖨 Print</button>
+        </div>
+      </div>
+      <div id="zrBody"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Cash Drawer</div></div>
+      <div id="cashAlert" class="alert hidden" style="margin-bottom:10px"></div>
+      <div id="cashBody"></div>
+      <div id="cashHistory" style="margin-top:14px"></div>
+    </div>`;
+  // Stash helpers + state on the widget so the on* handlers can reach them.
+  window._dayClose = { getLocId, _m, isOwner, lastZ: null };
+  dayCloseRefreshZ();
+  dayCloseRefreshCash();
+}
+
+function dayCloseNeedLoc() {
+  const dc = window._dayClose; const loc = dc.getLocId();
+  if (dc.isOwner && !loc) return null;     // owner must pick a single location
+  return loc || '';                        // manager: '' → server uses own location
+}
+
+async function dayCloseRefreshZ() {
+  const dc = window._dayClose, _m = dc._m, body = document.getElementById('zrBody');
+  const loc = dayCloseNeedLoc();
+  if (loc === null) { body.innerHTML = '<p style="color:var(--muted);padding:12px">Pick a single location above to view its Z-report.</p>'; return; }
+  const date = document.getElementById('zrDate').value || new Date().toISOString().slice(0, 10);
+  let z; try { z = await API.zReport({ location_id: loc, date }); } catch (e) { body.innerHTML = `<p style="color:var(--danger);padding:12px">${e.message}</p>`; return; }
+  dc.lastZ = z;
+  const row = (label, val, strong) => `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)${strong ? ';font-weight:800;font-size:15px' : ''}"><span>${label}</span><span>${val}</span></div>`;
+  const methodRows = z.by_method.length ? z.by_method.map(m => row(`&nbsp;&nbsp;${m.method[0].toUpperCase() + m.method.slice(1)} (${m.count})`, _m(m.total))).join('') : '<div style="color:var(--muted);padding:4px 0">No sales</div>';
+  body.innerHTML = `
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">${z.location_name} · ${z.date}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px">
+      <div>
+        ${row('Orders', z.orders)}
+        ${row('Gross sales', _m(z.gross_sales))}
+        ${row('Discounts', '−' + _m(z.discounts))}
+        ${row(`Comps (${z.comp_count})`, '−' + _m(z.comps))}
+        ${row('Net sales', _m(z.net_sales), true)}
+        ${row('Avg check', _m(z.avg_check))}
+      </div>
+      <div>
+        ${row('Service charge', _m(z.service_charge))}
+        ${row('Tax collected', _m(z.tax))}
+        ${row('Tips', _m(z.tips))}
+        ${row('Total collected', _m(z.total_collected), true)}
+        ${row('Refunds (' + z.refunds.count + ')', '−' + _m(z.refunds.total))}
+        ${row('Voids', z.voids)}
+      </div>
+    </div>
+    <div style="margin-top:10px;font-weight:700;font-size:13px">Tendered by method</div>
+    ${methodRows}`;
+}
+
+function dayClosePrintZ() {
+  const z = window._dayClose && window._dayClose.lastZ;
+  if (!z) return;
+  const _m = n => '$' + (Number(n) || 0).toFixed(2);
+  const w = window.open('', '_blank', 'width=420,height=640');
+  const line = (l, v) => `<tr><td>${l}</td><td style="text-align:right">${v}</td></tr>`;
+  w.document.write(`<html><head><title>Z-Report ${z.date}</title>
+    <style>body{font-family:monospace;padding:16px;font-size:13px}h2,h3{text-align:center;margin:4px 0}table{width:100%;border-collapse:collapse}td{padding:2px 0}hr{border:none;border-top:1px dashed #999}</style></head><body>
+    <h2>Z-REPORT</h2><h3>${z.location_name}</h3><div style="text-align:center">${z.date}</div><hr>
+    <table>
+      ${line('Orders', z.orders)}${line('Gross sales', _m(z.gross_sales))}${line('Discounts', '-' + _m(z.discounts))}
+      ${line('Comps', '-' + _m(z.comps))}${line('NET SALES', _m(z.net_sales))}${line('Avg check', _m(z.avg_check))}<tr><td colspan=2><hr></td></tr>
+      ${line('Service charge', _m(z.service_charge))}${line('Tax', _m(z.tax))}${line('Tips', _m(z.tips))}${line('TOTAL COLLECTED', _m(z.total_collected))}
+      ${line('Refunds', '-' + _m(z.refunds.total))}${line('Voids', z.voids)}<tr><td colspan=2><hr></td></tr>
+      ${z.by_method.map(m => line(m.method + ' (' + m.count + ')', _m(m.total))).join('')}
+    </table><hr><div style="text-align:center">${new Date().toLocaleString()}</div>
+    <script>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+
+async function dayCloseRefreshCash() {
+  const dc = window._dayClose, _m = dc._m, body = document.getElementById('cashBody');
+  const loc = dayCloseNeedLoc();
+  if (loc === null) { body.innerHTML = '<p style="color:var(--muted);padding:12px">Pick a single location above to manage its cash drawer.</p>'; document.getElementById('cashHistory').innerHTML = ''; return; }
+  let d; try { d = await API.cashCurrent(loc); } catch (e) { body.innerHTML = `<p style="color:var(--danger);padding:12px">${e.message}</p>`; return; }
+  if (!d) {
+    body.innerHTML = `
+      <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">No drawer open. Open one with the starting float to begin a shift.</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="cashFloat" type="number" min="0" step="0.01" placeholder="Opening float $" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;width:160px">
+        <button class="btn btn-primary" onclick="dayCloseOpenDrawer()">Open Drawer</button>
+      </div>`;
+  } else {
+    const r = (l, v, strong) => `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)${strong ? ';font-weight:800' : ''}"><span>${l}</span><span>${v}</span></div>`;
+    const events = (d.events || []).length ? d.events.map(e => `<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:2px 0"><span>${e.type === 'paid_in' ? '＋ In' : '－ Out'} · ${e.reason || ''}</span><span>${_m(e.amount)}</span></div>`).join('') : '';
+    body.innerHTML = `
+      <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Opened by ${d.opened_by_name || '—'} · ${fmtDateTime(d.opened_at)}</div>
+      ${r('Opening float', _m(d.opening_float))}
+      ${r('Cash sales', _m(d.cash_sales))}
+      ${r('Pay-ins', _m(d.paid_in))}
+      ${r('Pay-outs', '−' + _m(d.paid_out))}
+      ${r('Expected in drawer', _m(d.expected_cash_live), true)}
+      ${events ? `<div style="margin-top:8px">${events}</div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn btn-ghost btn-sm" onclick="dayCloseCashEvent(${d.id},'paid_in')">＋ Pay In</button>
+        <button class="btn btn-ghost btn-sm" onclick="dayCloseCashEvent(${d.id},'paid_out')">－ Pay Out</button>
+        <button class="btn btn-success btn-sm" onclick="dayCloseCloseDrawer(${d.id},${d.expected_cash_live})">Count &amp; Close</button>
+      </div>`;
+  }
+  // History
+  let hist; try { hist = await API.cashHistory(loc); } catch { hist = []; }
+  document.getElementById('cashHistory').innerHTML = hist.length ? `
+    <div style="font-weight:700;font-size:13px;margin-bottom:6px">Recent closes</div>
+    <table class="data-table"><thead><tr><th>Closed</th><th>By</th><th>Expected</th><th>Counted</th><th>Over/Short</th><th>Deposit</th></tr></thead><tbody>${
+      hist.map(h => `<tr>
+        <td class="text-sm">${fmtDateTime(h.closed_at)}</td><td class="text-sm">${h.closed_by_name || '—'}</td>
+        <td>${_m(h.expected_cash)}</td><td>${_m(h.closing_count)}</td>
+        <td style="font-weight:700;color:${h.over_short < 0 ? 'var(--danger)' : h.over_short > 0 ? 'var(--warning)' : 'var(--success)'}">${h.over_short > 0 ? '+' : ''}${_m(h.over_short)}</td>
+        <td>${h.deposit_amount != null ? _m(h.deposit_amount) : '—'}</td></tr>`).join('')
+    }</tbody></table>` : '';
+}
+
+async function dayCloseOpenDrawer() {
+  const loc = dayCloseNeedLoc();
+  const v = parseFloat(document.getElementById('cashFloat').value);
+  if (!(v >= 0)) return showAlert('cashAlert', 'Enter a valid opening float.');
+  try { await API.cashOpen({ location_id: loc, opening_float: v }); dayCloseRefreshCash(); }
+  catch (e) { showAlert('cashAlert', e.message); }
+}
+async function dayCloseCashEvent(id, type) {
+  const amt = parseFloat(prompt(`${type === 'paid_in' ? 'Pay-in' : 'Pay-out'} amount ($):`, ''));
+  if (!(amt > 0)) return;
+  const reason = prompt('Reason (optional):', '') || '';
+  try { await API.cashEvent(id, { type, amount: amt, reason }); dayCloseRefreshCash(); }
+  catch (e) { showAlert('cashAlert', e.message); }
+}
+async function dayCloseCloseDrawer(id, expected) {
+  const counted = parseFloat(prompt(`Counted cash in drawer ($)?\nExpected: $${(expected || 0).toFixed(2)}`, ''));
+  if (!(counted >= 0)) return;
+  const deposit = parseFloat(prompt('Bank deposit amount ($, optional):', '')) ;
+  try {
+    const r = await API.cashClose(id, { closing_count: counted, deposit_amount: isNaN(deposit) ? null : deposit });
+    const os = r.over_short;
+    showAlert('cashAlert', `Drawer closed. Expected $${r.expected_cash.toFixed(2)}, counted $${counted.toFixed(2)} → ${os === 0 ? 'balanced ✓' : (os > 0 ? 'OVER +$' + os.toFixed(2) : 'SHORT −$' + Math.abs(os).toFixed(2))}.`, os === 0 ? 'success' : 'warning');
+    dayCloseRefreshCash();
+  } catch (e) { showAlert('cashAlert', e.message); }
+}
+
 document.addEventListener('DOMContentLoaded', () => { initDarkMode(); initMobileSidebar(); });
