@@ -780,6 +780,8 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | GET | `/` | Owner, Manager, Chef, Stockroom | Inventory for location. |
 | GET | `/warehouse` | Owner, Manager, Stockroom, Chef | All-locations stock comparison. |
 | GET | `/supply-orders` | Owner, Manager, Stockroom, Chef | Supply orders. |
+| GET | `/reorder-suggestions` | Owner, Manager, Stockroom, Chef | Items below their reorder point with a suggested order qty (builds to par) + est. cost. |
+| POST | `/reorder/create` | Owner, Manager, Stockroom | Create pending POs from a reviewed reorder draft (`items:[{item_id,quantity}]`, optional `vendor_id`). |
 | POST | `/order` | Owner, Manager, Chef, Stockroom, Employee | Create supply order. |
 | PUT | `/order/:id` | Owner, Manager | Update supply status; receiving adds stock. |
 | GET | `/transfer-requests` | Owner, Manager, Stockroom, Chef | Transfer requests. |
