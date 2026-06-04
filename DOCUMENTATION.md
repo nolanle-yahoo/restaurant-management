@@ -663,7 +663,7 @@ SQLite database with 34 tables. Core entities and relationships:
 - **cycle_counts** — physical inventory counts (system vs counted qty + variance).
 - **certifications** — staff certifications with issue/expiry dates.
 - **waitlist** — walk-in host queue (party, size, quote, status).
-- **inventory** also carries `sku` and `unit_cost` (for scan-receiving and valuation).
+- **inventory** also carries `sku`, `unit_cost` (for scan-receiving and valuation), and `par_level` (target reorder-up-to level for auto-reorder suggestions).
 - **order_items** also carry a `course` (Appetizers/Mains/Desserts/Drinks) for kitchen grouping,
   `fired_at` (when the course was sent to the line; null = held), and a `prep_minutes` cook-time
   snapshot for the KDS prep timer.
