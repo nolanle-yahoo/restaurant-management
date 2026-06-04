@@ -1168,6 +1168,8 @@ async function submitSupplyOrder() {
 
 async function loadSupply() {
   const locId = document.getElementById('supplyLocFilter').value;
+  // Auto-reorder suggestions for the chosen location (owner picks a single location).
+  if (!window._reorderPanel) mountReorderPanel(document.getElementById('ownerReorder'), () => document.getElementById('supplyLocFilter').value || ''); else reorderRefresh();
   const rows = await API.supplyOrders(locId);
   document.getElementById('supplyBody').innerHTML = rows.map(r => `
     <tr>
