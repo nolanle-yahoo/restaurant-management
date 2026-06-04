@@ -92,6 +92,14 @@ const API = {
   barTabs(includeClosed)  { return this.get('/bar/tabs' + (includeClosed ? '?include_closed=1' : '')); },
   openBarTab(data)        { return this.post('/bar/tabs', data); },
   updateBarTab(id, data)  { return this.put(`/bar/tabs/${id}`, data); },
+
+  // End-of-day reporting + cash drawer
+  zReport(params = {})    { const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v)).toString(); return this.get('/reports/zreport' + (qs ? '?' + qs : '')); },
+  cashCurrent(locId)      { return this.get('/reports/cash/current' + (locId ? `?location_id=${locId}` : '')); },
+  cashHistory(locId)      { return this.get('/reports/cash/history' + (locId ? `?location_id=${locId}` : '')); },
+  cashOpen(data)          { return this.post('/reports/cash/open', data); },
+  cashEvent(id, data)     { return this.post(`/reports/cash/${id}/event`, data); },
+  cashClose(id, data)     { return this.post(`/reports/cash/${id}/close`, data); },
   voidOrder(id, reason)   { return this.put(`/orders/${id}/void`, { reason }); },
   moveOrder(id, to_table_id) { return this.put(`/orders/${id}/move`, { to_table_id }); },
   addOrderItem(id, data)        { return this.post(`/orders/${id}/items`, data); },
