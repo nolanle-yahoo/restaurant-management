@@ -82,7 +82,7 @@ SQLite database (34 tables)
 
 ## 4. User Roles & Access Model
 
-Seven roles are enforced both in the UI (page routing) and on the server (`requireRole`).
+Ten roles are enforced both in the UI (page routing) and on the server (`requireRole`).
 
 | Role | Scope | Primary responsibilities |
 |---|---|---|
@@ -93,6 +93,7 @@ Seven roles are enforced both in the UI (page routing) and on the server (`requi
 | **Stockroom** | Own location | Inventory and supply-chain operations (uses the manager dashboard). |
 | **Chef** | Own location | Kitchen order queue, inventory quick view. |
 | **Waiter** | Own location | Assigned area, full floor, take/serve orders. |
+| **Bartender** | Own location | Run **bar tabs** (open → add rounds → settle), 86 bar items, view bar stock. |
 | **Front Desk** | Own location | Floor map, table status, reservations. |
 | **Employee** | Own location | Time clock, plus waiter-equivalent table/order capability. |
 
