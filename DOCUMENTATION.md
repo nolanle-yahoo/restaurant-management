@@ -350,6 +350,22 @@ Ten roles are enforced both in the UI (page routing) and on the server (`require
   dedicated mobile interface for field roles.
 - **FR-15.2** Light/dark theme toggle persisted per browser.
 
+### 5.15a Bar Tabs (Bartender)
+- **FR-15a.1** A **bartender** runs **bar tabs** from a dedicated Bar Station. A tab is an open
+  running check at the bar — stored as an order with `order_type='bar'` and no table — that the
+  bartender opens by guest/tab name, optionally flagging **🪪 ID checked** (age verification).
+- **FR-15a.2** Drinks are added to the selected tab from the **Bar Menu** (beverage items); each
+  add re-uses the shared order-item flow, so it audits and **depletes liquor inventory** via the
+  normal recipe/BOM path. Items on a bar tab are fired immediately (made at the bar, not the kitchen).
+- **FR-15a.3** A tab stays **open** until settled; **Close & Settle** uses the shared payment flow
+  (cash/card/mobile + tip, split-aware). Once a payment covers the tab it drops off the open list.
+  Bartenders may toggle ID-checked and remove lines while a tab is open.
+- **FR-15a.4** Bar revenue flows into the standard payments/analytics (owners & managers see it).
+  The Bar Station also shows a **Bar Stock** quick view (beverage inventory with low-stock flags)
+  and lets the bartender **86** a drink (toggle availability).
+- **FR-15a.5** Bar-tab actions are location-scoped and role-gated: only bartenders (own location),
+  managers, and owners can open/modify tabs; the bartender must be clocked in.
+
 ### 5.16 Payments & Bill Settlement
 - **FR-16.1** Order-handling staff settle a table's bill, producing an itemized total of
   subtotal + optional service charge + sales tax + optional tip. The sales-tax and
