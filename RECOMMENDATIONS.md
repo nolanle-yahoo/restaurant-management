@@ -161,7 +161,7 @@ cross-cutting concerns: staff communication, multi-location operations, and adve
 ## Tier 6 — New advisory backlog (post-v1.45 review, not yet built)
 Proposed during the role-by-role review. Roughly ordered by operational impact.
 55. ✅ **DONE (v1.46.0)** — **End-of-day Z-report + cash/drawer reconciliation** (owner/manager): per-day Z-report (net sales, covers, avg check, voids/comps/discounts, by-method, tips, refunds) + open/float → pay-ins/outs → count & close with over/short and deposit history.
-56. **Live labor dashboard** — who's on the clock, labor $ vs live sales %, overtime/approaching-OT alerts, sales-per-labor-hour. *M* ⭐
+56. ✅ **DONE (v1.47.0)** — **Live labor dashboard** — who's on the clock, labor $ vs net-sales %, approaching-OT (≥36h) / overtime (≥40h) + long-shift flags, sales-per-labor-hour; auto-refreshing on the Sales Analytics view.
 57. **Par levels → auto-reorder draft POs** (stockroom) — suggest/draft POs below par; receive-against-PO 3-way match. *M–L* (backlog #36)
 58. **Tip pooling / tip-out engine + server checkout report** (waiter/manager). *M*
 59. **Digital manager log / shift log** — end-of-shift notes, incidents, 86s, VIPs (searchable). *S–M*
