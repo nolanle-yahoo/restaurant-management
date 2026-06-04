@@ -989,6 +989,7 @@ to scope their subscription. The server broadcasts:
 | `driver.html` | Driver | Assigned deliveries with map link + tap-to-call, status actions (picked up / delivered / failed), and opt-in live location sharing. |
 | `waiter.html` | Waiter | **My Area/Tables** (top: assigned area; bottom: tables assigned to or claimed by the waiter, each releasable), Full Floor, My Orders; take/serve with menu picker + special request; Settle Bill. |
 | `chef.html` | Chef | Kitchen queue (dine-in + online pickup/delivery), inventory quick view, low-stock alert, Menu Availability (86/un-86), and live toasts. |
+| `bartender.html` | Bartender | Bar Station: open/close bar tabs, add drinks (Bar Menu), 86 items, and Bar Stock quick view. |
 | `frontdesk.html` | Front Desk | Floor Map, Areas & Staff, Reservations, Waitlist. |
 | `employee.html` | Employee | My Time (clock), Tables & Orders (take orders, Settle Bill), Time Off, Messages. |
 | `mobile.html` | Field roles | Floor, My Area, Orders, Profile (clock) — touch-optimized. |
