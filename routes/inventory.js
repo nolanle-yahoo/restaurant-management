@@ -200,6 +200,48 @@ router.post('/order', requireRole('owner','manager','chef','stockroom','employee
   res.json({ success: true });
 });
 
+// Auto-reorder suggestions: items at/below their reorder point, with a suggested order
+// quantity that builds back up to par (or to the reorder point if no par is set).
+router.get('/reorder-suggestions', requireRole('owner', 'manager', 'stockroom', 'chef'), (req, res) => {
+  const locId = req.user.role === 'owner' ? (req.query.location_id || null) : req.user.location_id;
+  if (!locId) return res.json([]);
+  const rows = db.prepare(`
+    SELECT id, item_name, category, unit, quantity, min_quantity, par_level, unit_cost
+    FROM inventory WHERE location_id=? AND quantity < min_quantity ORDER BY category, item_name
+  `).all(locId);
+  const out = rows.map(r => {
+    const buildTo = (r.par_level && r.par_level > r.min_quantity) ? r.par_level : r.min_quantity;
+    const suggested = Math.max(0, Math.ceil(buildTo - r.quantity));
+    return { ...r, build_to: buildTo, suggested_qty: suggested, est_cost: Math.round(suggested * (r.unit_cost || 0) * 100) / 100 };
+  }).filter(r => r.suggested_qty > 0);
+  res.json(out);
+});
+
+// Create purchase orders from a (reviewed) reorder draft. Body: { items:[{item_id,quantity}],
+// vendor_id? } — creates a 'pending' supply order per line, optionally tagged to a vendor.
+router.post('/reorder/create', requireRole('owner', 'manager', 'stockroom'), (req, res) => {
+  const locId = req.user.role === 'owner' ? (req.body.location_id || null) : req.user.location_id;
+  if (!locId) return res.status(400).json({ error: 'A location is required.' });
+  const items = Array.isArray(req.body.items) ? req.body.items : [];
+  if (!items.length) return res.status(400).json({ error: 'No items to order.' });
+  const vendorId = req.body.vendor_id || null;
+  let vendorName = null;
+  if (vendorId) { const v = db.prepare(`SELECT name FROM vendors WHERE id=?`).get(vendorId); if (v) vendorName = v.name; }
+  const ins = db.prepare(`INSERT INTO supply_orders (item_id, item_name, location_id, quantity, vendor, vendor_id, notes, status, ordered_by) VALUES (?,?,?,?,?,?,?,'pending',?)`);
+  let created = 0;
+  items.forEach(it => {
+    const qty = Math.max(0, parseFloat(it.quantity) || 0);
+    if (qty <= 0) return;
+    const inv = db.prepare(`SELECT id, item_name FROM inventory WHERE id=? AND location_id=?`).get(it.item_id, locId);
+    if (!inv) return;
+    ins.run(inv.id, inv.item_name, locId, qty, vendorName, vendorId, 'Auto-reorder (below par)', req.user.id);
+    created++;
+  });
+  if (!created) return res.status(400).json({ error: 'No valid items to order.' });
+  auditLog(req, 'reorder_create', 'supply_order', null, { count: created, vendor: vendorName, location_id: Number(locId) });
+  res.json({ success: true, created });
+});
+
 router.put('/order/:id', requireRole('owner','manager'), (req, res) => {
   const { status, tracking_number, shipping_address } = req.body;
   const valid = ['pending','approved','shipped','received'];
