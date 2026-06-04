@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bar Station</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .bar-wrap { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+    @media(max-width:900px){ .bar-wrap { grid-template-columns:1fr; } }
+    .tab-card { border:1.5px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; cursor:pointer; transition:border-color .15s, box-shadow .15s; }
+    .tab-card.sel { border-color:var(--gold,#C9A84C); box-shadow:0 0 0 2px rgba(201,168,76,.25); }
+    .tab-items { margin:8px 0; }
+    .tab-line { display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:3px 0; }
+    .empty-bar { text-align:center; padding:50px 20px; color:var(--muted); }
+    .menu-add-row { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:6px 0; border-bottom:1px solid var(--border); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🍸</div>
+      <div class="logo-name">Restaurant Mgmt</div>
+      <div class="logo-sub">Bar Station</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-name" id="sb-name"></div>
+      <div class="user-role" id="sb-role"></div>
+      <div class="user-loc" id="sb-location"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#"><span class="nav-icon">🍸</span>Bar Tabs</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn">Sign Out</button></div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <button class="hamburger-btn" id="hamburgerBtn">☰</button>
+      <div class="topbar-title">Bar Tabs</div>
+      <div class="topbar-right">
+        <span class="text-muted text-sm" id="tabSummary">—</span>
+        <span class="text-muted text-sm" id="topbarTime"></span>
+        <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite" title="Live"></div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="bar-wrap">
+        <div>
+          <!-- Open a new tab -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header"><div class="card-title">Open a Tab</div></div>
+            <div id="openAlert" class="alert hidden" style="margin-bottom:10px"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <input id="tabName" placeholder="Guest name / tab name" style="flex:1;min-width:160px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap"><input type="checkbox" id="tabIdChecked"> 🪪 ID checked</label>
+              <button class="btn btn-primary" onclick="openTab()">Open Tab</button>
+            </div>
+          </div>
+
+          <div class="stat-grid" style="margin-bottom:16px" id="barStats"></div>
+          <div id="tabsList"></div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header"><div class="card-title">Bar Menu</div></div>
+            <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Select a tab on the left, then tap a drink to add it. Tap the price toggle to 86 an item.</div>
+            <div id="barMenu"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Bar Stock</div></div>
+            <div id="barStock"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }</style>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script>
+const user = requireAuth(['bartender','manager']);
+if (user) populateSidebar(user);
+liveClock('topbarTime');
+
+let tabs = [], selectedTabId = null, barMenuItems = [];
+
+const money = n => '$' + (Number(n)||0).toFixed(2);
+
+async function loadTabs() {
+  try { tabs = await API.barTabs(); } catch(e) { return; }
+  const openCount = tabs.length;
+  const openValue = tabs.reduce((s,t)=>s+(t.subtotal||0),0);
+  document.getElementById('tabSummary').textContent = `${openCount} open tab${openCount!==1?'s':''} · ${money(openValue)}`;
+  document.getElementById('barStats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon burgundy">🍸</div><div class="stat-info"><div class="stat-value">${openCount}</div><div class="stat-label">Open Tabs</div></div></div>
+    <div class="stat-card"><div class="stat-icon success">💵</div><div class="stat-info"><div class="stat-value">${money(openValue)}</div><div class="stat-label">Open Value</div></div></div>`;
+
+  if (!tabs.length) {
+    document.getElementById('tabsList').innerHTML = `<div class="empty-bar"><div style="font-size:46px">🍸</div><div style="font-size:18px;font-weight:700;color:var(--charcoal)">No open tabs</div><div style="margin-top:6px">Open a tab above to get started</div></div>`;
+    selectedTabId = null;
+    return;
+  }
+  if (!tabs.some(t => t.id === selectedTabId)) selectedTabId = tabs[0].id;
+
+  document.getElementById('tabsList').innerHTML = tabs.map(t => {
+    const items = t.items || [];
+    const lines = items.length ? items.map(i => `
+      <div class="tab-line">
+        <span>${i.quantity}× ${i.item_name}${i.modifiers?` <span style="color:var(--muted);font-size:11px">(${i.modifiers})</span>`:''}</span>
+        <span style="display:flex;align-items:center;gap:8px">${money(i.price*i.quantity)}
+          <button class="btn btn-sm btn-ghost" style="color:var(--danger);padding:0 6px" title="Remove" onclick="event.stopPropagation();removeItem(${t.id},${i.id})">✕</button>
+        </span>
+      </div>`).join('') : '<div style="font-size:12.5px;color:var(--muted);padding:6px 0">No items yet — tap drinks from the Bar Menu →</div>';
+    return `
+      <div class="tab-card ${t.id===selectedTabId?'sel':''}" onclick="selectTab(${t.id})">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <div style="font-weight:800;font-size:15px">${t.tab_name || 'Tab'}${t.id===selectedTabId?' <span class="badge badge-warning" style="font-size:10px">selected</span>':''}</div>
+          <div style="font-weight:800;color:var(--success)">${money(t.subtotal)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:3px">
+          <button class="btn btn-sm ${t.id_checked?'btn-success':'btn-ghost'}" onclick="event.stopPropagation();toggleId(${t.id},${t.id_checked})">🪪 ${t.id_checked?'ID ✓':'ID?'}</button>
+          <span style="font-size:11.5px;color:var(--muted)">${t.bartender_name||''} · opened ${fmtTime(t.created_at)}</span>
+        </div>
+        <div class="tab-items">${lines}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gold btn-sm" style="background:var(--gold,#C9A84C);color:#fff" onclick="event.stopPropagation();selectTab(${t.id})">＋ Add (select)</button>
+          <button class="btn btn-success btn-sm" onclick="event.stopPropagation();closeTab(${t.id})" ${items.length?'':'disabled'}>Close &amp; Settle</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function selectTab(id) { selectedTabId = id; loadTabs(); }
+
+async function openTab() {
+  const name = document.getElementById('tabName').value.trim();
+  if (!name) return showAlert('openAlert', 'Enter a guest/tab name.');
+  const id_checked = document.getElementById('tabIdChecked').checked;
+  try {
+    const r = await API.openBarTab({ name, id_checked });
+    document.getElementById('tabName').value = '';
+    document.getElementById('tabIdChecked').checked = false;
+    selectedTabId = r.tab_id;
+    loadTabs();
+  } catch(e) { showAlert('openAlert', e.message); }
+}
+
+async function toggleId(tabId, cur) {
+  try { await API.updateBarTab(tabId, { id_checked: cur ? 0 : 1 }); loadTabs(); }
+  catch(e) { showToast(e.message, 'error'); }
+}
+
+async function addDrink(name, price) {
+  if (!selectedTabId) return showToast('Select a tab first', 'error');
+  try { await API.addOrderItem(selectedTabId, { name, price }); loadTabs(); }
+  catch(e) { showToast(e.message, 'error'); }
+}
+
+async function removeItem(tabId, itemId) {
+  try { await API.removeOrderItem(tabId, itemId); loadTabs(); }
+  catch(e) { showToast(e.message, 'error'); }
+}
+
+function closeTab(tabId) {
+  openPaymentModal(tabId, loadTabs);
+}
+
+async function loadBarMenu() {
+  let items; try { items = await API.menuItems(user.location_id); } catch(e) { return; }
+  // Bar menu = beverage/drink/bar categories.
+  barMenuItems = items.filter(i => /bever|drink|bar|wine|beer|spirit|cocktail/i.test(i.category_name||''));
+  if (!barMenuItems.length) barMenuItems = items; // fallback: show everything
+  document.getElementById('barMenu').innerHTML = barMenuItems.map(i => `
+    <div class="menu-add-row">
+      <span style="font-size:13px;${i.is_available?'':'color:var(--muted);text-decoration:line-through'}">${i.name}</span>
+      <span style="display:flex;align-items:center;gap:6px">
+        <button class="btn btn-sm ${i.is_available?'btn-ghost':'btn-ghost'}" title="${i.is_available?'Tap to 86':'Tap to re-enable'}" onclick="toggle86(${i.id},${i.is_available})" style="${i.is_available?'':'color:var(--danger)'}">${i.is_available?money(i.price):'86'}</button>
+        <button class="btn btn-sm btn-primary" ${i.is_available?'':'disabled'} onclick="addDrink('${(i.name||'').replace(/'/g,"\\'")}',${i.price})">Add</button>
+      </span>
+    </div>`).join('') || '<div style="color:var(--muted);padding:12px;text-align:center">No drinks on the menu</div>';
+}
+
+async function toggle86(id, cur) {
+  try { await API.menuItemUpdate(id, { is_available: cur ? 0 : 1 }); loadBarMenu(); }
+  catch(e) { showToast(e.message, 'error'); }
+}
+
+async function loadBarStock() {
+  let items; try { items = await API.inventory(user.location_id); } catch(e) { return; }
+  const bar = items.filter(i => /bever|liquor|beer|wine|spirit|bar|alcohol/i.test(i.category||''));
+  const el = document.getElementById('barStock');
+  if (!bar.length) { el.innerHTML = '<div style="color:var(--muted);padding:12px;text-align:center;font-size:13px">No bar stock items tracked.</div>'; return; }
+  el.innerHTML = bar.map(i => {
+    const low = i.quantity < i.min_quantity;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px">${i.item_name}</span>
+      <span class="badge ${low?'badge-danger':'badge-muted'}" style="font-size:11px">${i.quantity} ${i.unit||''}${low?' · low':''}</span>
+    </div>`;
+  }).join('');
+}
+
+function refreshAll() { loadTabs(); loadBarMenu(); loadBarStock(); }
+refreshAll();
+setInterval(loadTabs, 8000);
+setInterval(loadBarStock, 30000);
+
+connectWebSocket(user?.location_id, {
+  order_update: () => loadTabs(),
+});
+</script>
+</body>
+</html>
