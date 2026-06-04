@@ -22,6 +22,7 @@ function seed() {
     DELETE FROM waste_log; DELETE FROM cycle_counts; DELETE FROM vendors;
     DELETE FROM inventory_lots;
     DELETE FROM certifications;
+    DELETE FROM cash_events; DELETE FROM cash_drawers;
     DELETE FROM payments; DELETE FROM email_log; DELETE FROM password_reset_tokens;
     DELETE FROM loyalty_transactions; DELETE FROM customer_cards; DELETE FROM deliveries;
     DELETE FROM gift_card_txns; DELETE FROM gift_cards; DELETE FROM promo_codes;
