@@ -1309,7 +1309,7 @@ function renderInv(items) {
       <td class="fw-700">${i.item_name}</td>
       <td><span class="badge badge-muted">${i.category}</span></td>
       <td>${i.quantity} ${i.unit}</td>
-      <td>${i.min_quantity} ${i.unit}</td>
+      <td>${i.min_quantity} ${i.unit}${i.par_level != null ? `<br><span class="text-sm text-muted">par ${i.par_level}</span>` : ''}</td>
       <td><div class="inv-bar-wrap"><div class="inv-bar ${cls}" style="width:${pct}%"></div></div></td>
       <td>${i.quantity < i.min_quantity ? '<span class="badge badge-danger">Low</span>' : '<span class="badge badge-success">OK</span>'}</td>
       <td>
@@ -1317,7 +1317,7 @@ function renderInv(items) {
         <button class="btn btn-sm btn-ghost" onclick="openTransferFromInv('${i.item_name.replace(/'/g,"\\'")}')">Transfer</button>
         <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="logWasteFor(${i.id},'${i.item_name.replace(/'/g,"\\'")}',${i.quantity})">Waste</button>
         <button class="btn btn-sm btn-ghost" onclick="countFor(${i.id},'${i.item_name.replace(/'/g,"\\'")}',${i.quantity})">Count</button>
-        <button class="btn btn-sm btn-ghost" onclick="editItemAttrs(${i.id},'${i.item_name.replace(/'/g,"\\'")}','${i.sku||''}',${i.unit_cost||0})" title="SKU & cost">⚙</button>
+        <button class="btn btn-sm btn-ghost" onclick="editItemAttrs(${i.id},'${i.item_name.replace(/'/g,"\\'")}','${i.sku||''}',${i.unit_cost||0},${i.par_level==null?'null':i.par_level})" title="SKU, cost &amp; par level">⚙</button>
       </td>
     </tr>`;
   }).join('');
