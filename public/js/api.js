@@ -87,6 +87,11 @@ const API = {
   createOrder(data)  { return this.post('/orders', data); },
   updateOrder(id, status) { return this.put(`/orders/${id}`, { status }); },
   fireCourse(id, course)  { return this.put(`/orders/${id}/fire`, { course }); },
+
+  // Bar tabs
+  barTabs(includeClosed)  { return this.get('/bar/tabs' + (includeClosed ? '?include_closed=1' : '')); },
+  openBarTab(data)        { return this.post('/bar/tabs', data); },
+  updateBarTab(id, data)  { return this.put(`/bar/tabs/${id}`, data); },
   voidOrder(id, reason)   { return this.put(`/orders/${id}/void`, { reason }); },
   moveOrder(id, to_table_id) { return this.put(`/orders/${id}/move`, { to_table_id }); },
   addOrderItem(id, data)        { return this.post(`/orders/${id}/items`, data); },
