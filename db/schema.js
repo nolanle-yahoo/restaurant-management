@@ -252,6 +252,38 @@ function createSchema() {
       updated_at TEXT DEFAULT (datetime('now'))
     );
 
+    -- Cash drawer sessions for end-of-day reconciliation. A session is opened with a
+    -- starting float, accrues cash sales (from paid cash payments in its window) plus
+    -- manual pay-ins/pay-outs, then is closed by counting the drawer (over/short) and
+    -- recording a bank deposit.
+    CREATE TABLE IF NOT EXISTS cash_drawers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      location_id INTEGER NOT NULL REFERENCES locations(id),
+      opened_by INTEGER REFERENCES users(id),
+      opened_by_name TEXT,
+      opening_float REAL NOT NULL DEFAULT 0,
+      opened_at TEXT DEFAULT (datetime('now')),
+      closed_by INTEGER REFERENCES users(id),
+      closed_by_name TEXT,
+      closing_count REAL,
+      expected_cash REAL,
+      over_short REAL,
+      deposit_amount REAL,
+      notes TEXT,
+      status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','closed')),
+      closed_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS cash_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      drawer_id INTEGER NOT NULL REFERENCES cash_drawers(id),
+      type TEXT NOT NULL CHECK(type IN ('paid_in','paid_out')),
+      amount REAL NOT NULL DEFAULT 0,
+      reason TEXT,
+      user_id INTEGER REFERENCES users(id),
+      user_name TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS telegram_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       chat_id TEXT,
