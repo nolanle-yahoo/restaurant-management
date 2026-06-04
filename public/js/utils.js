@@ -1199,4 +1199,63 @@ async function dayCloseCloseDrawer(id, expected) {
   } catch (e) { showAlert('cashAlert', e.message); }
 }
 
+// ── Live Labor board: who's on the clock, labor % vs sales, OT alerts ────────────
+// mountLaborBoard(containerEl, getLocId) — owner passes the chosen location; manager
+// passes '' (server pins to theirs). Auto-refreshes while visible.
+function mountLaborBoard(el, getLocId) {
+  if (!el) return;
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Live Labor <span class="badge badge-muted" id="laborLive" style="font-size:10px">● live</span></div>
+      </div>
+      <div id="laborBody"></div>
+    </div>`;
+  window._laborBoard = { getLocId };
+  laborRefresh();
+  if (window._laborTimer) clearInterval(window._laborTimer);
+  window._laborTimer = setInterval(() => { const b = document.getElementById('laborBody'); if (b && b.offsetParent !== null) laborRefresh(); }, 45000);
+}
+
+async function laborRefresh() {
+  const lb = window._laborBoard; if (!lb) return;
+  const body = document.getElementById('laborBody'); if (!body) return;
+  const _m = n => '$' + (Number(n) || 0).toFixed(2);
+  const isOwner = (getUser() || {}).role === 'owner';
+  const loc = lb.getLocId();
+  if (isOwner && !loc) { body.innerHTML = '<p style="color:var(--muted);padding:12px">Pick a single location above to view live labor.</p>'; return; }
+  let d; try { d = await API.laborBoard({ location_id: loc || '' }); } catch (e) { body.innerHTML = `<p style="color:var(--danger);padding:12px">${e.message}</p>`; return; }
+
+  const pct = d.labor_pct;
+  const pctColor = pct == null ? 'var(--muted)' : pct <= 25 ? 'var(--success)' : pct <= 35 ? 'var(--warning)' : 'var(--danger)';
+  const stat = (label, val, color) => `<div class="stat-card"><div class="stat-info"><div class="stat-value" style="${color ? 'color:' + color : ''}">${val}</div><div class="stat-label">${label}</div></div></div>`;
+  const alerts = [];
+  if (d.ot_count) alerts.push(`${d.ot_count} in/near overtime`);
+  if (d.long_shift_count) alerts.push(`${d.long_shift_count} on a long shift (>${d.thresholds.long_shift}h)`);
+  const badge = s => s === 'overtime' ? '<span class="badge badge-danger" style="font-size:10px">OVERTIME</span>'
+    : s === 'approaching' ? '<span class="badge badge-warning" style="font-size:10px">approaching OT</span>' : '';
+
+  body.innerHTML = `
+    ${alerts.length ? `<div class="alert alert-warning" style="margin-bottom:10px">⚠️ ${alerts.join(' · ')} — review the schedule.</div>` : ''}
+    <div class="stat-grid" style="margin-bottom:12px">
+      ${stat('On duty', d.headcount)}
+      ${stat('Labor cost (today)', _m(d.labor_cost_today))}
+      ${stat('Net sales (today)', _m(d.sales_today))}
+      ${stat('Labor %', pct == null ? '—' : pct + '%', pctColor)}
+      ${stat('Sales / labor hr', d.sales_per_labor_hour == null ? '—' : _m(d.sales_per_labor_hour))}
+    </div>
+    ${d.on_duty.length ? `<table class="data-table">
+      <thead><tr><th>Staff</th><th>Clocked in</th><th>Shift</th><th>Today</th><th>Week</th><th>Cost</th><th></th></tr></thead>
+      <tbody>${d.on_duty.map(s => `<tr${s.ot_status === 'overtime' ? ' style="background:rgba(220,53,69,.06)"' : ''}>
+        <td class="fw-700">${s.name}<br><span class="text-sm text-muted" style="text-transform:capitalize">${s.role}</span></td>
+        <td class="text-sm">${fmtTime(s.check_in)}</td>
+        <td class="text-sm${s.long_shift ? '" style="color:var(--warning);font-weight:700' : ''}">${s.shift_hours.toFixed(1)}h${s.long_shift ? ' ⏰' : ''}</td>
+        <td>${s.hours_today.toFixed(1)}h</td>
+        <td class="fw-700">${s.week_hours.toFixed(1)}h</td>
+        <td>${_m(s.labor_cost)}</td>
+        <td>${badge(s.ot_status)}</td>
+      </tr>`).join('')}</tbody></table>`
+      : '<p style="color:var(--muted);padding:12px;text-align:center">No staff currently on the clock.</p>'}`;
+}
+
 document.addEventListener('DOMContentLoaded', () => { initDarkMode(); initMobileSidebar(); });
