@@ -707,6 +707,15 @@ All endpoints are under `/api`. Except `POST /auth/login`, every endpoint requir
 | POST | `/:id/release` | Assignee, Manager, Owner | Free a table's assignment. |
 | DELETE | `/:id` | Owner, Manager | Delete table. |
 
+### Bar Tabs — `/api/bar`
+| Method | Path | Access | Description |
+|---|---|---|---|
+| GET | `/tabs` | Bartender, Manager, Owner | Open bar tabs at the location (running totals + items); `?include_closed=1` to include settled. |
+| POST | `/tabs` | Bartender (on duty), Manager, Owner | Open a tab (`name`, optional `id_checked`). Creates an `order_type='bar'` order. |
+| PUT | `/tabs/:id` | Bartender (on duty), Manager, Owner | Update a tab's `name` / `id_checked`. |
+
+*(Adding drinks to a tab and settling it reuse `POST /api/orders/:id/items` and the `/api/payments` flow.)*
+
 ### Orders — `/api/orders`
 | Method | Path | Access | Description |
 |---|---|---|---|
