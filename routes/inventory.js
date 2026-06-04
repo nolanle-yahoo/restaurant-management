@@ -107,7 +107,7 @@ router.delete('/vendors/:id', requireRole('owner','manager'), (req, res) => {
 });
 
 // ── Inventory levels ───────────────────────────────────────
-router.get('/', requireRole('owner','manager','chef','stockroom'), (req, res) => {
+router.get('/', requireRole('owner','manager','chef','stockroom','bartender'), (req, res) => {
   const locId = req.user.role === 'owner' ? req.query.location_id : req.user.location_id;
   if (!locId) {
     const rows = db.prepare(`SELECT i.*, l.name as location_name FROM inventory i JOIN locations l ON i.location_id=l.id ORDER BY l.name, i.category, i.item_name`).all();
