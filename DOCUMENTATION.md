@@ -595,7 +595,8 @@ SQLite database with 34 tables. Core entities and relationships:
 > `menu_categories` → `menu_items` (1-to-many). All child rows reference parents by foreign key.
 
 - **locations** — restaurant branches.
-- **users** — staff accounts (role enum, location FK, hourly rate, active flag).
+- **users** — staff accounts (role enum incl. `bartender`, location FK, hourly rate, active flag).
+- **orders** — also carry `order_type` (`dine_in`/`pickup`/`delivery`/**`bar`**) and `id_checked` (age verification flag on bar tabs).
 - **clock_records** — check-in/out events and computed hours.
 - **areas** / **tables** — floor layout; tables belong to areas and locations.
 - **waiter_assignments** — waiter ↔ area mapping (unique pair).
